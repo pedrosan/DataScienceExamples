@@ -1,15 +1,15 @@
 ---
-title   : Machine-Learning-based Assessment of the quality of weight-lifting exercises
+title   : Machine-Learning-based Assessment of The Quality of Weight-lifting Exercises
 subtitle: 
 author  : Giovanni Fossati
 job     : null
 output  : 
   html_document:
-    self_contained: true
+    self_contained: false
     css: css/gf_small_touches.css
     theme: cerulean
     highlight: tango
-    keep_md: yes
+    keep_md: no
     mathjax: default
     toc: no
 ---
@@ -18,7 +18,6 @@ output  :
 require(knitr)
 # make this an external chunk that can be included in any file
 options(width = 100)
-# opts_chunk$set(message = FALSE, error = FALSE, warning = FALSE, collapse = TRUE, fig.align = 'left', dpi = 100, tidy = FALSE, cache.path = '.cache/', fig.path = 'figures/')
 opts_chunk$set(message = FALSE, 
                error = FALSE, 
                warning = FALSE, 
@@ -54,6 +53,14 @@ require(pROC)
 ```{r my_defs, echo=FALSE}
 source("./scripts/my_defs.R")
 ```
+
+## PREAMBLE
+
+Report for the first assignment of the [_Practical Machine Learning_](https://www.coursera.org/course/predmachlearn)
+course of the _Coursera/JHSPH Data Science Specialization_.
+
+The source files are posted on [GitHub](https://github.com/pedrosan/DataScienceExamples/tree/master/Human_Activity_2)
+
 
 ## INTRODUCTION
 
@@ -105,7 +112,7 @@ between categories of exercise quality, that can be related to the slight differ
 of the body and weight dumbbell, and that are apparently very well picked out by the algorithm.
 
 
-<hr class="separator">
+<hr class="thin_separator">
 <a name="THE_DATA_SET"></a>
 
 ## THE DATA SET
@@ -160,7 +167,7 @@ Fortunately the two types of variables can be easily separated on the basis of t
 which has value `no` for entries corresponding to timed data, and `yes` for their statistical summaries over each exercise window.
 
 
-<hr class="separator">
+<hr class="thin_separator">
 <a name="DATA_PREPARATION"></a>
 
 ## DATA PREPARATION
@@ -297,7 +304,7 @@ p + facet_grid(classe ~ .)
 ```
 
 
-<hr class="separator">
+<hr class="thin_separator">
 <a name="FEATURE_SELECTION"></a>
 
 ## ABOUT FEATURE SELECTION
@@ -331,7 +338,7 @@ selected among those with high correlation.
 The actual predictors filtering was done applying this method just on the _training_ subset (see below).
 
 
-<hr class="separator">
+<hr class="thin_separator">
 <a name="DATA_SPLITTING"></a>
 
 ## DATA SPLITTING: "NEW" _TRAINING_ AND _TESTING_ SUBSETS
@@ -392,7 +399,7 @@ alt.testing.cut75 <- alt.testing[, -(i.fC.75.alt+1)]
 
 
 
-<hr class="separator">
+<hr class="thin_separator">
 <a name="MODELING"></a>
 
 ## MODELING
