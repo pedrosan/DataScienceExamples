@@ -1,0 +1,840 @@
+---
+title: "Coding Challenge : Part 2 > Baby Names"
+author: "Giovanni Fossati"
+output:
+  html_document:
+    css: css/baby_names.css
+    highlight: tango
+    keep_md: yes
+    mathjax: default
+    self_contained: yes
+    theme: cerulean
+    toc: no
+subtitle: null
+job: null
+---
+
+```{r setup, cache = FALSE, echo = FALSE, message = FALSE, warning = FALSE, tidy = FALSE}
+require(knitr)
+options(width = 100, 
+        scipen = 5)
+opts_chunk$set(message = FALSE, 
+               error = FALSE, 
+               warning = FALSE, 
+               collapse = TRUE, 
+               tidy = FALSE,
+               cache = FALSE, 
+               cache.path = '.cache/', 
+               comment = '#',
+               fig.align = 'center', 
+               dpi = 100, 
+               fig.path = 'figures/Part1/')
+#
+library("dplyr")
+library("tidyr")
+library("magrittr")
+library("stringr")
+library("ggplot2")
+# library("gridExtra")
+```
+
+```{r load_packages, cache = FALSE, echo = FALSE, message = FALSE, warning = FALSE, tidy = FALSE}
+source("./scripts/my_functions_baby_names.R")
+```
+
+---
+
+### Report Outline
+
+* [DATA LOADING AND SET UP](#data_loading)
+* [QUESTIONS](#questions)
+    * [Question 1](#question1)
+    * [Question 2](#question2)
+    * [Question 3](#question3)
+    * [Question 4](#question4)
+    * [Question 5](#question5)
+* [OTHER BITS OF ANALYSIS](#OTHER_BITS)
+    * [Some Basic Trends by Year and Gender](#basictrends)
+    * [Count Distributions by State, Time, and Gender](#counts)
+
+
+### Note on the Report _Reproducible_ Format
+
+This report is generated from a _Rmarkdown_ document which includes all code to perform
+data processing, modeling, plotting, etc. (except for functions defined in external scripts, 
+included in the archive).
+However, for readability only a few bits of code are _echoed_ explicitly in the compiled document.
+The full straight reproducibility is only limited by the fact that in the interest of simplicity
+and for computational convenience some parts of the processing have been flagged as _inactive_ 
+(`eval = FALSE`), and in its current form some data are instead loaded from previously saved work,
+namely the model fitting. 
+That said, the document includes the code to perform the entire analysis, and a few changes would
+allow to do so by compiling it.
+
+
+<hr class="thin_separator">
+<a name="data_loading"></a>
+
+# DATA LOADING AND SETUP
+
+```{r data_loading, cache = TRUE}
+states_codes <- list.files("./data/", pattern = "*.TXT") %>% gsub("\\.TXT", "", ., perl = TRUE)
+data_dir <- "data"
+
+df <- do.call(bind_rows, lapply( list.files(data_dir, pattern = "[A-Z][A-Z].TXT.gz", full.names = TRUE), 
+                function(x) { read.csv(x, header = FALSE, stringsAsFactors = FALSE) }) )
+colnames(df) <- c("state", "gender", "year", "name", "count")
+```
+```{r more_preparation, cache = TRUE, echo = FALSE}
+unique_names_F <- filter(df, gender == "F") %>% dplyr::select(name) %>% unique(.)
+unique_names_M <- filter(df, gender == "M") %>% dplyr::select(name) %>% unique(.) 
+unique_names <- list(F = as.vector(unique_names_F), M = as.vector(unique_names_M))
+bisex_names <- intersect(unique_names$F, unique_names$M)
+
+rm(unique_names_F, unique_names_M)
+```
+
+
+<hr class="separator">
+<a name="questions"></a>
+
+# QUESTIONS
+
+<hr class="thin_separator">
+<a name="question1"></a>
+
+## Question #1
+
+### [A] Please describe the format of the data files.
+
+For illustration, we show here the _head_ of one of the state files (Alaska), showing the structure of the data as distributed.
+```{r q1-1}
+file.head("data/AK.TXT.gz", n = 10)
+```
+The data for each state are stored in _tall format_ in a comma separated list.
+Each row has five values:
+
+* __State__: the 2-letter code of the state.
+* __Gender__: one letter, _M|F_.
+* __Year__: the year of birth for this record, in 4-digit format.
+* __Name__: the name.
+* __Count__: an integer for the number of times this name occurred in that state in that year.
+
+A few additional notes:
+
+* Entries are grouped (sorted) by gender, then year, and finally in decreasing order of counts.
+If there are multiple names with the same number of occurrences, they are then sorted alphabetically.
+
+* It is __important to note__ that for each _state+year subset_ only names with at least five occurrences
+are reported in this public data set (out of privacy concerns).
+
+* The total number of distinct names in the data set is __`r nrow(unique_names$F) + nrow(unique_names$M) - nrow(bisex_names)`__,
+and of these __`r nrow(bisex_names)`__ have been used for both females and males.
+
+This is an example of the entries in the data frame where I loaded and combined all the data, a sample of random rows: 
+```{r q1-2}
+df[sample(1:nrow(df), 12), ]
+```
+
+
+### [B] Can you identify any limitations or distortions of the data?
+
+I did not get a chance to explore the data in much detail (and not for lack of interest)
+and at this stage my main concern, perhaps the only one for now, is about the effect of the
+cutoff imposed on the release of names with fewer than 5 occurrences in a state.
+
+First off, given the wide range of state populations (about a factor of 50), this threshold at a
+fixed value effectively introduces a distortion in the data in the sense that $n\ge5$
+truncates the distribution of names at different levels depending on a state population
+(taken as a proxy for number of births).
+On the other hand, we are dealing with an inherently discrete quantity and below 5 there
+are always only four other "levels" 1, 2, 3, 4, no matter how large is a state population.
+So, it is not clear to me how much is the impact of the cutoff in practice.
+One pertinent question is how much data would be there, and a good starting point is
+looking at how the available data are distributed.
+
+As with many things in nature, the distribution of the number of names vs. their frequency
+follows fairly closely a power law distribution.
+Here are a couple of examples, for two states, with data added over a 5-year period.
+Please note that this is a _log-log_ plot, the best way to look at data following
+a power law distribution, which comes out just like a straight line.
+Pink symbols show the distribution of female names, blue symbols that for male names.
+Red and blue dashed lines are the best fit with a linear regression model to the log-log data
+(points covered by a grey square were exclude from the fit.)
+
+Data were binned, with bin width $0.25 \log_{10}(5)$, and the plots show the counts in each bin,
+not a density (_i.e._ count divided by bin width).
+
+```{r plot_power_law_distribution_example_x4, fig.width = 7, fig.height = 4, echo = FALSE}
+par(fig = c(0, 1, 0, 1), mar = c(5, 4, 4, 1)+0.1, cex.axis = 1.0)
+single_panel_mar <- c(2, 2, 2, 1)
+single_panel_oma <- c(0 ,0, 2, 0)
+gr_par <- list( mar = single_panel_mar, oma = single_panel_oma, 
+                cex = 1.0, cex.axis = 0.8, cex.lab = 1.0, 
+                las = 0, mgp = c(1.0, 0.0, 0),
+                tcl = 0.3)
+
+par(gr_par)
+
+mat.layout <- matrix(1:2, nrow = 1, byrow = TRUE)
+layout(mat.layout)
+plot_hist_state_year_with_fit(data = df, STATE = "OK", YEAR = 2009:2013, subset = quote(y > log10(25)))
+plot_hist_state_year_with_fit(data = df, STATE = "TX", YEAR = 2009:2013, subset = quote(y > log10(25)))
+
+par(fig = c(0, 1, 0, 1), mar = c(5, 4, 4, 1)+0.1, cex.axis = 1.0)
+title("Examples of Distributions of Names by Count", cex.main = 1.25, outer = TRUE)
+```
+
+Data are sometimes noisy and bumpy, but overall, for all states and time intervals (provided that
+these latter were long enough to build up a decent statistic in states with low counts), 
+these distributions are well modeled with steep declining power laws, possibly with an exponential
+cutoff at high counts. 
+Assess that vs. simply a drop in statistics would require more careful analysis.
+
+The slope of the power law is around $-1$ (it would $-2$ for density), and if extrapolated back
+below the cutoff at 5 counts it would translate into a large number of names with low-count, as
+much as 10 times more than the names accounted for.
+
+One way of checking at a large scale level if this could indeed be the case, could be do compare
+the total counts of birth accounted for by these data with more comprehensive census of birth
+by state and year.  Unfortunately I did not get a chance to pursue this avenue.
+
+Frankly I was surprised to see that the certainly expected power law continued apparently
+undeterred until the lowest count limit.   My naive expectation was that before that point
+it would begin to taper off and eventually drop, though perhaps below the 5-count limit.
+I can't help but wonder how realistic/reasonable it is to imagine that there could be 
+several thousands of "hidden" names caught by the $n\ge5$ filter.  
+How many babies are given names that is unique to them (in a state and year)?!
+
+
+
+<hr class="thin_separator">
+<a name="question1"></a>
+
+## Question #2
+
+```{r q2-prep, echo = FALSE}
+top10_FM <- group_by(df, name) %>% summarize(n = sum(count)) %>% arrange(desc(n)) %>% head( . , 10)
+top10_F  <- filter(df, gender == "F") %>% group_by(name) %>% summarize(n = sum(count)) %>% arrange(desc(n)) %>% head( . , 10)
+top10_M  <- filter(df, gender == "M") %>% group_by(name) %>% summarize(n = sum(count)) %>% arrange(desc(n)) %>% head( . , 10)
+top10_all <- bind_cols(top10_FM, top10_F, top10_M)
+colnames(top10_all) <- c("AnyGender", "N_any", "Female", "N_female", "Male", "N_male")
+```
+
+
+### What is the most popular name of all time? (Of either gender.)
+
+* __Ignoring gender__, the most popular given-name in this data set is __`r top10_FM[1, 1]`__.    
+* For __female__ name it is __`r top10_F[1, 1]`__. 
+* For __male__ names __`r top10_M[1, 1]`__.
+
+For a little more information, here is the Table of Top 10 rankings, left to right, irrespective of gender, 
+female-given names, male-given names.
+```{r q1-print_rankings_table, echo = FALSE}
+print(top10_all, print.gap = 5)
+```
+
+
+<hr class="thin_separator">
+<a name="question3"></a>
+
+## Question #3
+
+```{r q3-most_ambiguous_names-prepare_data, echo = FALSE}
+# Preparing the relevant data frames
+c2013 <- intersect_MF_names_1year(data = df, select_year = 2013)$common
+c1945 <- intersect_MF_names_1year(data = df, select_year = 1945)$common
+
+# how many rows to show
+N_show <- 5
+
+# accepted ratio, and corresponding normalized difference.
+r_threshold <- 0.8
+rn <- abs((r_threshold - 1)/(r_threshold + 1))
+```
+
+### [A] What is the most gender ambiguous name in 2013?    
+
+First, how many names were used for both female and male babies in 2013?    
+__`r nrow(c2013)`__, a relatively small fraction of the set of __`r nrow(bisex_names)`__ names that
+"historically" have been used for both females and males.
+
+With the data ready, we can answer the question in a few different ways.
+
+#### _Approach 1_
+
+One option would be to select names for which the counts for female and male are identical, $\Delta=0$, 
+and among these pick the name with the highest count. 
+This approach penalizes popular names given the increasingly smaller likelihood that the number 
+of occurrences in females and males match.  
+```{r q3-most_ambiguous_2013-method1, echo = FALSE}
+# diff = 0, sorted by total number
+top2013a <- filter(c2013, diff == 0) %>% arrange(desc(N_tot)) %>% as.data.frame(.) %>% head( . , N_show)
+kable(top2013a, row.names = TRUE)
+```
+
+#### _Approach 2_
+
+To mitigate this effect, on account of the fact that we would like to pick a name that is in some way 
+popular, we could normalize the difference in male-female counts by the total counts (equivalent to
+using the $\min(F/M, M/F)$). 
+Names with a $\Delta=0$ would still come up at the top, hence we exclude them in this case, pending
+a check of whether or not they would have ranked higher than the top name resulting from this second method.
+```{r q3-most_ambiguous_2013-method2a, echo = FALSE}
+# diff > 0, sorted by normalized difference
+top2013a <- filter(c2013, diff > 0) %>% arrange(diff_norm) %>% as.data.frame(.) %>% head( . , N_show)
+kable(top2013a, row.names = TRUE)
+```
+
+```{r q3-most_ambiguous_2013-method2b, echo = FALSE, eval = FALSE}
+# diff > 0, sorted by how close the F/M ratio is to 1
+top2013b <- filter(c2013, diff > 0) %>% arrange(abs(ratio-1)) %>% as.data.frame(.) %>% head( . , N_show)
+kable(top2013b, row.names = TRUE)
+```
+
+#### __Approach 3__
+
+To open up more the "name space" towards generally more common, hence more interesting, names we
+need allow for a range in the normalized difference or equivalently the count ratio.   
+If we include names with $min(F/M, M/F) > `r r_threshold`$, we get this new list:
+
+```{r q3-most_ambiguous_2013-method3, echo = FALSE}
+top2013 <- filter(c2013, diff_norm <= rn) %>% arrange(desc(N_tot)) %>% as.data.frame(.) %>% head( . , N_show)
+kable(top2013, row.names = TRUE)
+
+```
+
+This plot summarizes the analysis.
+
+* The green dashed diagonal lines mark the region allowed by $min(F/M, M/F) > `r r_threshold`$.
+* The green diamonds mark the top-5 most ambiguous names according to _Approach 3_, also labeled with the corresponding names.
+* The blue diamonds mark the top-5 names with a count difference strictly equal to zero (_approach 1_).
+```{r q3-most_ambiguous_2013-method3-plot, echo = FALSE, fig.width = 6.0, fig.height = 6.0}
+single_panel_mar <- c(3, 3, 2, 2)
+single_panel_oma <- c(0 ,0, 2, 0)
+gr_par <- list( mar = single_panel_mar, oma = single_panel_oma, 
+                cex = 1.2, cex.axis = 1.0, cex.lab = 1.2, cex.main = 1.0,
+                las = 0, mgp = c(1.75, 0.5, 0),
+                tcl = 0.3)
+par(gr_par)
+lab_x <- top2013[, "N_female"]
+lab_y <- top2013[, "N_male"]
+lab_s <- top2013[, "Name"]
+lab_pos <- rep(c(4, 2), length.out = N_show)
+
+x  <- seq(5, 30000, by = 100)
+y1 <- (1 - rn)/(1 + rn)*x
+y2 <- (1 + rn)/(1 - rn)*x
+
+plot(c2013$N_female, c2013$N_male, log = "xy", 
+     xlim = c(4, 20000), ylim = c(4, 20000), asp = 1,
+     pch = 21, col = "orangered2", bg = rgb(0.8, 0.3, 0, 0.3),
+     xlab = "N female",
+     ylab = "N male",
+     main = "Male/Female Counts of Ambiguous Names (2013)")
+points(c2013$N_female[c2013$diff_norm <= abs(rn)], c2013$N_male[c2013$diff_norm <= abs(rn)], pch = 23, col = "darkgreen", bg = rgb(0, 0.9, 0, 0.3))
+points(c2013$N_female[c2013$diff == 0], c2013$N_male[c2013$diff == 0], pch = 23, col = "blue2", bg = rgb(0, 0, 0.9, 0.3))
+lines(x, y1, lty = 4, lwd = 1.5, col = "forestgreen")
+lines(x, y2, lty = 4, lwd = 1.5, col = "forestgreen")
+grid()
+text(lab_x, lab_y, labels = lab_s, pos = lab_pos, cex = 0.9, adj = c(NA, 0))
+```
+
+
+### [B] In 1945?
+
+We skip the two less smart approaches and show directly the results from _Approach 3_, with table and figure.    
+The total number of bisex names for 1945 is __`r nrow(c1945)`__.
+
+```{r q3-most_ambiguous_1945-method3_v2, echo = FALSE}
+top1945 <- filter(c1945, diff_norm <= rn) %>% arrange(desc(N_tot)) %>% as.data.frame(.) %>% head( . , N_show)
+kable(top1945, row.names = TRUE)
+```
+
+```{r q3-most_ambiguous_1945-method3-plot, echo = FALSE, fig.width = 6.0, fig.height = 6.0}
+par(gr_par)
+lab_x <- top1945[, "N_female"]
+lab_y <- top1945[, "N_male"]
+lab_s <- top1945[, "Name"]
+
+plot(c1945$N_female, c1945$N_male, log = "xy", 
+     xlim = c(4, 20000), ylim = c(4, 20000), asp = 1,
+     pch = 21, col = "orangered2", bg = rgb(0.8, 0.3, 0, 0.3),
+     xlab = "N female",
+     ylab = "N male",
+     main = "Male/Female Counts of Ambiguous Names (1945)")
+points(c1945$N_female[c1945$diff_norm <= abs(rn)], c1945$N_male[c1945$diff_norm <= abs(rn)], pch = 23, col = "darkgreen", bg = rgb(0, 0.9, 0, 0.3))
+points(c1945$N_female[c1945$diff == 0], c1945$N_male[c1945$diff == 0], pch = 23, col = "blue2", bg = rgb(0, 0, 0.9, 0.3))
+lines(x, y1, lty = 4, lwd = 1.5, col = "forestgreen")
+lines(x, y2, lty = 4, lwd = 1.5, col = "forestgreen")
+grid()
+text(lab_x, lab_y, labels = lab_s, pos = lab_pos, cex = 0.9, adj = c(NA, 0))
+```
+
+
+<hr class="thin_separator">
+<a name="question4"></a>
+
+## Question #4
+
+```{r q4-largest_changes-prepare_data, echo = FALSE}
+all1980 <- filter(df, year == 1980) %>% mutate(nameg = paste0(name, "_", gender)) %>% 
+                                        group_by(nameg) %>% 
+                                        summarize(n1980 = sum(count))
+
+all2013 <- filter(df, year == 2013) %>% mutate(nameg = paste0(name, "_", gender)) %>% 
+                                        group_by(nameg) %>% 
+                                        summarize(n2013 = sum(count))
+
+#---------
+inboth_namesG <- inner_join(all1980, all2013, by = "nameg") %>% mutate(ntot = n1980 + n2013, 
+                                                                       change_pct = 100*(n2013 - n1980)/n1980,
+                                                                       rev_pct = 100*(n1980 - n2013)/n2013,
+                                                                       gender = str_sub(nameg, start = -1),
+                                                                       name = str_replace(nameg, "_[FM]", "")) 
+inboth_names <- inboth_namesG[, c(8, 7, 2:6)]
+rm(inboth_namesG)
+
+#---------
+in2013_not1980 <- anti_join(all2013, all1980, by = "nameg") %>% mutate(change_if_1 = 100*(n2013 - 1),
+                                                                       gender = str_sub(nameg, start = -1),
+                                                                       name = str_replace(nameg, "_[FM]", ""))
+in1980_not2013 <- anti_join(all1980, all2013, by = "nameg") %>% mutate(rev_change_if_1 = 100*(n1980 - 1),
+                                                                       gender = str_sub(nameg, start = -1),
+                                                                       name = str_replace(nameg, "_[FM]", ""))
+in2013_not1980 <- in2013_not1980[, c(5, 4, 2, 3)]
+in1980_not2013 <- in1980_not2013[, c(5, 4, 2, 3)]
+#---------
+max_increase <- max(inboth_names$change_pct)
+max_rev_decrease <- max(inboth_names$rev_pct)
+
+# how many names to show
+N_show <- 5
+```
+
+```{r q4-largest_change-prepare_data-exclusive_and_common_names, echo = FALSE}
+names_in_both   <-  (all1980$nameg %in% all2013$nameg)
+names_only_1980 <- !(all1980$nameg %in% all2013$nameg)
+names_only_2013 <- !(all2013$nameg %in% all1980$nameg)
+```
+
+For this question we aggregate all the data nationally, summing all occurrences of each name over all states.
+However, we want to keep track separately of the female and male counts for bisex names,
+and for simplicity we append a `_F` or `_M` to the name itself for the instances where it is used
+for female or male.
+
+After aggregation, the 1980 and 2013 data sets comprise __`r nrow(all1980)`__ and __`r nrow(all2013)`__ 
+names, respectively, of which __`r nrow(inboth_names)`__ are in common.
+
+### [A] Of the names represented in the data, find the name that has had the largest __percentage increase__ in popularity since 1980.
+
+Taking the straightforward approach of defining percentage increase as the ratio between
+the difference 2013 and 1980 counts over the 1980 counts, _i.e._ $(n_{2013} - n_{1980})/n_{1980}$, 
+these are the names whose adoption increased the most between those two reference years:
+
+```{r q4-largest_increase_table, echo = FALSE}
+tab4a <- arrange(inboth_names, desc(change_pct)) %>% dplyr::select( . , -ntot, -rev_pct) 
+kable(head(tab4a, N_show), row.names = TRUE, digits = 0)
+
+frac_up_F_20 <- sum(head(tab4a, 20)$gender == "F")/20
+frac_up_F_50 <- sum(head(tab4a, 50)$gender == "F")/50
+```
+
+
+The majority of them barely made into the 1980 dataset because they total count is 5, meaning
+that they entered this data set only in one state for that year (there are `r nrow(subset(inboth_names, n1980 == 5))`
+names with a count of only 5 in 1980 for the _1980-2013 common data set_, `r nrow(subset(inboth_names, n2013 == 5))` in 2013).
+
+### [B] Largest __decrease__?
+
+For the largest decrease we do the same calculation and obtain the `r N_show` _worst performers_ shown
+in the following table. 
+To allow a more direct comparison with the changes reported for the increases, we added to this table
+a column with the percentage change computed with 2013 as baseline ("rev_pct").
+
+```{r q4-largest_decrease_table, echo = FALSE}
+tab4b <- arrange(inboth_names, change_pct) %>% dplyr::select( . , -ntot)
+digits_vec <- rep(0, ncol(tab4b)) 
+digits_vec[which(colnames(tab4b)=="change_pct")] <- 2
+kable(head(tab4b, N_show), row.names = TRUE, digits = digits_vec)
+
+frac_down_F_20 <- sum(head(tab4b, 20)$gender == "F")/20
+frac_down_F_50 <- sum(head(tab4b, 50)$gender == "F")/50
+```
+
+Again, not surprisingly, several of the _most forgotten names_ show up right at
+the minimum possible number of occurrences to enter the data set.
+
+__NOTE on gender and dramatic changes__: it is interesting, though at this level little more
+than anedoctal, that the majority of the names that exhibit the most dramatic changes are
+female names: they comprise __`r round(100*frac_up_F_20, 1)`%__ of the 20 largest (measurable)
+increases and __`r round(100*frac_down_F_20, 1)`%__ of the 20 largest (measurable) decrease
+(__`r round(100*frac_up_F_50, 1)`%__  and __`r round(100*frac_down_F_50, 1)`%__ of the top 50
+increase/decreases).
+
+
+
+<hr class="thin_separator">
+<a name="question5"></a>
+
+## Question #5
+
+### Can you identify names that may have had an even larger increase or decrease in popularity?
+
+There may be names that enjoyed (suffered) an even larger increase (decrease) in popularity
+in the 2-point comparison between 1980 and 2013 and not appear in the preceding analyses
+because they were below threshold for inclusion in the data set in either 1980 or 2013.
+
+* Names present in 2013 but not in 1980 could have in principle jumped up more than the
+`r round(tab4a$change_pct[1], 1)`% of `r tab4a$name[1]`.
+The largest increase one of these names could have experienced is if they started with a 
+count of 1 in 1980.   
+Of course, in principle some of the names recorded only in 2013 could truly not have "existed"
+in 1980, thus earning an "infinite" increase.
+However, we can quite handle properly the possibility that a 2013 name was not actually given to
+anybody in 1980 because we are blind to what "happened" below the 5-count threshold. 
+Therefore we restrict our estimate to the scenario whereby we assign to every name a 
+count equal to 1 for the epochs for which it is not present.
+
+* Viceversa, names present in 1980 but not in 2013, could have dropped more than 
+`r round(tab4b$rev_pct[1], 1)`% of `r tab4b$name[1]` and gone under threshold.
+
+
+Assigning, as noted, a _count = 1_ for 1980 to names existing in 2013 and not in 1980, we
+compute their hypothetical percentage increase from 1 to their actual 2013 count.
+
+
+```{r q5-max_potential_increase, echo = FALSE}
+tab5a <- filter(in2013_not1980, change_if_1 > max_increase) %>% arrange(desc(change_if_1))
+
+kable(head(tab5a, N_show), row.names = TRUE, digits = 2)
+```
+
+
+```{r q5-max_potential_decrease, echo = FALSE}
+tab5b <- filter(in1980_not2013, rev_change_if_1 > max_rev_decrease) %>% arrange(desc(rev_change_if_1))
+
+kable(head(tab5b, N_show), row.names = TRUE, digits = 0)
+```
+
+__NOTE:__ if we wanted to _split hairs_ and be excruciatingly obsessive in estimating the largest 
+potential increase, we could add to the total count for a name a "free $+4$ contribution" for any
+state for which it does not appear in the data.  That would be the maximum extra number of
+occurrences not accounted for.
+Viceversa for pushing the estimate for largest decrease we could add $4$ free counts for each
+state where a name does not appear in 1980.    
+With a little _R_ magic it would not be difficult but it is beyond the scope of this report.
+Moreover, considering that in the most extreme scenario of a name appearing for only one state, 
+this would add $200$ counts, it looks like it would not change substantially the rankings
+presented above.
+
+
+
+
+<hr class="thin_separator">
+<a name="OTHER_BITs"></a>
+
+# OTHER BITS OF ANALYSIS
+
+This dataset is extremely interesting and could the source of endless stimulating exploration,
+but I will have to leave that for another time.
+In the remainder of this report I will present some basic plots I have made as I was playing
+with the data. 
+
+First a few terse thoughts about ideas that crossed my mind while working with these data, not 
+much more than bullet points at this stage, and not a particularly deeply thought-through order:
+
+* Understanding the effect of the $n \ge 5$ cutoff.
+    * Get comprehensive aggregate birth data by state.
+
+* Clustering of States (also over time Time)
+    * Each state represented as a vector of names (kind of like a _Document Term Matrix_).
+    * Cluster them in space and time.
+    * Are there pattern developing over time, _e.g._ correlations between states with a time delay (waves?).
+* Anything related to immigration, "injection" of new names, perhaps spreading?
+* There is certainly an ethnicity factor in naming traditions, and so I would expect some effect
+  to transpire from the data.
+* I would guess that socio-economic factors might have some relationship with given names.
+    * Census data could be combined with this data set.
+
+* Number of new names year (decade) after year (decade)
+* Find names that:
+    * disappeared.
+    * popped up of nowhere.
+    * peaked.
+* Sociological/cultural influences on popular names?
+
+* A lot of analysis would lend itself to interesting visualization, over time and space (maps).
+    * A _ShinyApp_?
+
+* About name count distributions (see plots below for some hints of the background of these points).
+    * Interpretation of the systematic changes of slope, mostly for female names, getting steeper
+      over time.
+    * Interpretation of the difference between the distributions of female and male names.
+      The distribution of female names declines more rapidly and it seems to have an actual "roll over"
+      at high counts, sort of like an exponential cutoff.
+    * Is there really a bump in many cases (state/year) between the power law part and the steep drop,
+      something like a "knee"?
+      Flipping through sequences of distributions it would seem to be a real feature, and only
+      present in the male names (see for instance in the plots included later, the blue points, 
+      for CO, SC, TN, maybe TX too).
+
+
+<hr class="thin_separator">
+<a name="basictrends"></a>
+
+## SOME BASIC TRENDS BY YEAR AND GENDER
+
+```{r other-prepare_data_by_year_by_gender, cache = TRUE, echo = FALSE}
+by_year_by_gender <- group_by(df, year, gender) %>% summarize(n = n(), 
+                                                              tot_count = sum(count/1000), 
+                                                              n_dist = n_distinct(name),
+                                                              ratio1 = tot_count / n_dist, 
+                                                              ratio2 = n_dist / tot_count)
+
+```
+
+### Number of Distinct Names vs. Time
+
+Right after WW2, or so it seems, female names' variety started to grow while the used pool of male
+names remained fairly stable until the end of the 1960's.  
+After that point male names have expanded but it does not look like the can catch up.
+Please note that the Y-axis scale is logarithmic, hence constant spacing means constant
+ratio (instead of constant difference). 
+
+```{r other-plot_number_of_distinct_names, fig.width = 7, fig.height = 5, echo = FALSE}
+colors_FM <- c("pink2", "dodgerblue2")
+
+ggplot(by_year_by_gender, aes(x = year, y = n_dist)) + theme_bw() + 
+            theme(legend.position = c(0.15, 0.85),
+                axis.title = element_text(size = 14),
+                axis.text= element_text(size = 12),
+                axis.line = element_line(size = 1)
+                ) +
+       scale_color_manual(values = colors_FM) + 
+       scale_fill_manual(values = colors_FM) + 
+       scale_y_log10(breaks = c(1000, 2000, 4000)) + 
+       # scale_y_log10(breaks = c(500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 8000)) + 
+       labs(title = "Number of Distinct Names") + 
+       ylab("Count") +
+       geom_line(aes(color = gender), size = 1.2) + 
+       geom_point(aes(fill = gender), alpha = 0.75, pch = 21, size = 3) 
+```
+
+### Total Counts vs. Time
+
+Total number of births as counted from this dataset.
+These would be the figures to compare with accurate data about birthrates, to investigate
+the effect of the low-count threshold for inclusion in the data.
+
+The fact that the total counts for female and male births are systematically offset
+from each other by an amount that would seem hard to explain with natural causes,
+may be related to the presence of the threshold.   The count distributions for female
+names are steeper than those for males, quite systematically independently of the state
+and by a larger degree in more recent decades.
+Steeper power law distributions, if they continue to lower counts below the threshold
+would resuls in a larger loss of data for female names and male names.
+This in turn would bias the cumulative counts by gender.
+
+```{r other-plot_total_counts, fig.width = 7, fig.height = 5, echo = FALSE}
+ggplot(by_year_by_gender, aes(x = year, y = tot_count)) + theme_bw() + 
+       theme(legend.position = c(0.15, 0.85),
+           axis.title = element_text(size = 14),
+           axis.text= element_text(size = 12),
+           axis.line = element_line(size = 1)
+           ) +
+       scale_color_manual(values = colors_FM) + 
+       scale_fill_manual(values = colors_FM) + 
+       scale_y_log10(breaks = 100*2**(1:7)) +
+       coord_cartesian(ylim = c(300, 3000)) +
+       # scale_y_log10(breaks = c(1000, 2000, 4000)) + 
+       labs(title = "Total count (~ total number of births?)") +
+       ylab("Count (thousands)") +
+       geom_line(aes(color = gender), size = 1.2) + 
+       geom_point(aes(fill = gender), alpha = 0.75, pch = 21, size = 3) 
+```
+
+
+### Names _Coverage_
+
+How far do popular names stretch?   
+How many distinct names are necessary to cover a given fraction of the new babies?
+
+The curves in the following figure shows the fraction of the distinct names needed to cumulatively
+cover 90, 95, 99% of the new babies, as a function of time.
+The lines were largely flat or even decreasing until the 1950's, when the highest percentile line
+started a long term upward trend.
+All percentiles unambiguously started an increasing trend at the beginning of the 1990's.
+
+At first glance I don't see a reason why this trend could caused by population growth given
+that these lines represent the fraction of names given in a year, a relative measure.
+If population growth leads to the more names, as perhaps suggested by one of the previous figures, 
+this by itself as a mass effect would not automatically cause a shift in the percentile lines.
+
+My impression is that the trends reflect an increasing spreading of the tails of the distribution,
+with their cores able to account a decreasing portion of the population.
+
+The spreading could be due to _increased creativity_, less 
+
+
+```{r coverage, cache = TRUE, echo = FALSE}
+by_year_coverage <- group_by(df, year, name) %>% summarize(tot_count = sum(count)) %>% arrange(year, desc(tot_count))
+by_year_coverage <- group_by(df, year, name) %>% summarize(tot_count = sum(count)) %>% arrange(year, desc(tot_count)) %>% mutate()
+```
+
+```{r some_aggregation, cache = TRUE, echo = FALSE}
+for_coverage2a <- group_by(df, year, name) %>% summarize(tot_count = sum(count)) %>% arrange(year, desc(tot_count)) %>% 
+                                               summarise(fn90 = get_coverage(tot_count, 90)$Fcov,
+                                                         fn95 = get_coverage(tot_count, 95)$Fcov,
+                                                         fn99 = get_coverage(tot_count, 99)$Fcov)
+
+for_coverage2 <- gather(for_coverage2a, cutoff, fcov, fn90, fn95, fn99, -year)
+```
+
+```{r other-plot_names_coverage_v2, fig.width = 7, fig.height = 5.5, echo = FALSE}
+cols <- c("red2", "blue2", "orange")
+ggplot(for_coverage2, aes(x = year, y = fcov)) + theme_bw() + 
+            theme(legend.position = c(0.2, 0.85),
+                  axis.title = element_text(size = 14),
+                  axis.text= element_text(size = 12),
+                  axis.line = element_line(size = 1)
+                  ) +
+            scale_color_manual(values = cols) + 
+            scale_fill_manual(values = cols) + 
+            coord_cartesian(ylim = c(0.0, 0.8)) +
+            labs(title = "Fraction of Names Needed to Cover Given Fraction of Newborn)") + 
+            geom_line(aes(color = cutoff), size = 1.2) + 
+            geom_point(aes(fill = cutoff), alpha = 0.75, pch = 21, size = 3) 
+```
+
+<hr class="thin_separator">
+<a name="counts"></a>
+
+## COUNT DISTRIBUTIONS BY STATE, TIME, AND GENDER
+
+I already shared some thoughts about the count distributions, and here I would like to focus
+on the results of fitting them with power laws, allowing for the effect of gender.
+
+### Examples 
+
+First a few more examples of the count distributions.
+They are all for the period 2009-2013, for eight states in different regions and of different size.
+In all of them the female name counts distributions are steeper than the male's.
+Because broadly speaking their total integral should be approximately similar, their different
+slopes mean that they will cross-over, and so there are many more names with high-count among
+male names, and many more names with low-count among female names.
+
+We noted above that the steeper slope of the female names distribution combined with the low-count
+threshold may have something to do with the offset between total number of female and male births
+counted from these data.
+
+In a few of these plots there is a hint of a possible "knee" in the distribution of male names,
+between the power law part (left / lower counts side).
+
+```{r other-plot_power_law_distribution_examples, fig.width = 7, fig.height = 10, echo = FALSE}
+par(fig = c(0, 1, 0, 1), mar = c(5, 4, 4, 1)+0.1, cex.axis = 1.0)
+single_panel_mar <- c(2, 2, 2, 1)
+single_panel_oma <- c(0 ,0, 2, 0)
+gr_par <- list( mar = single_panel_mar, oma = single_panel_oma, 
+                cex = 1.0, cex.axis = 0.8, cex.lab = 1.0, 
+                las = 0, mgp = c(1.0, 0.0, 0),
+                tcl = 0.3)
+
+par(gr_par)
+
+mat.layout <- matrix(1:8, nrow = 4, byrow = TRUE)
+layout(mat.layout)
+
+plot_hist_state_year_with_fit(data = df, STATE = "AZ", YEAR = 2009:2013, subset = quote(y > log10(25)))
+plot_hist_state_year_with_fit(data = df, STATE = "CA", YEAR = 2009:2013, subset = quote(y > log10(25)))
+plot_hist_state_year_with_fit(data = df, STATE = "CO", YEAR = 2009:2013, subset = quote(y > log10(25)))
+plot_hist_state_year_with_fit(data = df, STATE = "DE", YEAR = 2009:2013, subset = quote(y > log10(25)))
+plot_hist_state_year_with_fit(data = df, STATE = "OK", YEAR = 2009:2013, subset = quote(y > log10(25)))
+plot_hist_state_year_with_fit(data = df, STATE = "SC", YEAR = 2009:2013, subset = quote(y > log10(25)))
+plot_hist_state_year_with_fit(data = df, STATE = "TN", YEAR = 2009:2013, subset = quote(y > log10(25)))
+plot_hist_state_year_with_fit(data = df, STATE = "TX", YEAR = 2009:2013, subset = quote(y > log10(25)))
+
+par(fig = c(0, 1, 0, 1), mar = c(5, 4, 4, 1)+0.1, cex.axis = 1.0)
+title("Distributions", cex.main = 1.25, outer = TRUE)
+```
+
+
+### Summary Plots of _Power Law_ Fits
+
+We split the data by state, decade and gender, binned them up and fit a linear regression model
+(`lm()`) to each name count distribution.  Please note that the "decades" are actually partially
+overlapping, in the sense that we used a 10-year wide sliding window, moving it in steps of 5 years.
+So, consecutive data/models are not fully independent as they overlap for half of the time intervals.
+
+The next three plots show the values of the slope of the female names distributions, the slope 
+of the male names distributions and they difference.
+Points for each state are connected over time.   
+The thick long-dashed grey line connects the mean values at each time value. 
+
+The main observations from these figures are that:
+
+* The power law slope for the distributions of female names has been steadily decreasing
+since the 1960's, shifting from about $-0.75$ to $-1.1$.
+* The slope of the male names has remained pretty stable at around $-0.75$
+* Looking at the means, we can appreciate that the slope for female names 
+has been steeper than that of male names since the 1960's.
+* This is illustrate more directly in the third figure, plotting the difference of the two slopes.
+It has been increasing for almost a century.
+
+
+```{r other-prepare_data-power_law_fits, cache = TRUE, echo = FALSE, eval = FALSE}
+powerlaw_fits <- prepare_powerlaw_fits_data_frame(data = df)
+```
+
+```{r other-prepare_data-load_saved_power_law_fits, cache = TRUE, echo = FALSE}
+powerlaw_fits <- readRDS("my_data/powerlaw_fits.RDS")
+```
+
+```{r other-plot-power_law_fits_slope_F, fig.width = 7, fig.height = 7, echo = FALSE}
+ggplot(powerlaw_fits, aes(x = Time, y = slopeF, color = State)) + theme_bw() + 
+        theme(legend.position = "top", legend.title = element_blank()) +
+        guides(col = guide_legend(nrow = 4, byrow = TRUE)) + 
+        ylim(-2.2, -0.3) +
+        geom_line(aes(group = State)) + 
+        geom_point() +
+        stat_summary(fun.y = "mean", geom = "line", aes(group=1), size = 2.0, lty = 5) +
+        labs(title = "Slope of Power Law Fit to Female Names Count Distributions")
+```
+
+```{r other-plot-power_law_fits_slope_M, fig.width = 7, fig.height = 7, echo = FALSE}
+ggplot(powerlaw_fits, aes(x = Time, y = slopeM, color = factor(State))) + theme_bw() + 
+        theme(legend.position = "top", legend.title = element_blank()) +
+        guides(col = guide_legend(nrow = 4, byrow = TRUE)) + 
+        ylim(-2.2, -0.3) +
+        geom_line(aes(group = State)) + 
+        geom_point() +
+        stat_summary(fun.y = "mean", geom = "line", aes(group=1), size = 2.0, lty = 5) +
+        labs(title = "Slope of Power Law Fit to Male Names Count Distributions")
+```
+
+```{r other-plot-power_law_fits_slope_delta, fig.width = 7, fig.height = 7, echo = FALSE}
+ggplot(powerlaw_fits, aes(x = Time, y = slopeM-slopeF, color = factor(State))) + theme_bw() + 
+        theme(legend.position = "top", legend.title = element_blank()) +
+        guides(col = guide_legend(nrow = 4, byrow = TRUE)) + 
+        ylim(-0.3, 0.9) +
+        geom_line(aes(group = State)) + 
+        geom_point() + 
+        stat_summary(fun.y = "mean", geom = "line", aes(group=1), size = 2.0, lty = 5) +
+        geom_abline(slope = 0, lty = 2, col = "grey40", size = 1) +
+        labs(title = "Difference b/w Male and Female Power Law Slopes")
+```
+
+
+
+<hr class="thin_separator">
+<a name="SessionInfo"></a>
+
+## R Session Info
+
+```{r R_session_info}
+sessionInfo()
+```
+
+<hr class="separator">
+
+
