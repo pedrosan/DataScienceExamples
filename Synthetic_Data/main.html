@@ -1,0 +1,1437 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="author" content="Giovanni Fossati" />
+
+
+<title>Data Challenge on Synthetic Data Set</title>
+
+<script src="main_files/jquery-1.11.0/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="main_files/bootstrap-3.3.1/css/cerulean.min.css" rel="stylesheet" />
+<script src="main_files/bootstrap-3.3.1/js/bootstrap.min.js"></script>
+<script src="main_files/bootstrap-3.3.1/shim/html5shiv.min.js"></script>
+<script src="main_files/bootstrap-3.3.1/shim/respond.min.js"></script>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; background-color: #f8f8f8; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+pre, code { background-color: #f8f8f8; }
+code > span.kw { color: #204a87; font-weight: bold; }
+code > span.dt { color: #204a87; }
+code > span.dv { color: #0000cf; }
+code > span.bn { color: #0000cf; }
+code > span.fl { color: #0000cf; }
+code > span.ch { color: #4e9a06; }
+code > span.st { color: #4e9a06; }
+code > span.co { color: #8f5902; font-style: italic; }
+code > span.ot { color: #8f5902; }
+code > span.al { color: #ef2929; }
+code > span.fu { color: #000000; }
+code > span.er { font-weight: bold; }
+</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<link rel="stylesheet" href="css/gf_small_touches.css" type="text/css" />
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img { 
+  max-width:100%; 
+  height: auto; 
+}
+</style>
+<div class="container-fluid main-container">
+
+
+<div id="header">
+<h1 class="title">Data Challenge on Synthetic Data Set</h1>
+<h4 class="author"><em>Giovanni Fossati</em></h4>
+</div>
+
+
+<hr />
+<div id="summary" class="section level1">
+<h1>SUMMARY</h1>
+<p>I report on the analysis and modeling of the provided dataset. Before focusing on model building, we had to tackle the issue of missing data, which, while not being in aggregate a large fraction of the data set, are distributed in such a way that ignoring incomplete observations was not an option.</p>
+<p>Based on a quick review of the data, we made the assumption that the data were missing completely at random, and so we deemed it acceptable to adopt a simple approach for imputing them, mostly based on random sampling from the existing data for each variable.</p>
+<p>The model we adopted in the end is <em>Multivariate Adaptive Regression Splines</em> (MARS). It offers an attractive combination of light computational “cost”, flexibility, built-in variable selection, interpretatibility, and on the <em>Training</em> data set it gave good results (fitting included <em>cross validation</em>). On the <em>Training</em> data sets these models yield <span class="math">\(MSE \simeq 2.4\)</span> and <span class="math">\(R^2 \simeq 0.91\)</span>.</p>
+<p>We computed predictions of best-fit models on four different imputed <em>Training</em> data, on each of four different imputed <em>Testing</em> data sets, and then averaged their predictions to obtain our prediction for submission.</p>
+<p>One reason of concern is that the statistical properties of the data seem to slightly differ between the <em>Training</em> and the <em>Testing</em> data sets.<br />On the other hand, considering that the model is using only about a dozen variables, it is possible that its performance may not be so seriously affected by this apparent difference.</p>
+<div id="note-on-the-report-reproducible-format" class="section level3">
+<h3>Note on the Report <em>Reproducible</em> Format</h3>
+<p>This report is generated from a <em>Rmarkdown</em> document which includes all code to perform data processing, modeling, plotting, etc. (except for functions defined in external scripts, included in the archive). However, for readability only a few bits of code are <em>echoed</em> explicitly in the compiled document. The full straight reproducibility is only limited by the fact that in the interest of simplicity and for computational convenience some parts of the processing have been flagged as <em>inactive</em> (<code>eval = FALSE</code>), and in its current form some data are instead loaded from previously saved work, namely the model fitting. That said, the document includes the code to perform the entire analysis, and a few changes would allow to do so by compiling it.</p>
+</div>
+<div id="report-outline" class="section level3">
+<h3>Report Outline</h3>
+<ul>
+<li><a href="#data_loading">DATA LOADING AND SET UP</a></li>
+<li><a href="#EDA">EXPLORATORY ANALYSIS</a>
+<ul>
+<li><a href="#missing_data">Missing Data</a></li>
+<li><a href="#summary_numeric">Summary of Numeric Variables</a></li>
+<li><a href="#summary_non_numeric">Summary of Non-Numeric Variables</a></li>
+<li><a href="#target_variable">The <em>target</em> Variable</a></li>
+</ul></li>
+<li><a href="#IMPUTATION">DATA IMPUTATION</a></li>
+<li><a href="#MODELING">MODELING</a>
+<ul>
+<li><a href="#linear_regression">Linear Regression</a></li>
+<li><a href="#MARS"><em>Multivariate Adaptive Regression Splines</em> (MARS)</a></li>
+<li><a href="#Predictions">Predicting the <em>Testing</em> Data Set</a></li>
+</ul></li>
+<li><p><a href="#FINAL_THOUGHTS">FINAL THOUGHTS</a></p></li>
+<li><a href="#APPENDIX">APPENDIX</a>
+<ul>
+<li><a href="#Appendix_NA">Statistics of <code>NA</code></a></li>
+<li><a href="#Appendix_LM">Linear Regression Model Summary (Fit #4)</a></li>
+<li><a href="#Appendix_MARS">MARS Models Summary</a></li>
+<li><a href="#SessionInfo">R Session Info</a></li>
+</ul></li>
+</ul>
+<hr class="thin_separator">
+<p><a name="data_loading"></a></p>
+</div>
+</div>
+<div id="data-loading-and-set-up" class="section level1">
+<h1>DATA LOADING AND SET UP</h1>
+<pre class="sourceCode r"><code class="sourceCode r">train &lt;-<span class="st"> </span><span class="kw">read.delim</span>(<span class="dt">file =</span> <span class="st">&quot;data/codetest_train.txt.gz&quot;</span>, <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
+test  &lt;-<span class="st"> </span><span class="kw">read.delim</span>(<span class="dt">file =</span> <span class="st">&quot;data/codetest_test.txt.gz&quot;</span>, <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)</code></pre>
+<p>Beside the <code>target</code> variable that is <em>numeric</em>, the data sets comprise <strong>254</strong> variables, with the following breakdown by type:</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">table</span>(<span class="kw">sapply</span>(train[, -<span class="dv">1</span>], class))
+<span class="co"># </span>
+<span class="co"># character   numeric </span>
+<span class="co">#         4       250</span></code></pre>
+<p>The non-numeric variables are: <strong><code>f_61, f_121, f_215, f_237</code></strong>. They are all of of <em>character</em> type and look like <em>bona fide</em> factor variables, non-ordered.<br />I will refer to them as factors or character variables interchangeably.</p>
+<p>For convenience of processing I defined flags for character/non-character variables and vectors of indices to be able to directly select them when necessary to handle numeric and character variables separately.</p>
+<pre class="sourceCode r"><code class="sourceCode r">flag_factor_cols &lt;-<span class="st"> </span><span class="kw">sapply</span>(train[, -<span class="dv">1</span>], is.character)
+idx_factors &lt;-<span class="st"> </span>(<span class="dv">2</span>:<span class="kw">ncol</span>(train))[flag_factor_cols]
+idx_numeric &lt;-<span class="st"> </span>(<span class="dv">2</span>:<span class="kw">ncol</span>(train))[!flag_factor_cols]
+factor_cols_names &lt;-<span class="st"> </span><span class="kw">colnames</span>(train)[idx_factors]</code></pre>
+<div id="fixing-empty-strings-as-na-in-the-character-variables" class="section level4">
+<h4>Fixing Empty Strings as <code>NA</code> in the Character Variables</h4>
+<p>Missing data in character variables are not directly translated into <code>NA</code> but treated simply as empty strings.<br />Assuming that they are in fact missing data, we need to change them to be proper NAs.</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Training set</span>
+for( s in factor_cols_names) { train[train[, s] ==<span class="st"> &quot;&quot;</span>, s] &lt;-<span class="st"> </span><span class="ot">NA</span> }
+
+<span class="co"># Testing set</span>
+for( s in factor_cols_names) { test[test[, s] ==<span class="st"> &quot;&quot;</span>, s] &lt;-<span class="st"> </span><span class="ot">NA</span> }</code></pre>
+<hr class="separator">
+<p><a name="EDA"></a></p>
+</div>
+</div>
+<div id="exploratory-analysis" class="section level1">
+<h1>EXPLORATORY ANALYSIS</h1>
+<p><a name="missing_data"></a></p>
+<div id="missing-data" class="section level2">
+<h2>Missing Data</h2>
+<p>First step is to review how missing data are distributed in the data set, starting with how many they are.<br /><strong>NOTE</strong>: tables showing these statistics in more detail are included in the <a href="#APPENDIX">APPENDIX</a>.</p>
+<div id="training-data-set" class="section level3">
+<h3><em>Training</em> Data Set</h3>
+<ul>
+<li><p>In the <em>Training</em> set there are <strong>overall</strong> <strong>25207</strong> <code>NA</code>, out of <strong><span class="math">\(1.27\times 10^{6}\)</span></strong> data points, <em>i.e.</em> about <strong>1.98%</strong> of the total data.</p></li>
+<li><strong>Summary by Columns (i.e. Variables)</strong>:
+<ul>
+<li>There are <strong>0</strong> variables without <code>NA</code>.</li>
+<li>On average variables have around <strong>99.2</strong> (<em>i.e.</em> <strong>1.98%</strong> of 5000 observations).</li>
+</ul></li>
+<li><p><strong>Summary by Rows (i.e. Observations)</strong>:</p>
+<ul>
+<li>There are <strong>32</strong> observations exempt from <code>NA</code>, just about <strong>0.64%</strong>.</li>
+<li>On average observations have around <strong>5</strong> (<em>i.e.</em> <strong>1.98%</strong> of 254 variables).</li>
+</ul></li>
+</ul>
+</div>
+<div id="testing-data-set" class="section level3">
+<h3><em>Testing</em> Data Set</h3>
+<ul>
+<li><p>The <em>Testing</em> data set that contains <strong>4973</strong> <code>NA</code>, out of <strong><span class="math">\(2.53\times 10^{5}\)</span></strong> total data points, <em>i.e.</em> about <strong>1.97%</strong>.</p></li>
+<li><strong>Summary by Columns (i.e. Variables)</strong>:
+<ul>
+<li>There are <strong>0</strong> variables without NA.</li>
+<li>On average variables have around <strong>19.6</strong> (<em>i.e.</em> <strong>1.96%</strong> of 1000 observations).</li>
+</ul></li>
+<li><strong>Summary by Rows (i.e. Observations)</strong>:
+<ul>
+<li>There are <strong>6</strong> observations exempt from <code>NA</code>, just about <strong>0.6%</strong>.</li>
+<li>On average observations have around <strong>5</strong> (<em>i.e.</em> <strong>1.96%</strong> of 254 variables).</li>
+</ul></li>
+</ul>
+<table>
+<caption>Summary of NA Statistics by Data Set, Variables, Observations</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="center">n_NA</th>
+<th align="center">n_Obs</th>
+<th align="center">compl_col</th>
+<th align="center">compl_row</th>
+<th align="center">avrg_NA_by_col</th>
+<th align="center">pct_NA_by_col</th>
+<th align="center">avrg_NA_by_row</th>
+<th align="center">pct_NA_by_row</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Training</td>
+<td align="center">25207</td>
+<td align="center">5000</td>
+<td align="center">0</td>
+<td align="center">32</td>
+<td align="center">99.24</td>
+<td align="center">1.98</td>
+<td align="center">5.04</td>
+<td align="center">1.98</td>
+</tr>
+<tr class="even">
+<td align="left">Testing</td>
+<td align="center">4973</td>
+<td align="center">1000</td>
+<td align="center">0</td>
+<td align="center">6</td>
+<td align="center">19.58</td>
+<td align="center">1.96</td>
+<td align="center">4.97</td>
+<td align="center">1.96</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="visual-comparison-of-na-statistics" class="section level3">
+<h3>Visual Comparison of <code>NA</code> Statistics</h3>
+<p>These plots show that on aggregate the <em>Training</em> and <em>Testing</em> sets are affected by <code>NA</code> in similar ways.<br />This does not imply that the detailed distribution of <code>NA</code> in rows and columns may not be biased by some trend that would not be revealed by this plots.</p>
+<p><img src="figures/Part1/plot_NA_stats-1-1.png" title="" alt="" width="600" style="display: block; margin: auto;" /></p>
+<hr class="thin_separator">
+<p><a name="summary_numeric"></a></p>
+</div>
+</div>
+<div id="summary-of-numeric-variables" class="section level2">
+<h2>Summary of Numeric Variables</h2>
+<p>A quick visual review of the distribution of the values of each variable shows that they are all approximately similar, Gaussian-looking (roughly speaking).<br />Because of this, their distributions can be characterized reasonably well by standard simple summary statistics for each variable.<br />We prepare a data frame with the basic summary statistics for each numeric variable (from <code>summary()</code>), adding <em>interquartile range</em> and <em>standard deviation</em>.</p>
+<pre class="sourceCode r"><code class="sourceCode r">train.stats_by_column &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(<span class="kw">t</span>(<span class="kw">sapply</span>(train[, idx_numeric], summary)))
+<span class="kw">colnames</span>(train.stats_by_column) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;min&quot;</span>, <span class="st">&quot;q025&quot;</span>, <span class="st">&quot;median&quot;</span>, <span class="st">&quot;mean&quot;</span>, <span class="st">&quot;q075&quot;</span>, <span class="st">&quot;max&quot;</span>, <span class="st">&quot;nNA&quot;</span>)
+
+<span class="co"># add IQR</span>
+train.stats_by_column$IQR &lt;-<span class="st"> </span>(train.stats_by_column$q075 -<span class="st"> </span>train.stats_by_column$q025)
+
+<span class="co"># add std.dev.</span>
+train.stats_by_column$sd &lt;-<span class="st"> </span><span class="kw">sapply</span>(train[, idx_numeric], function(x) <span class="kw">sd</span>(x, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>))</code></pre>
+<p>For illustration this is a random sample of rows from the resulting data frame:</p>
+<table>
+<caption>Example of Summary Statistics</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">min</th>
+<th align="right">q025</th>
+<th align="right">median</th>
+<th align="right">mean</th>
+<th align="right">q075</th>
+<th align="right">max</th>
+<th align="right">nNA</th>
+<th align="right">IQR</th>
+<th align="right">sd</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">f_33</td>
+<td align="right">-3.911</td>
+<td align="right">-0.683</td>
+<td align="right">-0.005</td>
+<td align="right">-0.008</td>
+<td align="right">0.680</td>
+<td align="right">4.350</td>
+<td align="right">107</td>
+<td align="right">1.363</td>
+<td align="right">1.012</td>
+</tr>
+<tr class="even">
+<td align="left">f_63</td>
+<td align="right">-3.635</td>
+<td align="right">-0.664</td>
+<td align="right">-0.003</td>
+<td align="right">0.001</td>
+<td align="right">0.698</td>
+<td align="right">3.217</td>
+<td align="right">88</td>
+<td align="right">1.361</td>
+<td align="right">0.999</td>
+</tr>
+<tr class="odd">
+<td align="left">f_66</td>
+<td align="right">-3.512</td>
+<td align="right">-0.705</td>
+<td align="right">-0.015</td>
+<td align="right">-0.019</td>
+<td align="right">0.659</td>
+<td align="right">3.956</td>
+<td align="right">105</td>
+<td align="right">1.364</td>
+<td align="right">1.003</td>
+</tr>
+<tr class="even">
+<td align="left">f_90</td>
+<td align="right">-3.727</td>
+<td align="right">-0.692</td>
+<td align="right">-0.022</td>
+<td align="right">-0.013</td>
+<td align="right">0.675</td>
+<td align="right">3.622</td>
+<td align="right">85</td>
+<td align="right">1.367</td>
+<td align="right">0.997</td>
+</tr>
+<tr class="odd">
+<td align="left">f_174</td>
+<td align="right">-3.758</td>
+<td align="right">-0.680</td>
+<td align="right">-0.003</td>
+<td align="right">-0.010</td>
+<td align="right">0.664</td>
+<td align="right">3.815</td>
+<td align="right">97</td>
+<td align="right">1.344</td>
+<td align="right">1.002</td>
+</tr>
+<tr class="even">
+<td align="left">f_244</td>
+<td align="right">-3.585</td>
+<td align="right">-0.666</td>
+<td align="right">0.026</td>
+<td align="right">0.014</td>
+<td align="right">0.672</td>
+<td align="right">3.365</td>
+<td align="right">90</td>
+<td align="right">1.338</td>
+<td align="right">1.001</td>
+</tr>
+</tbody>
+</table>
+<p>Same preparation for the <em>Testing</em> set:</p>
+<pre class="sourceCode r"><code class="sourceCode r">test.stats_by_column &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(<span class="kw">t</span>(<span class="kw">sapply</span>(test[, idx_numeric<span class="dv">-1</span>], summary)))
+<span class="kw">colnames</span>(test.stats_by_column) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;min&quot;</span>, <span class="st">&quot;q025&quot;</span>, <span class="st">&quot;median&quot;</span>, <span class="st">&quot;mean&quot;</span>, <span class="st">&quot;q075&quot;</span>, <span class="st">&quot;max&quot;</span>, <span class="st">&quot;nNA&quot;</span>)
+
+test.stats_by_column$IQR &lt;-<span class="st"> </span>(test.stats_by_column$q075 -<span class="st"> </span>test.stats_by_column$q025)
+test.stats_by_column$sd &lt;-<span class="st"> </span><span class="kw">sapply</span>(test[, idx_numeric<span class="dv">-1</span>], function(x) <span class="kw">sd</span>(x, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>))</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r">all.stats_by_column &lt;-<span class="st"> </span><span class="kw">bind_rows</span>(train.stats_by_column, test.stats_by_column)
+all.stats_by_column$set &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="kw">rep</span>(<span class="st">&quot;train&quot;</span>, <span class="dv">250</span>), <span class="kw">rep</span>(<span class="st">&quot;test&quot;</span>, <span class="dv">250</span>))</code></pre>
+<div id="distributions-of-summary-statistics-of-predictors" class="section level3">
+<h3>Distributions of Summary Statistics of Predictors</h3>
+<p>First we inspect visually the distribution of the summary statistics for the 250 numeric variables.<br />The following figures show the density curves for median, 0.25 quantile, 0.75 quantile and interquartile range, overlaying the curves for the <em>Training</em> (orange/yellow) and the <em>Testing</em> (blue) data sets.</p>
+<p><img src="figures/Part1/plot_predictors_distributions_3x2-train_and_test-1.png" title="" alt="" width="900" style="display: block; margin: auto;" /></p>
+<p>The two sets of plots reveal an issue that has the potential of affecting negatively the predictive power of a model built (trained) on the <em>Training</em> set when applied to this <em>Testing</em> set: <strong>the distribution of some of these summary statistics differ between <em>Training</em> and <em>Testing</em> data sets</strong>, namely they are systematically broader in the <em>Testing</em> set than they are in the <em>Training</em> set.</p>
+<p>The fact that the distributions of <em>medians</em> and <em>quantiles</em> are different raises some concern for the modeling To review this matter further we can look at scatter plots of the summary statistics, shown below.</p>
+<p><img src="figures/Part1/plot_predictors_summary_stats_train_vs_test_v2-1.png" title="" alt="" width="700" style="display: block; margin: auto;" /></p>
+<p>The scatter plots illustrate clearly the different extension of the scatter in the <em>Training</em> and <em>Testing</em> sets.</p>
+<p>As a side note, there are a handful of outliers, particularly noticeable in quantile plots.<br />Before modeling it is hard to tell if these will turn out to be important variables, but they certainly stand out in these plots. We can pick them out by filter the data frame on the <code>q075</code> value:</p>
+<table>
+<caption>Outlying Variables</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">min</th>
+<th align="right">q025</th>
+<th align="right">median</th>
+<th align="right">mean</th>
+<th align="right">q075</th>
+<th align="right">max</th>
+<th align="right">nNA</th>
+<th align="right">IQR</th>
+<th align="right">sd</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">f_47</td>
+<td align="right">-2.769</td>
+<td align="right">-0.495</td>
+<td align="right">-0.035</td>
+<td align="right">-0.029</td>
+<td align="right">0.441</td>
+<td align="right">2.344</td>
+<td align="right">102</td>
+<td align="right">0.935</td>
+<td align="right">0.705</td>
+</tr>
+<tr class="even">
+<td align="left">f_75</td>
+<td align="right">-2.463</td>
+<td align="right">-0.481</td>
+<td align="right">-0.013</td>
+<td align="right">0.003</td>
+<td align="right">0.478</td>
+<td align="right">2.429</td>
+<td align="right">110</td>
+<td align="right">0.959</td>
+<td align="right">0.707</td>
+</tr>
+<tr class="odd">
+<td align="left">f_161</td>
+<td align="right">-2.923</td>
+<td align="right">-0.477</td>
+<td align="right">0.017</td>
+<td align="right">0.001</td>
+<td align="right">0.473</td>
+<td align="right">2.394</td>
+<td align="right">94</td>
+<td align="right">0.950</td>
+<td align="right">0.702</td>
+</tr>
+<tr class="even">
+<td align="left">f_169</td>
+<td align="right">-2.713</td>
+<td align="right">-0.462</td>
+<td align="right">0.015</td>
+<td align="right">0.015</td>
+<td align="right">0.488</td>
+<td align="right">2.639</td>
+<td align="right">91</td>
+<td align="right">0.951</td>
+<td align="right">0.701</td>
+</tr>
+<tr class="odd">
+<td align="left">f_195</td>
+<td align="right">-2.479</td>
+<td align="right">-0.487</td>
+<td align="right">-0.015</td>
+<td align="right">-0.015</td>
+<td align="right">0.466</td>
+<td align="right">2.674</td>
+<td align="right">86</td>
+<td align="right">0.953</td>
+<td align="right">0.718</td>
+</tr>
+</tbody>
+</table>
+<hr />
+</div>
+<div id="a-thought-about-modeling" class="section level3">
+<h3>A Thought About Modeling</h3>
+<p>Thinking about modeling, the best we can wish for is that the most important predictors will be “well behaved”, in the sense that they will be among the variables whose distributions are consistent between <em>Training</em> and <em>Testing</em> sets.</p>
+<hr class="thin_separator">
+<p><a name="summary_non_numeric"></a></p>
+</div>
+</div>
+<div id="summary-of-non-numeric-variables" class="section level2">
+<h2>Summary of Non-Numeric Variables</h2>
+<p>Four of the predictors are factors, and we can compare them between <em>Training</em> and <em>Testing</em> set by looking at the distribution of the data over their levels. We first computed the fraction of data in each level of a factor, in the two sets separately, and then took the ratio (<em>Training</em>/<em>Testing</em>). The following barplots show these ratios for the four factor variables. Horizontal lines mark the 0.9, 1.0, and 1.1 points.</p>
+<p>In all variables there are variations up to 10% (larger for <code>f_121</code>), which raise another red flag for modeling. For instance, if a model considered important levels <em>A</em> and <em>C</em> of <code>f_121</code>, the fact that <em>A</em> is 10% less populated in the <em>Training</em> set, and <em>C</em> 15% more, will affect negatively the quality of the predictions on the <em>Testing</em> set.</p>
+<p><img src="figures/Part1/plot_distributions_of_factors_train_vs_test-1.png" title="" alt="" width="600" style="display: block; margin: auto;" /></p>
+<hr class="thin_separator">
+<p><a name="target_variable"></a></p>
+</div>
+<div id="the-target-variable" class="section level2">
+<h2>The <code>target</code> Variable</h2>
+<div id="distribution-of-the-values-of-target." class="section level3">
+<h3>Distribution of the Values of <code>target</code>.</h3>
+<p>(Please note that in order to increase the visibility of the low-count parts the vertical scale is logarithmic (<span class="math">\(log10()\)</span>).)</p>
+<p><img src="figures/Part1/plot_target_distribution_v2-1.png" title="" alt="" width="500" style="display: block; margin: auto;" /></p>
+</div>
+<div id="correlations-bw-target-and-predictors-and-between-predictors" class="section level3">
+<h3>Correlations b/w <code>target</code> and Predictors (and between Predictors)</h3>
+<p>Once again we treat factor variables separately.<br />We compute the correlation matrix with the option dropping <code>NA</code> only on a <em>pair wise</em> basis to preserve as much as possible the integrity of the result, as in this case we want to know the strength of the correlation between each two variables independently on the others.</p>
+<pre class="sourceCode r"><code class="sourceCode r">corr1_pcomp &lt;-<span class="st"> </span><span class="kw">cor</span>(train[, idx_numeric], <span class="dt">use =</span> <span class="st">&quot;pairwise.complete.obs&quot;</span>)
+corr2_pcomp &lt;-<span class="st"> </span><span class="kw">cor</span>(train[, <span class="kw">c</span>(<span class="dv">1</span>, idx_numeric)], <span class="dt">use =</span> <span class="st">&quot;pairwise.complete.obs&quot;</span>)
+corr1_pcomp_test &lt;-<span class="st"> </span><span class="kw">cor</span>(test[, idx_numeric<span class="dv">-1</span>], <span class="dt">use =</span> <span class="st">&quot;pairwise.complete.obs&quot;</span>)</code></pre>
+<p>We summarize the unwiedly correlation matrices in following histograms plots: left to right predictor-<code>target</code> correlation in the <em>Training</em> set, predictor-predictor correlation in the <em>Training</em> set, predictor-predictor correlation in the <em>Testing</em> set. To highlight the low-frequency cases, the vertical scale is truncated.</p>
+<p><img src="figures/Part1/plot_correlation_stats-1.png" title="" alt="" width="800" style="display: block; margin: auto;" /></p>
+<p>There is very little correlation between variables in the <em>Training</em> data set, with a pile up in a narrow peak around 0 and only a handful of variables with stronger correlation, <span class="math">\(\sim 0.7\)</span>. In this case the <em>Testing</em> set exhibits very similar properties.</p>
+<ul>
+<li>Five pairs of predictors stand out at relatively high correlation strength, <span class="math">\(\sim 0.7\)</span>, involving the same 10 variables in the <em>Training</em> and <em>Testing</em> data sets:
+<ul>
+<li><code>f_47, f_35, f_218, f_169, f_175, f_94, f_161, f_205, f_195, f_75</code></li>
+<li><code>f_47, f_35, f_218, f_169, f_175, f_94, f_161, f_205, f_195, f_75</code></li>
+</ul></li>
+<li>About half a dozen predictors are weakly/mildly correlated with <code>target</code>:
+<ul>
+<li><code>f_35, f_47, f_161, f_175, f_195, f_205, f_218</code></li>
+</ul></li>
+</ul>
+<p>In view of model building this findings would seem to indicate that we can expect that it will possible to model the outcome with a fairly limited subset of the predictors. We must keep in mind that the Pearson method is poorly suited for assessing relationship between variables for a wide range of scenario, but after reviewing scatterplots of the variables we think that in this case it may provide a reliable measure of correlation.</p>
+</div>
+<div id="scatterplots-of-target-vs.predictors" class="section level3">
+<h3>Scatterplots of <code>target</code> vs. Predictors</h3>
+<p>We visually inspected the scatterplots between <code>target</code> and all variables and they all look like smooth clouds with a central density peak, with in a few cases some elongation or substructures (<em>e.g.</em> the top right panel below). For illustrative purposes we would like to show a few examples of scatterplots for the <code>target</code> variable and predictors, for four different levels of correlation (see plot titles).</p>
+<p><img src="figures/Part1/scatterplot_target_vs_predictors_v2-1.png" title="" alt="" width="800" style="display: block; margin: auto;" /></p>
+</div>
+<div id="distribution-of-target-values-by-factor-levels" class="section level3">
+<h3>Distribution of <code>target</code> Values by Factor Levels</h3>
+<p>The last check concerns possible relationships between the <code>target</code> variable and levels of the four factor variables. Boxplots are well suited for this purpose and we show the four of them below.</p>
+<p><img src="figures/Part1/figure-boxplot_outcome_vs_factors-1.png" title="" alt="" width="800" style="display: block; margin: auto;" /></p>
+<p>A quick look at the boxplots suggest that:</p>
+<ul>
+<li><code>f_121</code> and <code>f_215</code> may not be important variables <em>per se</em> (but they could still have an effect through interaction with other variables).</li>
+<li><code>f_61</code> and <code>f_237</code> may instead be picked up in a model because there are shifts of <code>target</code> values from level to level, albeit not large.</li>
+</ul>
+<hr class="separator">
+<p><a name="IMPUTATION"></a></p>
+</div>
+</div>
+</div>
+<div id="data-imputation" class="section level1">
+<h1>DATA IMPUTATION</h1>
+<p>Given the characteristics of the missing data it is not possible to adopt the simplest approach, that is to retain only complete observations. Doing so would result in working with only less than 1% of the data. It is therefore necessary to <em>impute</em> the missing data.</p>
+<div id="general-considerations" class="section level3">
+<h3>General Considerations</h3>
+<p>The first question would concern the cause of this <em>missingness</em>, and unfortunately for this data set we have no information about the origin of the data and their meaning. Usually this latter would be “available” but in this case the data are simulated, hence it is unlikely that they had any particular <em>interpretable</em> meaning.</p>
+<p>Broadly speaking there are a few missingness mechanisms.</p>
+<ul>
+<li><strong>Missing completely at random</strong>: the probability of missingness is the same for every data point.</li>
+<li><strong>Missing at random</strong>: the probability of a missing a data point depends only on available information, <em>i.e.</em> observed variables.</li>
+<li><strong>Missingness depends on unobserved variables</strong>: this is the case when the probability dependes on information that is not available. Data are not missing at random.<br /></li>
+<li><strong>Missingness depends on the missing value itself</strong>, commonly called <em>censoring</em>:</li>
+</ul>
+<p>If missingness is not at random it should be modeled, and the difficulty of this task depends on the mechanism behind it.</p>
+</div>
+<div id="imputation-strategy" class="section level3">
+<h3>Imputation Strategy</h3>
+<p>On the basis of our quick look at the data it would seem reasonable to <strong>hypothesize that data are missing completely at random</strong>.<br />There does not seem to be a pattern in the missing data, and the fact that there is very little correlation between predictors suggests that it is unlikely that the data missing in a variable depend on values of other variables.<br />In principle, if this was indeed the case, excluding incomplete cases would not bias the data set and in turn our modeling. Unfortunately, as noted above, we can not take this approach and we have to impute the missing data.</p>
+<p>For <em>numeric variables</em> we proceeded in the following way:</p>
+<ul>
+<li>Variables are imputed one at a time.</li>
+<li>For each variable <span class="math">\(x_i\)</span> we first look for variables with correlation with it greater than a threshold value (generously low).</li>
+<li>If there are any correlated variables, <span class="math">\(\{x_j\}\)</span>, we check if in this reduced data set <span class="math">\(x_i + \{x_j\}\)</span> there are observations comprising just <code>NA</code>.
+<ul>
+<li>If there are, we drop from <span class="math">\(\{x_j\}\)</span> the least correlated variable and</li>
+<li>check again, until we are left with just <span class="math">\(x_i\)</span> and one of its correlated variables.</li>
+</ul></li>
+<li>If after this vetting, at least one <span class="math">\(\{x_j\}\)</span> is left, we impute the missing values of <span class="math">\(x_i\)</span> by means of a linear regression model with the <span class="math">\(\{x_j\}\)</span> as predictors.
+<ul>
+<li>Since among a handful of variables the worst case scenario for the distribution of <code>NA</code>s would cause the loss of only a few percent of the observations, the fact that <code>lm()</code> only keeps complete cases is not likely to have a significant impact.</li>
+</ul></li>
+<li>If not enough data are left, we impute the missing data of <span class="math">\(x_i\)</span> by random sampling the observed ones (operation performed by the function <code>impute_with_random_sampling()</code>.</li>
+</ul>
+<p><em>Non-numeric variables</em> were imputed simply by random sampling of the observed values.</p>
+</div>
+<div id="doing-the-imputation" class="section level3">
+<h3>Doing the Imputation</h3>
+<p>Data are imputed one variable at a time, starting from the <em>numeric variables</em>. We know from the previous analysis that variables are really weakly correlated at best, and so we set a pretty low value to the threshold on correlation strength for considering variable for imputation by the linear regression.</p>
+<p>Given that the imputation is mostly done by random re-sampling, each time we impute the missing data we get a data set different from another one on <span class="math">\(~2\)</span>% of values.</p>
+<p>To improve the robustness of the model building and testing tasks, we produced several different imputed data sets for both <em>Training</em> and <em>Testing</em> set (for reproducibility we then set the seed before imputation.)</p>
+<pre class="sourceCode r"><code class="sourceCode r">threshold &lt;-<span class="st"> </span><span class="fl">0.05</span>
+seeds.train_impute &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">2931</span>, <span class="dv">7777</span>, <span class="dv">4853</span>, <span class="dv">6464</span>)
+
+for(s in seeds.train_impute) {
+    train_imputed &lt;-<span class="st"> </span>train
+    <span class="kw">set.seed</span>(s)
+
+    <span class="co"># Imputation of _numeric_ variables:</span>
+    for(i in idx_numeric) {
+        yname &lt;-<span class="st"> </span><span class="kw">colnames</span>(train)[i]
+        check &lt;-<span class="st"> </span><span class="kw">sum</span>(<span class="kw">abs</span>(corr_pcomp[yname, ]) &gt;<span class="st"> </span>threshold)
+    
+        if(check ==<span class="st"> </span><span class="dv">0</span>) {
+            train_imputed[, i] &lt;-<span class="st"> </span><span class="kw">impute_with_random_sampling</span>(<span class="dt">data =</span> train[, i])
+        } else {
+            train_imputed[, i] &lt;-<span class="st"> </span><span class="kw">impute_with_lm</span>(<span class="dt">data =</span> train, 
+                                                <span class="dt">corr_matrix =</span> corr_pcomp, 
+                                                <span class="dt">i =</span> i, 
+                                                <span class="dt">threshold =</span> threshold, 
+                                                <span class="dt">verbose =</span> <span class="ot">FALSE</span>)
+        }
+    }
+    <span class="co"># Imputation of _non-numeric_ (i.e. factor) variables:</span>
+    for(i in idx_factors) {
+        train_imputed[, i] &lt;-<span class="st"> </span><span class="kw">impute_with_random_sampling</span>(<span class="dt">data =</span> train[, i])
+    }
+
+    <span class="kw">assign</span>(<span class="kw">paste0</span>(<span class="st">&quot;train_imputed_&quot;</span>, s), train_imputed)
+}</code></pre>
+<p><strong>NOTE:</strong> <em>for convenience instead of performing the imputation in the script directly, although it is coded for it, we saved the imputed data sets and load them invisibly to be able to use them in the following sections. The same applies to the model fits.</em></p>
+</div>
+<div id="imputation-of-the-testing-data-set" class="section level3">
+<h3>Imputation of the <em>Testing</em> Data Set</h3>
+<p>The same procedure and functions were applied to the <em>Testing</em> data set.</p>
+<pre class="sourceCode r"><code class="sourceCode r">threshold &lt;-<span class="st"> </span><span class="fl">0.05</span>
+seeds.test_impute &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">9876</span>, <span class="dv">6543</span>, <span class="dv">3210</span>, <span class="dv">1999</span>)
+
+for(s in seeds.test_impute) {
+    test_imputed &lt;-<span class="st"> </span>test
+    <span class="kw">set.seed</span>(s)
+    
+    <span class="co"># Imputation of _numeric_ variables:</span>
+    for( i in (idx_numeric<span class="dv">-1</span>) ) {
+        yname &lt;-<span class="st"> </span><span class="kw">colnames</span>(test)[i]
+        check &lt;-<span class="st"> </span><span class="kw">sum</span>(<span class="kw">abs</span>(corr_pcomp_test[yname, ]) &gt;<span class="st"> </span>threshold)
+    
+        if(check ==<span class="st"> </span><span class="dv">0</span>) {
+            test_imputed[, i] &lt;-<span class="st"> </span><span class="kw">impute_with_random_sampling</span>(<span class="dt">data =</span> test[, i])
+        } else {
+            test_imputed[, i] &lt;-<span class="st"> </span><span class="kw">impute_with_lm</span>(<span class="dt">data =</span> test, 
+                                                <span class="dt">corr_matrix =</span> corr_pcomp_test, 
+                                                <span class="dt">i =</span> i, 
+                                                <span class="dt">threshold =</span> threshold, 
+                                                <span class="dt">verbose =</span> <span class="ot">FALSE</span>)
+        }
+    }
+    <span class="co"># Fixing _non-numeric_ (i.e. factor) variables:</span>
+    for( i in (idx_factors<span class="dv">-1</span>) ) {
+        test_imputed[, i] &lt;-<span class="st"> </span><span class="kw">impute_with_random_sampling</span>(<span class="dt">data =</span> test[, i])
+    }
+
+    <span class="kw">assign</span>(<span class="kw">paste0</span>(<span class="st">&quot;test_imputed_&quot;</span>, s), test_imputed)
+}</code></pre>
+<hr class="separator">
+<p><a name="MODELING"></a></p>
+</div>
+</div>
+<div id="modeling" class="section level1">
+<h1>MODELING</h1>
+<p>We first tried to model the data with <strong>linear regression</strong>, with very poor results as shown below, and then with <strong>Multivariate Adaptive Regression Splines</strong> (MARS, as implemented in the R package <code>earth</code>). This latter yield quite decent <em>in-sample</em> and <em>out-of-sample</em> results.</p>
+<p>MARS models have the advantage of being able to automatically model non-linearities and “perform” variable selection, while remaining fairly interpretable.</p>
+<div id="trainingtesting-sets" class="section level2">
+<h2><em>Training</em>/<em>Testing</em> sets</h2>
+<p>The first step in any modeling is splitting the data into training and testing subsets, and we opted for a 80/20 split (and set the seed).</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Set seeds for splitting programmatically from seeds used for imputation.</span>
+seeds.train_split &lt;-<span class="st"> </span>seeds.train_impute*<span class="dv">10</span> +<span class="st"> </span><span class="dv">1</span>
+
+<span class="co"># For each seed (###) create objects:</span>
+<span class="co">#  - split.train_### : indices of &#39;training&#39; split</span>
+<span class="co">#  - spTrain_###     : &#39;training&#39; data set split</span>
+<span class="co">#  - spTest_###      : &#39;testing&#39; data set split</span>
+for( k in <span class="dv">1</span>:<span class="kw">length</span>(seeds.train_split) ) {
+    allTrain_imputed &lt;-<span class="st"> </span><span class="kw">get</span>(<span class="kw">paste0</span>(<span class="st">&quot;train_imputed_&quot;</span>, seeds.train_impute[k]))
+    <span class="kw">set.seed</span>(seeds.train_split[k])
+    
+    split.train &lt;-<span class="st"> </span><span class="kw">createDataPartition</span>(allTrain_imputed$target, <span class="dt">p =</span> <span class="fl">0.8</span>, <span class="dt">list =</span> <span class="ot">FALSE</span>, <span class="dt">times =</span> <span class="dv">1</span>)
+    <span class="kw">assign</span>(<span class="kw">paste0</span>(<span class="st">&quot;split.train_&quot;</span>, seeds.train_impute[k]), split.train)
+
+    <span class="kw">assign</span>(<span class="kw">paste0</span>(<span class="st">&quot;spTrain_&quot;</span>, seeds.train_impute[k]), allTrain_imputed[split.train, ])
+    <span class="kw">assign</span>(<span class="kw">paste0</span>(<span class="st">&quot;spTest_&quot;</span>,  seeds.train_impute[k]), allTrain_imputed[-split.train, ])
+}</code></pre>
+<hr class="thin_separator">
+<p><a name="linear_regression"></a></p>
+</div>
+<div id="linear-regression" class="section level2">
+<h2>Linear Regression</h2>
+<p>We built a model in successive steps:</p>
+<ul>
+<li>We started with using all variables and then</li>
+<li>reduced the set of predictors to only those that were deemed significant by the previous model, two times in a row.</li>
+<li>The last fit is done adding to the significant variables of the third model the 6 variables that show some correlation with the <code>target</code>.</li>
+</ul>
+<p>Here we report only the results of this last fourth step, and note that it did not actually represent a major improvement over the most basic <code>target</code> vs. <em>all</em> first model. A full summary of the model is included in the <a href="#Appendix_LM">Appendix</a>.</p>
+<div id="performance" class="section level3">
+<h3>Performance</h3>
+<p>The summary performance metrics are pretty poor, namely:</p>
+<ul>
+<li>On the training set itself, <em>i.e.</em> in-sample:
+<ul>
+<li><strong>MSE</strong> = <strong>11.43</strong></li>
+<li><strong><span class="math">\(R^2\)</span></strong> = <strong>0.5791</strong></li>
+</ul></li>
+<li>On the testing set, <em>i.e.</em> out-of-sample:
+<ul>
+<li><strong>MSE</strong> = <strong>11.07</strong></li>
+<li><strong><span class="math">\(R^2\)</span></strong> = <strong>0.5931</strong></li>
+</ul></li>
+</ul>
+</div>
+<div id="diagnostics-plots" class="section level3">
+<h3>Diagnostics Plots</h3>
+<p>The following plots show the relationship between predicted and observed values of <code>target</code> as scatter and residuals plots, as well as the difference between the distribution of observed and predicted values.<br />About these latter it is particularly clear from its <em>wavy</em> shape that both in-sample and out-of-sample the model predicts a much narrower distribution of values than the observed ones.</p>
+<p><img src="figures/Part1/LM-diagnostic_plots-1.png" title="" alt="" width="900" style="display: block; margin: auto;" /></p>
+<hr class="thin_separator">
+<p><a name="MARS"></a></p>
+</div>
+</div>
+<div id="multivariate-adaptive-regression-splines-mars" class="section level2">
+<h2><em>Multivariate Adaptive Regression Splines</em> (MARS)</h2>
+<p>For MARS we used the implementation part of the <code>earth</code> package. It can be run with built-in <strong>K-Fold Cross Validation</strong> and in our run we set the number of <em>folds</em> to 5 and the number of <em>cross-validations</em> per fold to 6.</p>
+<p>At first we used the training/testing 80/20 split described above, but after seeing that the performance of the model was quite good and “stable” (<em>e.g.</em> with respect to variable selection) we performed the last runs using the entire <em>Training</em> data set, confiding in the extensive built-in <em>Cross Validation</em> mitigates the risk of over-fitting.</p>
+<div id="general-procedure" class="section level3">
+<h3>General Procedure</h3>
+<p>To smooth-out the effects of imputation and of the stochastic nature of <em>cross validation</em>, we fit a model for each of the different imputed data sets (in each case with the 5-fold <span class="math">\(\times\)</span> 6 <em>cross validations</em>), and combine their predictions a posteriori. We allow the model to consider second degree interactions.</p>
+</div>
+<div id="example-model" class="section level3">
+<h3>Example Model</h3>
+<p>For illustration, we show only the results of one of the runs (and loaded from previously saved run). However, in the next box we show the code that would run one model on each of the imputed <em>Training</em> data sets. It is set to <code>eval = FALSE</code> for speed of compilation of the document, but if “activated” it would reproduce the results.</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Set seeds for splitting programmatically from seeds used for imputation.</span>
+seeds.train_model_MARS &lt;-<span class="st"> </span>seeds.train_split*<span class="dv">10</span> +<span class="st"> </span><span class="dv">1</span>
+
+for( k in <span class="dv">1</span>:<span class="kw">length</span>(seeds.train_model_MARS) ) {
+    split.train &lt;-<span class="st"> </span><span class="kw">get</span>(<span class="kw">paste0</span>(<span class="st">&quot;split.train_&quot;</span>, seeds.train_impute[k]))
+    allTrain &lt;-<span class="st"> </span><span class="kw">get</span>(<span class="kw">paste0</span>(<span class="st">&quot;train_imputed_&quot;</span>, seeds.train_impute[k]))
+    
+    spTrain &lt;-<span class="st"> </span>allTrain[split.train, ]
+    spTest &lt;-<span class="st"> </span>allTrain[-split.train, ]
+
+    <span class="kw">set.seed</span>(seeds.train_model_MARS[k])
+    mars.model &lt;-<span class="st"> </span><span class="kw">earth</span>(target ~<span class="st"> </span>., <span class="dt">data =</span> allTrain, <span class="dt">degree =</span> <span class="dv">2</span>, <span class="dt">nfold =</span> <span class="dv">5</span>, <span class="dt">ncross =</span> <span class="dv">6</span>, <span class="dt">keepxy =</span> <span class="ot">TRUE</span>)
+    <span class="co"># mars.model &lt;- earth(target ~ ., data = allTrain, degree = 2, nfold = 5, ncross = 6, keepxy = TRUE, pmethod = &quot;cv&quot;)</span>
+    <span class="kw">assign</span>(<span class="kw">paste0</span>(<span class="st">&quot;marsN&quot;</span>, k, <span class="st">&quot;.model&quot;</span>), mars.model)
+}</code></pre>
+<div id="model-summary" class="section level4">
+<h4>Model Summary</h4>
+<p>Please note that MARS models use as basis constants and <em>hinge functions</em>, represented in the summary by the <em>h(x - value)</em> expressions.</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">summary</span>(marsN4.model)
+<span class="co"># Call: earth(formula=target~., data=allTrain, keepxy=TRUE, ncross=6, nfold=5, degree=2)</span>
+<span class="co"># </span>
+<span class="co">#                                         coefficients</span>
+<span class="co"># (Intercept)                               -5.4517654</span>
+<span class="co"># f_61c                                     -1.8611246</span>
+<span class="co"># f_61e                                     -3.5208894</span>
+<span class="co"># f_237Mexico                                1.5330420</span>
+<span class="co"># f_237USA                                   0.5114941</span>
+<span class="co"># h(1.74462-f_35)                           -0.8745734</span>
+<span class="co"># h(f_35-1.74462)                            0.8686218</span>
+<span class="co"># h(1.05346-f_94)                            8.2623995</span>
+<span class="co"># h(f_94-1.05346)                           -7.9723987</span>
+<span class="co"># h(-0.800929-f_175)                        -2.9821025</span>
+<span class="co"># h(f_175- -0.800929)                        2.8492932</span>
+<span class="co"># h(0.143952-f_205)                         -1.7799823</span>
+<span class="co"># h(f_205-0.143952)                          1.8365448</span>
+<span class="co"># h(2.7266-f_218)                            6.5775061</span>
+<span class="co"># h(f_218-2.7266)                            2.9554053</span>
+<span class="co"># h(2.32379-f_94) * h(2.7266-f_218)         -3.1800323</span>
+<span class="co"># h(f_94-2.32379) * h(2.7266-f_218)          3.0405692</span>
+<span class="co"># h(f_161-0.0836778) * h(-0.800929-f_175)    7.1635419</span>
+<span class="co"># </span>
+<span class="co"># Selected 18 of 19 terms, and 10 of 264 predictors </span>
+<span class="co"># Termination condition: RSq changed by less than 0.001 at 19 terms</span>
+<span class="co"># Importance: f_175, f_205, f_94, f_218, f_61e, f_35, f_61c, f_237Mexico, f_237USA, f_161, ...</span>
+<span class="co"># Number of terms at each degree of interaction: 1 14 3</span>
+<span class="co"># GCV 2.33317  RSS 11463.75  GRSq 0.915685  RSq 0.9171125  CVRSq 0.9071801</span>
+<span class="co"># </span>
+<span class="co"># Note: the cross-validation sd&#39;s below are standard deviations across folds</span>
+<span class="co"># </span>
+<span class="co"># Cross validation:   nterms 18.70 sd 1.34    nvars 10.40 sd 0.89</span>
+<span class="co"># </span>
+<span class="co">#      CVRSq    sd     MaxErr sd</span>
+<span class="co">#       0.91 0.024        -60 17</span></code></pre>
+</div>
+<div id="important-variables" class="section level4">
+<h4>Important Variables</h4>
+<p>These are the important (<em>i.e.</em> selected/used) variables for this particular model:</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">evimp</span>(marsN4.model)
+<span class="co">#             nsubsets   gcv    rss</span>
+<span class="co"># f_175             17 100.0  100.0</span>
+<span class="co"># f_205             15  72.8   72.8</span>
+<span class="co"># f_94              14  74.0&gt;  73.9&gt;</span>
+<span class="co"># f_218             14  74.0   73.9</span>
+<span class="co"># f_61e             12  49.6   49.6</span>
+<span class="co"># f_35               9  32.0   32.0</span>
+<span class="co"># f_61c              7  20.8   20.9</span>
+<span class="co"># f_237Mexico        6  15.1   15.2</span>
+<span class="co"># f_237USA           4   5.8    6.1</span>
+<span class="co"># f_161              3   4.1    4.4</span></code></pre>
+</div>
+</div>
+<div id="performance-of-mars-models" class="section level3">
+<h3>Performance of MARS Models</h3>
+<p>The <em>MSE</em> and <span class="math">\(R^2\)</span> metrics for the four final MARS models are summarized in this table:</p>
+<table>
+<caption>Summary of MARS Models Performance</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="center">MARS1</th>
+<th align="center">MARS2</th>
+<th align="center">MARS3</th>
+<th align="center">MARS4</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">MSE</td>
+<td align="center">2.3421</td>
+<td align="center">2.4323</td>
+<td align="center">2.3746</td>
+<td align="center">2.2927</td>
+</tr>
+<tr class="even">
+<td align="left">R2</td>
+<td align="center">0.9153</td>
+<td align="center">0.9121</td>
+<td align="center">0.9142</td>
+<td align="center">0.9171</td>
+</tr>
+</tbody>
+</table>
+<p>They are all equivalent, also from the point of view of <em>variable selection</em> where the four models only differ on 1-2 of the lowest importance variables.<br />The combined list of important variables is:</p>
+<pre class="sourceCode r"><code class="sourceCode r">marsNall.imp_var
+<span class="co">#  [1] &quot;f_35&quot;  &quot;f_61&quot;  &quot;f_73&quot;  &quot;f_85&quot;  &quot;f_94&quot;  &quot;f_161&quot; &quot;f_175&quot; &quot;f_205&quot; &quot;f_218&quot; &quot;f_237&quot;</span></code></pre>
+<p>Note that some of them are factors: <code>f_61, f_237</code>.</p>
+</div>
+<div id="diagnostics-plots-1" class="section level3">
+<h3>Diagnostics Plots</h3>
+<p>For direct comparison with the <em>linear regression</em> results we plot here the scatter and residuals plots, and the difference between observed and predicted distributions of <code>target</code> (for one of the <em>MARS</em> models).<br />There still remains a systematic slant to the residuals, but it is acceptable, and the difference between the distributions is more even than before.</p>
+<p><img src="figures/Part1/MARS-diagnostic_plots-N4-1.png" title="" alt="" width="900" style="display: block; margin: auto;" /></p>
+<hr class="thin_separator">
+<p><a name="Prediction"></a></p>
+</div>
+</div>
+<div id="predicting-the-testing-data-set" class="section level2">
+<h2>Predicting the <em>Testing</em> Data Set</h2>
+<p>We used each of the four models (coming from the four imputed <em>Training</em> data sets) to predict <code>target</code> for each of the four imputed <em>Testing</em> data sets. <strong>For each model we took as its prediction the average of <code>target</code> values over the four imputed <em>Testing</em> sets</strong>.</p>
+<div id="quick-health-checks-of-predictions" class="section level3">
+<h3>Quick <em>Health</em> Checks of Predictions</h3>
+<p>To assess the effect of imputation, we compared the variability of its predictions on the four imputed <em>Testing</em> data sets, computing mean and standard deviation.</p>
+<p>For each observation we have then four <em>mean</em> and <em>sd</em>, one for each model over the four imputed <em>Testing</em> sets. We can look at the amount of variation from model to model, for instance by inspecting the <em>max-min</em> range of predicted values for each observation, or the <em>“MSE”</em> by observation. We look at them in the next two plots.</p>
+<p><img src="figures/Part1/MARS-plots-predicted_variables_minmax_and_MSE-1.png" title="" alt="" width="1000" style="display: block; margin: auto;" /></p>
+<p>In both quantities there are only a few cases at large deviations; for instance, as a reference, there are 65 with <span class="math">\(MSE &gt; 0.01\)</span> (marked by the red dashed line).</p>
+<p>Overall the predictions seem to be quite robust, from the point of view of the potential variations caused by imputation and variable selection.</p>
+</div>
+<div id="prediction" class="section level3">
+<h3>Prediction</h3>
+<p>As noted, our final prediction for the <em>Testing</em> data set is the <em>grand mean</em> of the predictions of the four models “crossed” with the four imputed <em>Testing</em> data.</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">write.csv</span>(summaryNall$target, <span class="dt">file =</span> <span class="st">&quot;codetest_prediction.csv&quot;</span>, <span class="dt">row.names =</span> <span class="ot">FALSE</span>, <span class="dt">quote =</span> <span class="ot">FALSE</span>)</code></pre>
+<hr class="separator">
+<p><a name="FINAL_THOUGHTS"></a></p>
+</div>
+</div>
+<div id="final-thoughts" class="section level2">
+<h2>FINAL THOUGHTS</h2>
+<p>The issue of missing data required to impute them before to proceed with modeling as they were scattered around the data set in such a way that most models would not have been applicable, or we would have incurred a high “cost” in terms of loss of usable training data.</p>
+<p>Based on a quick coarse review of the data, we made the assumption that the data were missing completely at random, and so it was acceptable to impute them with a simple approach. Given the small fraction of missingness for each variable (and observation), imputation by random sampling from the existing data is likely good enough. Nevertheless, for the few variables showing some degree of correlation with other, we included the possibility of imputing their missing values via linear regression on the correlated predictors.</p>
+<p>The model we adopted is <em>Multivariate Adaptive Regression Splines</em> (MARS), because it offers an attractive combination of light computational “cost”, flexibility, built-in variable selection, interpretatibility. In the final runs we trained models on the entire data set, relying on <em>K-fold Cross Validation</em> to avoid over-fitting. We obtained several models by fitting on different versions of the imputed data set. On the <em>Training</em> data sets these models performance is quite good, with <span class="math">\(MSE \simeq 2.4\)</span> and <span class="math">\(R^2 \simeq 0.91\)</span>.</p>
+<p>We computed predictions of four models on each of four imputed <em>Testing</em> data sets, and then averaged their predictions. This average is what we saved and submitted.</p>
+<p>The quick checks that we did on the variations on the predictions on the <em>Testing</em> data set seem to suggest that the models are quite “stable”, in the sense that only a few observations exhibit significant variance in the predictions. However, this is more of a measure of the effect of imputation and of the small differences between models (important variables, coefficients), and while it is comforting to see that we get consistent results, this may not translate in good performance on the actual <code>target</code> values of the <em>Testing</em> data set.</p>
+<p>One reason of concern is that the statistical properties of the data seem to be slightly different between the <em>Training</em> and the <em>Testing</em> data set, in particular the apparent broader range of values spanned by <em>quantiles</em> (and in turn <em>IQR</em>).</p>
+<p>On the other hand, considering that the model is using only about a dozen variables, it is possible that its performance may not be so seriously affected by this apparent difference. To get a glimpse on this, we repeat below some of the plots of the <a href="#summary_numeric">earlier summary section</a>, marking with blue circles the <em>important variables</em>. Qualitative speaking one could argue that the blue symbols are less spread than the full set of variables. However, with respect to generalization of the model the truly ideal finding would be that the important variables were clusted closely around the diagonal, <em>i.e.</em> with identical characteristics in the <em>Training</em> and <em>Testing</em> data sets, at least as far as these summaries can go.</p>
+<p><img src="figures/Part1/plot-predictors_summary_stats_train_vs_test_with_imp_vars-1.png" title="" alt="" width="900" style="display: block; margin: auto;" /></p>
+<hr class="separator">
+<p><a name="APPENDIX"></a></p>
+</div>
+</div>
+<div id="appendix" class="section level1">
+<h1>APPENDIX</h1>
+<p><a name="Appendix_NA"></a></p>
+<div id="statistics-of-na" class="section level2">
+<h2>Statistics of <code>NA</code></h2>
+<div id="training-data-set-1" class="section level3">
+<h3><em>Training</em> Data Set</h3>
+<div id="by-variable" class="section level4">
+<h4>By Variable</h4>
+<table>
+<caption>Contingency Table of NA Counts in Columns</caption>
+<thead>
+<tr class="header">
+<th align="right">72</th>
+<th align="right">79</th>
+<th align="right">80</th>
+<th align="right">81</th>
+<th align="right">82</th>
+<th align="right">83</th>
+<th align="right">84</th>
+<th align="right">85</th>
+<th align="right">86</th>
+<th align="right">87</th>
+<th align="right">88</th>
+<th align="right">89</th>
+<th align="right">90</th>
+<th align="right">91</th>
+<th align="right">92</th>
+<th align="right">93</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">3</td>
+<td align="right">2</td>
+<td align="right">4</td>
+<td align="right">4</td>
+<td align="right">1</td>
+<td align="right">11</td>
+<td align="right">6</td>
+<td align="right">4</td>
+<td align="right">3</td>
+<td align="right">3</td>
+<td align="right">11</td>
+<td align="right">7</td>
+<td align="right">11</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr class="header">
+<th align="right">94</th>
+<th align="right">95</th>
+<th align="right">96</th>
+<th align="right">97</th>
+<th align="right">98</th>
+<th align="right">99</th>
+<th align="right">100</th>
+<th align="right">101</th>
+<th align="right">102</th>
+<th align="right">103</th>
+<th align="right">104</th>
+<th align="right">105</th>
+<th align="right">106</th>
+<th align="right">107</th>
+<th align="right">108</th>
+<th align="right">109</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">12</td>
+<td align="right">5</td>
+<td align="right">9</td>
+<td align="right">14</td>
+<td align="right">7</td>
+<td align="right">6</td>
+<td align="right">10</td>
+<td align="right">13</td>
+<td align="right">13</td>
+<td align="right">8</td>
+<td align="right">14</td>
+<td align="right">6</td>
+<td align="right">7</td>
+<td align="right">4</td>
+<td align="right">7</td>
+<td align="right">6</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr class="header">
+<th align="right">110</th>
+<th align="right">111</th>
+<th align="right">112</th>
+<th align="right">113</th>
+<th align="right">114</th>
+<th align="right">115</th>
+<th align="right">116</th>
+<th align="right">117</th>
+<th align="right">118</th>
+<th align="right">121</th>
+<th align="right">122</th>
+<th align="right">124</th>
+<th align="right">131</th>
+<th align="right">132</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">8</td>
+<td align="right">3</td>
+<td align="right">3</td>
+<td align="right">2</td>
+<td align="right">3</td>
+<td align="right">4</td>
+<td align="right">3</td>
+<td align="right">3</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="by-observation" class="section level4">
+<h4>By Observation</h4>
+<table>
+<caption>Contingency Table of NA Counts in Rows</caption>
+<thead>
+<tr class="header">
+<th align="right">0</th>
+<th align="right">1</th>
+<th align="right">2</th>
+<th align="right">3</th>
+<th align="right">4</th>
+<th align="right">5</th>
+<th align="right">6</th>
+<th align="right">7</th>
+<th align="right">8</th>
+<th align="right">9</th>
+<th align="right">10</th>
+<th align="right">11</th>
+<th align="right">12</th>
+<th align="right">13</th>
+<th align="right">14</th>
+<th align="right">15</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">32</td>
+<td align="right">139</td>
+<td align="right">416</td>
+<td align="right">660</td>
+<td align="right">872</td>
+<td align="right">955</td>
+<td align="right">729</td>
+<td align="right">537</td>
+<td align="right">339</td>
+<td align="right">181</td>
+<td align="right">73</td>
+<td align="right">33</td>
+<td align="right">22</td>
+<td align="right">8</td>
+<td align="right">2</td>
+<td align="right">2</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="testing-data-set-1" class="section level3">
+<h3><em>Testing</em> Data Set</h3>
+<div id="by-variable-1" class="section level4">
+<h4>By Variable</h4>
+<table>
+<caption>Contingency Table of NA Counts in Columns</caption>
+<thead>
+<tr class="header">
+<th align="right">10</th>
+<th align="right">11</th>
+<th align="right">12</th>
+<th align="right">13</th>
+<th align="right">14</th>
+<th align="right">15</th>
+<th align="right">16</th>
+<th align="right">17</th>
+<th align="right">18</th>
+<th align="right">19</th>
+<th align="right">20</th>
+<th align="right">21</th>
+<th align="right">22</th>
+<th align="right">23</th>
+<th align="right">24</th>
+<th align="right">25</th>
+<th align="right">26</th>
+<th align="right">27</th>
+<th align="right">28</th>
+<th align="right">29</th>
+<th align="right">30</th>
+<th align="right">31</th>
+<th align="right">32</th>
+<th align="right">34</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">3</td>
+<td align="right">3</td>
+<td align="right">1</td>
+<td align="right">7</td>
+<td align="right">7</td>
+<td align="right">16</td>
+<td align="right">20</td>
+<td align="right">17</td>
+<td align="right">22</td>
+<td align="right">24</td>
+<td align="right">37</td>
+<td align="right">24</td>
+<td align="right">22</td>
+<td align="right">18</td>
+<td align="right">8</td>
+<td align="right">9</td>
+<td align="right">5</td>
+<td align="right">5</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="by-observation-1" class="section level4">
+<h4>By Observation</h4>
+<table>
+<caption>Contingency Table of NA Counts in Rows</caption>
+<thead>
+<tr class="header">
+<th align="right">0</th>
+<th align="right">1</th>
+<th align="right">2</th>
+<th align="right">3</th>
+<th align="right">4</th>
+<th align="right">5</th>
+<th align="right">6</th>
+<th align="right">7</th>
+<th align="right">8</th>
+<th align="right">9</th>
+<th align="right">10</th>
+<th align="right">11</th>
+<th align="right">12</th>
+<th align="right">13</th>
+<th align="right">14</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">6</td>
+<td align="right">27</td>
+<td align="right">84</td>
+<td align="right">156</td>
+<td align="right">178</td>
+<td align="right">185</td>
+<td align="right">134</td>
+<td align="right">103</td>
+<td align="right">57</td>
+<td align="right">33</td>
+<td align="right">21</td>
+<td align="right">11</td>
+<td align="right">2</td>
+<td align="right">2</td>
+<td align="right">1</td>
+</tr>
+</tbody>
+</table>
+<hr class="thin_separator">
+<p><a name="Appendix_LM"></a></p>
+</div>
+</div>
+</div>
+<div id="linear-regression-model-summary-fit-4" class="section level2">
+<h2>Linear Regression Model Summary (Fit #4)</h2>
+<p>Setup of variables and model formula:</p>
+<pre class="sourceCode r"><code class="sourceCode r">varnames_lm3_0005 &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;(Intercept)&quot;</span>, <span class="st">&quot;f_35&quot;</span>, <span class="st">&quot;f_54&quot;</span>, <span class="st">&quot;f_61&quot;</span>, <span class="st">&quot;f_94&quot;</span>, <span class="st">&quot;f_175&quot;</span>, <span class="st">&quot;f_196&quot;</span>, <span class="st">&quot;f_205&quot;</span>, <span class="st">&quot;f_217&quot;</span>, <span class="st">&quot;f_218&quot;</span>, <span class="st">&quot;f_237&quot;</span>)
+var_from_corr &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;f_35&quot;</span>, <span class="st">&quot;f_47&quot;</span>, <span class="st">&quot;f_161&quot;</span>, <span class="st">&quot;f_175&quot;</span>, <span class="st">&quot;f_195&quot;</span>, <span class="st">&quot;f_205&quot;</span>, <span class="st">&quot;f_218&quot;</span>)
+lm4.vars &lt;-<span class="st"> </span><span class="kw">c</span>(varnames_lm3_0005, var_from_corr) %&gt;%<span class="st"> </span>base::<span class="kw">unique</span>(.)
+lm4.formula &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&quot;target&quot;</span>, <span class="kw">paste0</span>(lm4.vars[-<span class="dv">1</span>], <span class="dt">collapse =</span> <span class="st">&quot; + &quot;</span>), <span class="dt">sep =</span> <span class="st">&quot; ~ &quot;</span>)</code></pre>
+<p>Model fit, and summary:</p>
+<pre class="sourceCode r"><code class="sourceCode r">spTrain &lt;-<span class="st"> </span>spTrain_6464
+lm4.model &lt;-<span class="st"> </span><span class="kw">lm</span>(<span class="kw">as.formula</span>(lm4.formula), <span class="dt">data =</span> spTrain)
+
+<span class="kw">summary</span>(lm4.model)
+<span class="co"># </span>
+<span class="co"># Call:</span>
+<span class="co"># lm(formula = as.formula(lm4.formula), data = spTrain)</span>
+<span class="co"># </span>
+<span class="co"># Residuals:</span>
+<span class="co">#      Min       1Q   Median       3Q      Max </span>
+<span class="co"># -19.4445  -1.5964  -0.0098   1.5763  22.4205 </span>
+<span class="co"># </span>
+<span class="co"># Coefficients:</span>
+<span class="co">#             Estimate Std. Error t value Pr(&gt;|t|)    </span>
+<span class="co"># (Intercept)  1.55370    0.14361  10.819  &lt; 2e-16 ***</span>
+<span class="co"># f_35         0.85286    0.07347  11.608  &lt; 2e-16 ***</span>
+<span class="co"># f_54         0.15140    0.05363   2.823 0.004784 ** </span>
+<span class="co"># f_61b       -0.24777    0.17074  -1.451 0.146807    </span>
+<span class="co"># f_61c       -1.80486    0.17149 -10.525  &lt; 2e-16 ***</span>
+<span class="co"># f_61d       -0.13202    0.17148  -0.770 0.441432    </span>
+<span class="co"># f_61e       -3.45945    0.17224 -20.085  &lt; 2e-16 ***</span>
+<span class="co"># f_94         0.41500    0.05438   7.631 2.90e-14 ***</span>
+<span class="co"># f_175        2.73123    0.07406  36.879  &lt; 2e-16 ***</span>
+<span class="co"># f_196        0.19843    0.05488   3.616 0.000303 ***</span>
+<span class="co"># f_205        1.79301    0.07459  24.038  &lt; 2e-16 ***</span>
+<span class="co"># f_217       -0.15839    0.05431  -2.917 0.003559 ** </span>
+<span class="co"># f_218        0.79881    0.05353  14.922  &lt; 2e-16 ***</span>
+<span class="co"># f_237Mexico  1.59591    0.13131  12.154  &lt; 2e-16 ***</span>
+<span class="co"># f_237USA     0.62192    0.13077   4.756 2.05e-06 ***</span>
+<span class="co"># f_47         0.11609    0.10480   1.108 0.268062    </span>
+<span class="co"># f_161        0.20703    0.10536   1.965 0.049491 *  </span>
+<span class="co"># f_195        0.20869    0.10301   2.026 0.042845 *  </span>
+<span class="co"># ---</span>
+<span class="co"># Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</span>
+<span class="co"># </span>
+<span class="co"># Residual standard error: 3.388 on 3982 degrees of freedom</span>
+<span class="co"># Multiple R-squared:  0.5791,  Adjusted R-squared:  0.5773 </span>
+<span class="co"># F-statistic: 322.3 on 17 and 3982 DF,  p-value: &lt; 2.2e-16</span></code></pre>
+<hr class="thin_separator">
+<p><a name="Appendix_MARS"></a></p>
+</div>
+<div id="mars-models-summary" class="section level2">
+<h2>MARS Models Summary</h2>
+<pre class="sourceCode r"><code class="sourceCode r">for( i in <span class="dv">1</span>:<span class="kw">length</span>(seeds.train_impute) ) {
+    <span class="kw">print</span>( <span class="kw">summary</span>(<span class="kw">get</span>(<span class="kw">paste0</span>(<span class="st">&quot;marsN&quot;</span>, i, <span class="st">&quot;.model&quot;</span>))) )
+    <span class="kw">cat</span>(<span class="st">&quot;--------------------------------------------------------------------------------</span><span class="ch">\n</span><span class="st">&quot;</span>)
+}
+<span class="co"># Call: earth(formula=target~., data=allTrain, keepxy=TRUE, ncross=6, nfold=5, degree=2)</span>
+<span class="co"># </span>
+<span class="co">#                                        coefficients</span>
+<span class="co"># (Intercept)                               -7.778593</span>
+<span class="co"># f_61c                                     -1.892951</span>
+<span class="co"># f_61e                                     -3.443103</span>
+<span class="co"># f_237Mexico                                1.515953</span>
+<span class="co"># f_237USA                                   0.508410</span>
+<span class="co"># h(-0.45462-f_35)                          -0.863094</span>
+<span class="co"># h(f_35- -0.45462)                          0.856960</span>
+<span class="co"># h(1.84129-f_94)                            8.185400</span>
+<span class="co"># h(f_94-1.84129)                           -8.615932</span>
+<span class="co"># h(-0.350485-f_175)                        -2.897314</span>
+<span class="co"># h(f_175- -0.350485)                        2.824960</span>
+<span class="co"># h(2.7609-f_205)                           -1.794493</span>
+<span class="co"># h(f_205-2.7609)                            3.195921</span>
+<span class="co"># h(2.7266-f_218)                            6.762135</span>
+<span class="co"># h(f_218-2.7266)                            3.090793</span>
+<span class="co"># h(f_85-1.7543) * h(f_94-1.84129)        -267.598442</span>
+<span class="co"># h(2.38873-f_94) * h(2.7266-f_218)         -3.166116</span>
+<span class="co"># h(f_94-2.38873) * h(2.7266-f_218)          3.419594</span>
+<span class="co"># h(f_161-0.561281) * h(-0.350485-f_175)    14.264592</span>
+<span class="co"># </span>
+<span class="co"># Selected 19 of 21 terms, and 11 of 264 predictors </span>
+<span class="co"># Termination condition: RSq changed by less than 0.001 at 21 terms</span>
+<span class="co"># Importance: f_175, f_205, f_94, f_218, f_61e, f_35, f_61c, f_237Mexico, f_85, f_237USA, f_161, ...</span>
+<span class="co"># Number of terms at each degree of interaction: 1 14 4</span>
+<span class="co"># GCV 2.385784  RSS 11710.44  GRSq 0.9137836  RSq 0.9153288  CVRSq 0.6470189</span>
+<span class="co"># </span>
+<span class="co"># Note: the cross-validation sd&#39;s below are standard deviations across folds</span>
+<span class="co"># </span>
+<span class="co"># Cross validation:   nterms 18.93 sd 1.28    nvars 10.83 sd 1.21</span>
+<span class="co"># </span>
+<span class="co">#      CVRSq  sd     MaxErr sd</span>
+<span class="co">#       0.65 1.4        473 89</span>
+<span class="co"># --------------------------------------------------------------------------------</span>
+<span class="co"># Call: earth(formula=target~., data=allTrain, keepxy=TRUE, ncross=6, nfold=5, degree=2)</span>
+<span class="co"># </span>
+<span class="co">#                                     coefficients</span>
+<span class="co"># (Intercept)                            4.3932656</span>
+<span class="co"># f_61c                                 -1.8484281</span>
+<span class="co"># f_61e                                 -3.4518793</span>
+<span class="co"># f_237Mexico                            1.5382089</span>
+<span class="co"># f_237USA                               0.5066329</span>
+<span class="co"># h(-0.516529-f_35)                     -0.9285587</span>
+<span class="co"># h(f_35- -0.516529)                     0.8411785</span>
+<span class="co"># h(-0.317052-f_94)                      8.1908066</span>
+<span class="co"># h(f_94- -0.317052)                    -8.0570019</span>
+<span class="co"># h(-0.79197-f_175)                     -2.9264043</span>
+<span class="co"># h(f_175- -0.79197)                     2.8666916</span>
+<span class="co"># h(0.443702-f_205)                     -1.7953955</span>
+<span class="co"># h(f_205-0.443702)                      1.8313630</span>
+<span class="co"># h(2.7266-f_218)                        6.6858965</span>
+<span class="co"># h(f_218-2.7266)                        2.8493045</span>
+<span class="co"># h(-0.516529-f_35) * h(f_73-2.35286)    7.6485434</span>
+<span class="co"># h(2.38873-f_94) * h(2.7266-f_218)     -3.1406172</span>
+<span class="co"># h(f_94-2.38873) * h(2.7266-f_218)      3.1285533</span>
+<span class="co"># </span>
+<span class="co"># Selected 18 of 19 terms, and 10 of 264 predictors </span>
+<span class="co"># Termination condition: RSq changed by less than 0.001 at 19 terms</span>
+<span class="co"># Importance: f_175, f_205, f_94, f_218, f_61e, f_35, f_61c, f_237Mexico, f_237USA, f_73, ...</span>
+<span class="co"># Number of terms at each degree of interaction: 1 14 3</span>
+<span class="co"># GCV 2.475219  RSS 12161.69  GRSq 0.9105516  RSq 0.9120661  CVRSq 0.8795061</span>
+<span class="co"># </span>
+<span class="co"># Note: the cross-validation sd&#39;s below are standard deviations across folds</span>
+<span class="co"># </span>
+<span class="co"># Cross validation:   nterms 18.73 sd 0.78    nvars 10.77 sd 0.77</span>
+<span class="co"># </span>
+<span class="co">#      CVRSq   sd     MaxErr sd</span>
+<span class="co">#       0.88 0.11       -119 30</span>
+<span class="co"># --------------------------------------------------------------------------------</span>
+<span class="co"># Call: earth(formula=target~., data=allTrain, keepxy=TRUE, ncross=6, nfold=5, degree=2)</span>
+<span class="co"># </span>
+<span class="co">#                                       coefficients</span>
+<span class="co"># (Intercept)                            -11.6446232</span>
+<span class="co"># f_61c                                   -1.9671706</span>
+<span class="co"># f_61e                                   -3.5421656</span>
+<span class="co"># f_237Mexico                              1.5034153</span>
+<span class="co"># f_237USA                                 0.5388568</span>
+<span class="co"># h(-1.74871-f_35)                        -0.8884175</span>
+<span class="co"># h(f_35- -1.74871)                        0.8496770</span>
+<span class="co"># h(f_73-2.69681)                          7.0882725</span>
+<span class="co"># h(2.18198-f_94)                          8.2395910</span>
+<span class="co"># h(f_94-2.18198)                         -9.7848048</span>
+<span class="co"># h(-0.38468-f_175)                       -2.9482687</span>
+<span class="co"># h(f_175- -0.38468)                       2.8377941</span>
+<span class="co"># h(2.7609-f_205)                         -1.8021526</span>
+<span class="co"># h(f_205-2.7609)                          3.1149184</span>
+<span class="co"># h(2.76626-f_218)                         6.6460353</span>
+<span class="co"># h(f_218-2.76626)                         3.0407269</span>
+<span class="co"># h(2.38873-f_94) * h(2.76626-f_218)      -3.1416510</span>
+<span class="co"># h(f_94-2.38873) * h(2.76626-f_218)       3.7895943</span>
+<span class="co"># h(f_161-0.106835) * h(-0.38468-f_175)    4.0771906</span>
+<span class="co"># </span>
+<span class="co"># Selected 19 of 21 terms, and 11 of 264 predictors </span>
+<span class="co"># Termination condition: RSq changed by less than 0.001 at 21 terms</span>
+<span class="co"># Importance: f_175, f_205, f_94, f_218, f_61e, f_35, f_61c, f_237Mexico, f_237USA, f_161, f_73, ...</span>
+<span class="co"># Number of terms at each degree of interaction: 1 15 3</span>
+<span class="co"># GCV 2.418907  RSS 11873.02  GRSq 0.9125866  RSq 0.9141533  CVRSq -2575847</span>
+<span class="co"># </span>
+<span class="co"># Note: the cross-validation sd&#39;s below are standard deviations across folds</span>
+<span class="co"># </span>
+<span class="co"># Cross validation:   nterms 20.13 sd 1.38    nvars 11.53 sd 0.86</span>
+<span class="co"># </span>
+<span class="co">#      CVRSq       sd     MaxErr     sd</span>
+<span class="co">#   -2575847 14096540   -1306825 238394</span>
+<span class="co"># --------------------------------------------------------------------------------</span>
+<span class="co"># Call: earth(formula=target~., data=allTrain, keepxy=TRUE, ncross=6, nfold=5, degree=2)</span>
+<span class="co"># </span>
+<span class="co">#                                         coefficients</span>
+<span class="co"># (Intercept)                               -5.4517654</span>
+<span class="co"># f_61c                                     -1.8611246</span>
+<span class="co"># f_61e                                     -3.5208894</span>
+<span class="co"># f_237Mexico                                1.5330420</span>
+<span class="co"># f_237USA                                   0.5114941</span>
+<span class="co"># h(1.74462-f_35)                           -0.8745734</span>
+<span class="co"># h(f_35-1.74462)                            0.8686218</span>
+<span class="co"># h(1.05346-f_94)                            8.2623995</span>
+<span class="co"># h(f_94-1.05346)                           -7.9723987</span>
+<span class="co"># h(-0.800929-f_175)                        -2.9821025</span>
+<span class="co"># h(f_175- -0.800929)                        2.8492932</span>
+<span class="co"># h(0.143952-f_205)                         -1.7799823</span>
+<span class="co"># h(f_205-0.143952)                          1.8365448</span>
+<span class="co"># h(2.7266-f_218)                            6.5775061</span>
+<span class="co"># h(f_218-2.7266)                            2.9554053</span>
+<span class="co"># h(2.32379-f_94) * h(2.7266-f_218)         -3.1800323</span>
+<span class="co"># h(f_94-2.32379) * h(2.7266-f_218)          3.0405692</span>
+<span class="co"># h(f_161-0.0836778) * h(-0.800929-f_175)    7.1635419</span>
+<span class="co"># </span>
+<span class="co"># Selected 18 of 19 terms, and 10 of 264 predictors </span>
+<span class="co"># Termination condition: RSq changed by less than 0.001 at 19 terms</span>
+<span class="co"># Importance: f_175, f_205, f_94, f_218, f_61e, f_35, f_61c, f_237Mexico, f_237USA, f_161, ...</span>
+<span class="co"># Number of terms at each degree of interaction: 1 14 3</span>
+<span class="co"># GCV 2.33317  RSS 11463.75  GRSq 0.915685  RSq 0.9171125  CVRSq 0.9071801</span>
+<span class="co"># </span>
+<span class="co"># Note: the cross-validation sd&#39;s below are standard deviations across folds</span>
+<span class="co"># </span>
+<span class="co"># Cross validation:   nterms 18.70 sd 1.34    nvars 10.40 sd 0.89</span>
+<span class="co"># </span>
+<span class="co">#      CVRSq    sd     MaxErr sd</span>
+<span class="co">#       0.91 0.024        -60 17</span>
+<span class="co"># --------------------------------------------------------------------------------</span></code></pre>
+<div id="important-variables-1" class="section level4">
+<h4>Important Variables</h4>
+<pre class="sourceCode r"><code class="sourceCode r">for( i in <span class="dv">1</span>:<span class="kw">length</span>(seeds.train_impute) ) {
+    <span class="kw">print</span>( <span class="kw">evimp</span>(<span class="kw">get</span>(<span class="kw">paste0</span>(<span class="st">&quot;marsN&quot;</span>, i, <span class="st">&quot;.model&quot;</span>))) )
+    <span class="kw">cat</span>(<span class="st">&quot;--------------------------------------------------------------------------------</span><span class="ch">\n</span><span class="st">&quot;</span>)
+}
+<span class="co">#             nsubsets   gcv    rss</span>
+<span class="co"># f_175             18 100.0  100.0</span>
+<span class="co"># f_205             16  72.4   72.4</span>
+<span class="co"># f_94              15  72.6&gt;  72.5&gt;</span>
+<span class="co"># f_218             15  72.6   72.5</span>
+<span class="co"># f_61e             12  37.1   37.2</span>
+<span class="co"># f_35              11  28.7   28.7</span>
+<span class="co"># f_61c             10  23.7   23.8</span>
+<span class="co"># f_237Mexico        9  18.5   18.6</span>
+<span class="co"># f_85               5   7.7    8.0</span>
+<span class="co"># f_237USA           4   6.1    6.4</span>
+<span class="co"># f_161              3   4.6    4.8</span>
+<span class="co"># --------------------------------------------------------------------------------</span>
+<span class="co">#             nsubsets   gcv    rss</span>
+<span class="co"># f_175             17 100.0  100.0</span>
+<span class="co"># f_205             15  71.5   71.5</span>
+<span class="co"># f_94              14  72.7&gt;  72.6&gt;</span>
+<span class="co"># f_218             14  72.7   72.6</span>
+<span class="co"># f_61e             12  48.4   48.4</span>
+<span class="co"># f_35               9  30.7   30.7</span>
+<span class="co"># f_61c              8  26.1   26.1</span>
+<span class="co"># f_237Mexico        6  16.4   16.5</span>
+<span class="co"># f_237USA           3   5.7    5.9</span>
+<span class="co"># f_73               2   3.9    4.1</span>
+<span class="co"># --------------------------------------------------------------------------------</span>
+<span class="co">#             nsubsets   gcv    rss</span>
+<span class="co"># f_175             18 100.0  100.0</span>
+<span class="co"># f_205             16  71.9   72.0</span>
+<span class="co"># f_94              15  72.7&gt;  72.6&gt;</span>
+<span class="co"># f_218             15  72.7   72.6</span>
+<span class="co"># f_61e             13  43.2   43.2</span>
+<span class="co"># f_35              11  27.1   27.1</span>
+<span class="co"># f_61c             10  20.9   21.1</span>
+<span class="co"># f_237Mexico        9  14.2   14.4</span>
+<span class="co"># f_237USA           8   8.2    8.6</span>
+<span class="co"># f_161              5   5.5    5.9</span>
+<span class="co"># f_73               4   4.3    4.7</span>
+<span class="co"># --------------------------------------------------------------------------------</span>
+<span class="co">#             nsubsets   gcv    rss</span>
+<span class="co"># f_175             17 100.0  100.0</span>
+<span class="co"># f_205             15  72.8   72.8</span>
+<span class="co"># f_94              14  74.0&gt;  73.9&gt;</span>
+<span class="co"># f_218             14  74.0   73.9</span>
+<span class="co"># f_61e             12  49.6   49.6</span>
+<span class="co"># f_35               9  32.0   32.0</span>
+<span class="co"># f_61c              7  20.8   20.9</span>
+<span class="co"># f_237Mexico        6  15.1   15.2</span>
+<span class="co"># f_237USA           4   5.8    6.1</span>
+<span class="co"># f_161              3   4.1    4.4</span>
+<span class="co"># --------------------------------------------------------------------------------</span></code></pre>
+<hr class="thin_separator">
+<p><a name="SessionInfo"></a></p>
+</div>
+</div>
+<div id="r-session-info" class="section level2">
+<h2>R Session Info</h2>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">sessionInfo</span>()
+<span class="co"># R version 3.1.3 (2015-03-09)</span>
+<span class="co"># Platform: x86_64-pc-linux-gnu (64-bit)</span>
+<span class="co"># Running under: Ubuntu 14.04.2 LTS</span>
+<span class="co"># </span>
+<span class="co"># locale:</span>
+<span class="co">#  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8       </span>
+<span class="co">#  [4] LC_COLLATE=C               LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   </span>
+<span class="co">#  [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                  LC_ADDRESS=C              </span>
+<span class="co"># [10] LC_TELEPHONE=C             LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       </span>
+<span class="co"># </span>
+<span class="co"># attached base packages:</span>
+<span class="co"># [1] grid      stats     graphics  grDevices utils     datasets  methods   base     </span>
+<span class="co"># </span>
+<span class="co"># other attached packages:</span>
+<span class="co">#  [1] earth_4.3.0       plotmo_3.1.3      TeachingDemos_2.9 plotrix_3.5-12    caret_6.0-47     </span>
+<span class="co">#  [6] lattice_0.20-31   MASS_7.3-41       gridExtra_0.9.1   ggplot2_1.0.1     magrittr_1.5     </span>
+<span class="co"># [11] tidyr_0.2.0       dplyr_0.4.2       knitr_1.10.5     </span>
+<span class="co"># </span>
+<span class="co"># loaded via a namespace (and not attached):</span>
+<span class="co">#  [1] BradleyTerry2_1.0-6 DBI_0.3.1           Matrix_1.2-0        R6_2.0.1           </span>
+<span class="co">#  [5] Rcpp_0.11.6         SparseM_1.6         assertthat_0.1      brglm_0.5-9        </span>
+<span class="co">#  [9] car_2.0-25          codetools_0.2-11    colorspace_1.2-6    digest_0.6.8       </span>
+<span class="co"># [13] evaluate_0.7        foreach_1.4.2       formatR_1.2         gtable_0.1.2       </span>
+<span class="co"># [17] gtools_3.4.2        highr_0.5           htmltools_0.2.6     iterators_1.0.7    </span>
+<span class="co"># [21] labeling_0.3        lme4_1.1-8          mgcv_1.8-6          minqa_1.2.4        </span>
+<span class="co"># [25] munsell_0.4.2       nlme_3.1-120        nloptr_1.0.4        nnet_7.3-9         </span>
+<span class="co"># [29] parallel_3.1.3      pbkrtest_0.4-2      plyr_1.8.3          proto_0.3-10       </span>
+<span class="co"># [33] quantreg_5.11       reshape2_1.4.1      rmarkdown_0.7       scales_0.2.4       </span>
+<span class="co"># [37] splines_3.1.3       stringi_0.5-5       stringr_1.0.0       tools_3.1.3        </span>
+<span class="co"># [41] yaml_2.1.13</span></code></pre>
+<hr />
+</div>
+</div>
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+$(document).ready(function () {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+});
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
