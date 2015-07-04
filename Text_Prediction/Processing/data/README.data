@@ -1,0 +1,68 @@
+data/:
+total 12
+drwxr-xr-x 2 gfossati 4096 Apr  9 01:30 clean/
+drwxr-xr-x 2 gfossati 4096 Apr 16 23:25 raw/
+drwxr-xr-x 2 gfossati 4096 Apr 16 19:09 sentences/
+
+data/clean:
+total 976176
+-rw-r--r-- 1 gfossati      1931 Apr  8 15:15 README.stats
+-rw-r--r-- 1 gfossati  74872059 Dec 18  2014 appData_sentence.RData
+-rw-r--r-- 1 gfossati      6835 Apr  8 15:04 check.R
+-rw-r--r-- 1 gfossati      1074 Apr  8 22:53 load_RDS_files.R
+-rw-r--r-- 1 gfossati   6947904 Dec 18  2014 n3g_as_sentences_gt2.RDS
+-rw-r--r-- 1 gfossati   6621345 Dec 18  2014 n3g_as_sentences_gt2.csv.gz
+-rw-r--r-- 1 gfossati  28929313 Dec 14  2014 n3g_as_words_and_sentences_ALL.RDS
+-rw-r--r-- 1 gfossati  25622959 Apr  8 22:52 n3g_as_words_and_sentences_ALL.csv.gz
+-rw-r--r-- 1 gfossati   9144580 Dec 14  2014 n3g_as_words_and_sentences_gt2.RDS
+-rw-r--r-- 1 gfossati   6584154 Dec 18  2014 n3g_as_words_gt2.csv.gz
+-rw-r--r-- 1 gfossati   7061647 Dec 18  2014 n4g_as_sentences_gt2.RDS
+-rw-r--r-- 1 gfossati   6125797 Dec 18  2014 n4g_as_sentences_gt2.csv.gz
+-rw-r--r-- 1 gfossati  62354189 Dec 14  2014 n4g_as_words_and_sentences_ALL.RDS
+-rw-r--r-- 1 gfossati  51117987 Apr  8 22:55 n4g_as_words_and_sentences_ALL.csv.gz
+-rw-r--r-- 1 gfossati  10802042 Dec 14  2014 n4g_as_words_and_sentences_gt2.RDS
+-rw-r--r-- 1 gfossati   5979069 Dec 18  2014 n4g_as_words_gt2.csv.gz
+-rw-r--r-- 1 gfossati   3825870 Dec 18  2014 n5g_as_sentences_gt2.RDS
+-rw-r--r-- 1 gfossati   3303083 Dec 18  2014 n5g_as_sentences_gt2.csv.gz
+-rw-r--r-- 1 gfossati 113999146 Dec 14  2014 n5g_as_words_and_sentences_ALL.RDS
+-rw-r--r-- 1 gfossati  91714067 Apr  8 22:57 n5g_as_words_and_sentences_ALL.csv.gz
+-rw-r--r-- 1 gfossati   6428961 Dec 14  2014 n5g_as_words_and_sentences_gt2.RDS
+-rw-r--r-- 1 gfossati   3189575 Dec 18  2014 n5g_as_words_gt2.csv.gz
+-rw-r--r-- 1 gfossati  57033469 Dec 18  2014 n6g_as_sentences_50pct.RDS
+-rw-r--r-- 1 gfossati  50528600 Dec 18  2014 n6g_as_sentences_50pct.csv.gz
+-rw-r--r-- 1 gfossati  91304148 Dec 18  2014 n6g_as_sentences_ALL.RDS
+-rw-r--r-- 1 gfossati  64370061 Dec 18  2014 n6g_as_words_50pct.RDS
+-rw-r--r-- 1 gfossati  48936326 Dec 18  2014 n6g_as_words_50pct.csv.gz
+-rw-r--r-- 1 gfossati 160740712 Dec 14  2014 n6g_as_words_and_sentences_ALL.RDS
+-rwxr-xr-x 1 gfossati      1363 Apr  8 15:15 rename.csh*
+-rw-r--r-- 1 gfossati      1463 Apr  8 15:08 stats_RDS.csv
+-rw-r--r-- 1 gfossati    664932 Dec 18  2014 wc_best.RDS
+-rw-r--r-- 1 gfossati   1305170 Dec 18  2014 wc_new.RDS
+
+data/raw:
+total 747560
+-rw-r--r-- 1 gfossati     3229 Nov 12  2014 README.data
+-rw-r--r-- 1 gfossati     1820 Apr  9 01:30 README_NEW.checking_files_stats
+-rw-r--r-- 1 gfossati 89206984 Nov 14  2014 en_US.blogs.CLEANED1.txt.gz
+-rw-r--r-- 1 gfossati 89805769 Jul 22  2014 en_US.blogs.ORIGINAL.txt.gz
+-rw-r--r-- 1 gfossati 89046165 Dec 13  2014 en_US.blogs.XCLEANED.txt.gz
+-rw-r--r-- 1 gfossati 89140342 Nov 14  2014 en_US.news.CLEANED1.txt.gz
+-rw-r--r-- 1 gfossati 89490422 Jul 22  2014 en_US.news.ORIGINAL.txt.gz
+-rw-r--r-- 1 gfossati 88830991 Dec 13  2014 en_US.news.XCLEANED.txt.gz
+-rw-r--r-- 1 gfossati 77089729 Nov 14  2014 en_US.twitter.CLEANED1.txt.gz
+-rw-r--r-- 1 gfossati 77214605 Jul 22  2014 en_US.twitter.ORIGINAL.txt.gz
+-rw-r--r-- 1 gfossati 75643196 Dec 13  2014 en_US.twitter.XCLEANED.txt.gz
+-rw-r--r-- 1 gfossati     1933 Nov 12  2014 files_info.csv
+
+data/sentences:
+total 465656
+-rw-r--r-- 1 gfossati      542 Apr 16 19:08 README_NEW.stats_for_sentences
+lrwxrwxrwx 1 gfossati       25 Dec 13  2014 blogs.sentences.all.gz -> blogs.sentences.all_v2.gz
+-rw-r--r-- 1 gfossati 84981692 Dec 13  2014 blogs.sentences.all_v1.gz
+-rw-r--r-- 1 gfossati 84661037 Dec 13  2014 blogs.sentences.all_v2.gz
+lrwxrwxrwx 1 gfossati       24 Dec 13  2014 news.sentences.all.gz -> news.sentences.all_v2.gz
+-rw-r--r-- 1 gfossati 83712293 Dec 13  2014 news.sentences.all_v1.gz
+-rw-r--r-- 1 gfossati 83428109 Dec 13  2014 news.sentences.all_v2.gz
+lrwxrwxrwx 1 gfossati       27 Dec 13  2014 twitter.sentences.all.gz -> twitter.sentences.all_v2.gz
+-rw-r--r-- 1 gfossati 70090521 Dec 13  2014 twitter.sentences.all_v1.gz
+-rw-r--r-- 1 gfossati 69941410 Dec 13  2014 twitter.sentences.all_v2.gz

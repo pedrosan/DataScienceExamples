@@ -1,0 +1,242 @@
+EXAMPLES:
+
+  gzip -dc cleaned_n5g_ALL_sorted.csv.gz | ./scripts/quick_check_ngrams_vs_dictionary.pl -min_ngram 3 -min_word 10
+  gzip -dc cleaned_n4g_ALL_sorted.csv.gz | ./scripts/quick_check_ngrams_vs_dictionary.pl -min_ngram 3 -min_word 10
+
+====================================================================================================
+ * 3-GRAMS
+
+------------------------------------------------------------------------------
+ * min n-gram count :  3    Number of n-grams tested     =  2988695
+ * min word   count :  2    Number of words included     =   240166    Predicted word is in dictionary = 2985657 (99.90 % of n-grams)
+
+ Number of words in dictionary
+   0 ==>       24  ( 0.00 %)     could predict in :        21 (87.50 %)
+   1 ==>     5017  ( 0.17 %)     could predict in :      4941 (98.49 %)
+   2 ==>  2983653  (99.83 %)     could predict in :   2980695 (99.90 %)
+
+------------------------------------------------------------------------------
+ * min n-gram count :  3    Number of n-grams tested     =  2988695
+ * min word   count :  3    Number of words included     =   177901    Predicted word is in dictionary = 2985247 (99.88 % of n-grams)
+
+ Number of words in dictionary
+   0 ==>       42  ( 0.00 %)     could predict in :        36 (85.71 %)
+   1 ==>     5648  ( 0.19 %)     could predict in :      5515 (97.65 %)
+   2 ==>  2983004  (99.81 %)     could predict in :   2979696 (99.89 %)
+
+------------------------------------------------------------------------------
+ * min n-gram count :  3    Number of n-grams tested     =  2988695
+ * min word   count : 10    Number of words included     =    88261    Predicted word is in dictionary = 2981685 (99.77 % of n-grams)
+
+ Number of words in dictionary
+   0 ==>      244  ( 0.01 %)     could predict in :       203 (83.20 %)
+   1 ==>    11089  ( 0.37 %)     could predict in :     10586 (95.46 %)
+   2 ==>  2977361  (99.62 %)     could predict in :   2970896 (99.78 %)
+
+------------------------------------------------------------------------------
+ * min n-gram count :  3    Number of n-grams tested     =  2988695
+ * min word   count : 20    Number of words included     =    62412   Predicted word is in dictionary = 2977921 (99.64 % of n-grams)
+
+ Number of words in dictionary
+   0 ==>      478  ( 0.02 %)     could predict in :       378 (79.08 %)
+   1 ==>    16771  ( 0.56 %)     could predict in :     15841 (94.45 %)
+   2 ==>  2971445  (99.42 %)     could predict in :   2961702 (99.67 %)
+
+------------------------------------------------------------------------------
+ * min n-gram count :  4    Number of n-grams tested     =  1902018
+ * min word   count : 20    Number of words included     =    62412   Predicted word is in dictionary = 1896981 (99.74 % of n-grams)
+
+ Number of words in dictionary
+   0 ==>      203  ( 0.01 %)     could predict in :       155 (76.35 %)
+   1 ==>     7538  ( 0.40 %)     could predict in :      7140 (94.72 %)
+   2 ==>  1894276  (99.59 %)     could predict in :   1889686 (99.76 %)
+
+------------------------------------------------------------------------------
+ * min n-gram count :  4    Number of n-grams tested     =  1902018
+ * min word   count : 30    Number of words included     =    51319   Predicted word is in dictionary = 1895537 (99.66 % of n-grams)
+
+ Number of words in dictionary
+   0 ==>      285  ( 0.01 %)     could predict in :       222 (77.89 %)
+   1 ==>     9595  ( 0.50 %)     could predict in :      9008 (93.88 %)
+   2 ==>  1892137  (99.48 %)     could predict in :   1886307 (99.69 %)
+
+
+====================================================================================================
+ * 4-GRAMS
+
+------------------------------------------------------------------------------
+ * min n-gram count :  3     Number of n-grams tested     =  1287718
+ * min word   count :  2     Number of words included     =   240166    Predicted word is in dictionary = 1286737 (99.92 % of n-grams)
+
+ Number of words in dictionary
+   0 ==>        1  ( 0.00 %)     could predict in :         1 (100.00 %)
+   1 ==>       28  ( 0.00 %)     could predict in :        24 (85.71 %)
+   2 ==>     2260  ( 0.18 %)     could predict in :      2223 (98.36 %)
+   3 ==>  1285428  (99.82 %)     could predict in :   1284489 (99.93 %)
+
+------------------------------------------------------------------------------
+ * min n-gram count :  3     Number of n-grams tested     =  1287718
+ * min word   count :  3     Number of words included     =   177901    Predicted word is in dictionary = 1286611 (99.91 % of n-grams)
+
+ Number of words in dictionary
+   0 ==>        2  ( 0.00 %)     could predict in :         2 (100.00 %)
+   1 ==>       46  ( 0.00 %)     could predict in :        38 (82.61 %)
+   2 ==>     2553  ( 0.20 %)     could predict in :      2505 (98.12 %)
+   3 ==>  1285116  (99.80 %)     could predict in :   1284066 (99.92 %)
+
+------------------------------------------------------------------------------
+ * min n-gram count :  3     Number of n-grams tested     =  1287718
+ * min word   count : 10     Number of words included     =    88261    Predicted word is in dictionary =  1285295 (99.81 % of n-grams)
+
+ Number of words in dictionary
+   0 ==>        8  ( 0.00 %)     could predict in :         7 (87.50 %)
+   1 ==>      197  ( 0.02 %)     could predict in :       178 (90.36 %)
+   2 ==>     5540  ( 0.43 %)     could predict in :      5333 (96.26 %)
+   3 ==>  1281972  (99.55 %)     could predict in :   1279777 (99.83 %)
+
+------------------------------------------------------------------------------
+ * min n-gram count :  4       Number of n-grams tested     =   715418
+ * min word   count : 10       Number of words included     =    88261   Predicted word is in dictionary = 714497 (99.87 % of n-grams)
+
+ Number of words in dictionary
+   0 ==>        4  ( 0.00 %)     could predict in :         4 (100.00 %)
+   1 ==>       61  ( 0.01 %)     could predict in :        57 (93.44 %)
+   2 ==>     2218  ( 0.31 %)     could predict in :      2160 (97.39 %)
+   3 ==>   713134  (99.68 %)     could predict in :    712276 (99.88 %)
+
+------------------------------------------------------------------------------
+ * min n-gram count :  4       Number of n-grams tested     =  1287718
+ * min word   count : 20       Number of words included     =    62412    Predicted word is in dictionary = 1283846 (99.70 % of n-grams)
+
+ Number of words in dictionary
+   0 ==>       17  ( 0.00 %)     could predict in :        15 (88.24 %)
+   1 ==>      410  ( 0.03 %)     could predict in :       351 (85.61 %)
+   2 ==>     8495  ( 0.66 %)     could predict in :      8081 (95.13 %)
+   3 ==>  1278795  (99.31 %)     could predict in :   1275399 (99.73 %)
+
+------------------------------------------------------------------------------
+ * min n-gram count :  4     Number of n-grams tested     =   715418
+ * min word   count : 30     Number of words included     =    51319     Predicted word is in dictionary = 713334 (99.71 % of n-grams)
+
+ Number of words in dictionary
+   0 ==>       13  ( 0.00 %)     could predict in :        11 (84.62 %)
+   1 ==>      206  ( 0.03 %)     could predict in :       178 (86.41 %)
+   2 ==>     4370  ( 0.61 %)     could predict in :      4157 (95.13 %)
+   3 ==>   710828  (99.36 %)     could predict in :    708988 (99.74 %)
+
+
+====================================================================================================
+ * 5-GRAMS
+
+------------------------------------------------------------------------------
+ * min n-gram count :  2      Number of n-grams tested     =  1404638
+ * min word   count :  2      Number of words included     =   240166    Predicted word is in dictionary = 1403610 (99.93 % of n-grams)
+
+ Number of words in dictionary
+   0 ==>
+   1 ==>        1  ( 0.00 %)     could predict in :         0 ( 0.00 %)
+   2 ==>       62  ( 0.00 %)     could predict in :        59 (95.16 %)
+   3 ==>     2993  ( 0.21 %)     could predict in :      2945 (98.40 %)
+   4 ==>  1401581  (99.78 %)     could predict in :   1400606 (99.93 %)
+
+------------------------------------------------------------------------------
+ * min n-gram count :  2      Number of n-grams tested     =  1404638
+ * min word   count :  3      Number of words included     =   177901    Predicted word is in dictionary = 1402700 (99.86 % of n-grams)
+
+ Number of words in dictionary
+   0 ==>
+   1 ==>        6  ( 0.00 %)     could predict in :         5 (83.33 %)
+   2 ==>      222  ( 0.02 %)     could predict in :       205 (92.34 %)
+   3 ==>     5903  ( 0.42 %)     could predict in :      5765 (97.66 %)
+   4 ==>  1398506  (99.56 %)     could predict in :   1396725 (99.87 %)
+
+------------------------------------------------------------------------------
+ * min n-gram count :  2      Number of n-grams tested     =  1404638
+ * min word   count : 10      Number of words included     =    88261    Predicted word is in dictionary = 1399135 (99.61 % of n-grams)
+
+ Number of words in dictionary
+   0 ==> 
+   1 ==>       47  ( 0.00 %)     could predict in :        37 (78.72 %)
+   2 ==>      954  ( 0.07 %)     could predict in :       860 (90.15 %)
+   3 ==>    16502  ( 1.17 %)     could predict in :     15908 (96.40 %)
+   4 ==>  1387134  (98.75 %)     could predict in :   1382330 (99.65 %)
+
+------------------------------------------------------------------------------
+ * min n-gram count :  2    Number of n-grams tested     =  1404638
+ * min word   count : 20    Number of words included     =    62412      Predicted word is in dictionary = 1395956 (99.38 % of n-grams)
+
+ Number of words in dictionary
+   0 ==>        5  ( 0.00 %)     could predict in :         2 (40.00 %)
+   1 ==>      106  ( 0.01 %)     could predict in :        87 (82.08 %)
+   2 ==>     1749  ( 0.12 %)     could predict in :      1551 (88.68 %)
+   3 ==>    25938  ( 1.85 %)     could predict in :     24866 (95.87 %)
+   4 ==>  1376839  (98.02 %)     could predict in :   1369450 (99.46 %)
+
+------------------------------------------------------------------------------
+ * min n-gram count :  2     Number of n-grams tested     =  1404638
+ * min word   count : 30     Number of words included     =    51319    Predicted word is in dictionary = 1393332 (99.20 % of n-grams)
+
+ Number of words in dictionary
+   0 ==>       10  ( 0.00 %)     could predict in :         6 (60.00 %)
+   1 ==>      168  ( 0.01 %)     could predict in :       132 (78.57 %)
+   2 ==>     2456  ( 0.17 %)     could predict in :      2179 (88.72 %)
+   3 ==>    33632  ( 2.39 %)     could predict in :     32125 (95.52 %)
+   4 ==>  1368371  (97.42 %)     could predict in :   1358890 (99.31 %)
+------------------------------------------------------------------------------
+
+
+================================================
+ * min n-gram count :  3     Number of n-grams tested     =   371755
+ * min word   count :  2     Number of words included     =   240166    Predicted word is in dictionary = 371518 (99.94 % of n-grams)
+
+ Number of words in dictionary
+   0 ==>
+   1 ==>
+   2 ==>       15  ( 0.00 %)     could predict in :        14 (93.33 %)
+   3 ==>      803  ( 0.22 %)     could predict in :       790 (98.38 %)
+   4 ==>   370936  (99.78 %)     could predict in :    370714 (99.94 %)
+
+------------------------------------------------------------------------------
+ * min n-gram count :  3     Number of n-grams tested     =   371755 
+ * min word   count :  3     Number of words included     =   177901    Predicted word is in dictionary = 371507 (99.93 % of n-grams)
+
+ Number of words in dictionary
+   0 ==>
+   1 ==>
+   2 ==>       16  ( 0.00 %)     could predict in :        14 (87.50 %)
+   3 ==>      817  ( 0.22 %)     could predict in :       803 (98.29 %)
+   4 ==>   370921  (99.78 %)     could predict in :    370690 (99.94 %)
+
+------------------------------------------------------------------------------
+ * min n-gram count :  3     Number of n-grams tested     =   371755
+ * min word   count : 10     Number of words included     =    88261    Predicted word is in dictionary = 370971 (99.79 % of n-grams)
+
+ Number of words in dictionary
+   0 ==>
+   1 ==>        4  ( 0.00 %)     could predict in :         4 (100.00 %)
+   2 ==>       99  ( 0.03 %)     could predict in :        87 (87.88 %)
+   3 ==>     2374  ( 0.64 %)     could predict in :      2309 (97.26 %)
+   4 ==>   369277  (99.33 %)     could predict in :    368571 (99.81 %)
+
+------------------------------------------------------------------------------
+ * min n-gram count :  3    Number of n-grams tested     =   371755
+ * min word   count : 20    Number of words included     =    62412    Predicted word is in dictionary = 370399 (99.64 % of n-grams)
+
+ Number of words in dictionary
+   1 ==>       14  ( 0.00 %)     could predict in :        12 (85.71 %)
+   2 ==>      228  ( 0.06 %)     could predict in :       204 (89.47 %)
+   3 ==>     3963  ( 1.07 %)     could predict in :      3809 (96.11 %)
+   4 ==>   367549  (98.87 %)     could predict in :    366374 (99.68 %)
+
+------------------------------------------------------------------------------
+ * min n-gram count :  3    Number of n-grams tested     =   371755
+ * min word   count : 30    Number of words included     =    51319    Predicted word is in dictionary = 369877 (99.49 % of n-grams)
+
+ Number of words in dictionary
+   0 ==>        1  ( 0.00 %)     could predict in :         0 ( 0.00 %)
+   1 ==>       20  ( 0.01 %)     could predict in :        17 (85.00 %)
+   2 ==>      344  ( 0.09 %)     could predict in :       306 (88.95 %)
+   3 ==>     5200  ( 1.40 %)     could predict in :      4964 (95.46 %)
+   4 ==>   366189  (98.50 %)     could predict in :    364590 (99.56 %)
+
+====================================================================================================

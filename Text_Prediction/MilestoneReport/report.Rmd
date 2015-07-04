@@ -1,0 +1,807 @@
+---
+title: "Building a Text Prediction Algorithm"
+subtitle    : "Exploratory Analysis and Thoughts about a Prediction Strategy"
+author      : Giovanni Fossati
+job         : Rice University
+output      : 
+  html_document:
+    self_contained: true
+    theme: cerulean
+    highlight: tango
+    css: css/gf_small_touches_v2.css
+---
+
+```{r setup, cache = FALSE, echo = FALSE, message = FALSE, warning = FALSE, tidy = FALSE}
+require(knitr)
+options(width = 220, scipen = 5)
+# options(width = 100, digits = 7)
+opts_chunk$set(message = FALSE, error = FALSE, warning = FALSE, 
+               collapse = TRUE, tidy = FALSE,
+               cache = TRUE, cache.path = '.cache/', 
+               fig.align = 'left', dpi = 100, fig.path = 'figures/')
+# opts_chunk$set(dev="png", 
+#                dev.args=list(type="cairo"),
+#                dpi=96)
+```
+
+<a name="CONTENT"></a>
+
+## CONTENT
+
+The report is organized in the following sections:
+
+* [EXECUTIVE SUMMARY](#SUMMARY)
+* [PRELIMINARIES](#PRELIMINARIES)
+* [PREPROCESSING (before loading into R)](#PREPROCESSING)
+    * [Homogeneization of Characters](#Homogeneization)
+    * [Contractions, Profanities, Emoticons, Hashtags, etc...](#Contractions)
+* [LOADING THE DATA INTO R](#LOADING)
+* [FURTHER DATA CLEANING IN R](#FURTHER_CLEANING) 
+    * [Text transformations](#text_transformations)
+    * [Excluding rows with too few characters](#few_chars)
+    * [Subsetting of the data](#subsetting)
+* [ANALYSIS - STEP 1 : SENTENCE ANNOTATION](#STEP1)
+* [ANALYSIS - STEP 2 : N-GRAMS TOKENIZATION](#STEP2)
+    * [A look at the n-grams](#ngrams_tables)
+    * [Some Summary Plots for 4-grams](#ngrams_plots)
+        * [Top-30 all mixed](#top30_mixed)
+        * [Top-20 by data source](#top20_separate)
+* [APPENDIX](#APPENDIX)
+    * [User Defined Functions](#my_functions)
+    * [Mysterious issue with `NGramTokenizer`](#issue) 
+
+
+<a name="SUMMARY"></a>
+
+## EXECUTIVE SUMMARY
+
+In this report I briefly illustrate the exploratory analysis performed on a three datasets,
+comprising text from blogs, news and tweets.
+
+The ultimate goal is to produce a _light_ application able to predict text (words) given some
+preceding text, mimicking the predictive typing feature of modern software keyboard of portable
+devices.
+
+As a playground a fairly substantial dataset was made available, comprising text from various
+heterogenous sources (blogs, news, twitter). 
+These datasets are the foundation for developing an understanding of _language processing_ 
+and in turn devise a strategy for achieving the goal, and perhaps more importantly (in practice) 
+they constitute our training and testing datasets.
+
+I decided to invest a significant amount of time to explore the data, and delved (too) deeply into
+data cleaning, assuming that this effort will pay off by making any algorithm more robust.
+
+At this stage in the project I will mostly review my exploratory analysis of the data, 
+and outline my current thought about the strategy for developing the algorithm for the
+text-predicting application.
+
+__Performance issues__: it is worth mentioning that one of the main challenges has been 
+dealing smartly with the computational load, that turned out to be a serious limiting factor, 
+even on a powerful workstation.  
+I did not use the suggested `tm` suite and relied instead heavily on `perl` and in `R` mainly `dplyr`, `NLP` and `RWeka`.
+
+
+### Current Thoughts About Predictive Algorithm Strategy 
+
+My current thoughts, very much in flux, about the strategy are that a _n-grams_ based approach
+would be the most effective.  
+In particular, I am leaning towards a _weighted combination_ of _2- 3- 4- 5-grams_ (linear
+interpolation), perhaps _assisted_ by some additional information drawn from an analysis
+of the association of words in sentences or their distance within it.
+
+An important issue that I have not yet had a chance to ponder sufficiently include the handling of
+_"zeros"_, _i.e._ words not included in the dictionary of the training set or, more importantly
+with a _n-grams_ approach words that are not seen following a given _(n-1) gram_.
+In practice, based on my readings, this problem is tackled with some form of _smoothing_, 
+that is assigning a probability to the _"zeros"_ (and in turn re-allocating some mass probability
+away from the observed _n-grams_).  
+I have not yet had a chance to explore the feasibility and effectiveness of methods
+like _Good-Turing_ or _Stupid Backoff_.
+
+
+
+<a name="PRELIMINARIES"></a>
+
+## PRELIMINARIES
+
+[Back to the Top](#CONTENT)
+
+Libraries needed for data processing and plotting:
+
+```{r load_packages, cache = FALSE, echo = TRUE, message = FALSE, warning = FALSE, tidy = FALSE}
+#-----------------------------
+# NLP
+library("tm")
+library("SnowballC")
+library("openNLP")
+library("NLP")
+
+# To help java fail less :-(
+options( java.parameters = "-Xmx6g")
+library("RWeka")   # [NGramTokenizer], [Weka_control]
+
+#-----------------------------
+# general
+library("dplyr")
+library("magrittr")
+library("devtools")
+
+library("ggplot2")
+library("gridExtra")
+# library("RColorBrewer")
+
+#-----------------------------
+# my functions
+source("./scripts/my_functions.R")
+#-----------------------------
+```
+
+<a name="PREPROCESSING"></a>
+
+## PREPROCESSING (before loading into R)
+
+[Back to the Top](#CONTENT)
+
+After a quick review of the data with various R functions and packages, 
+I decided to perform some cleaning of the text with standard _Linux_ command line tools.
+
+The main task was to analyze the mix of invidual characters present in the three datasets
+with the goal of doing some homogeneization and tidying up of non-alphanumeric characters,
+such as quotes that can come in different forms.
+
+The used method is not elegant, but effective enough, relying on a simple perl command
+substituting a series of _non-odd_ characters with spaces, thus leaving a stream of _odd_ characters
+subsequently parsed and cleaned to produce a list of _odd_ characters sorted by their count.
+
+```
+perl -pe 's|[\d\w\$\,\.\!\?\(\);:\/\\\-=&%#_\~<>]||g; s|\s||g; s|[\^@"\+\*\[\]]||g;' | \
+          perl -pe "s/\'//g;" | \
+          egrep -v '^$' | \
+          split_to_singles.awk | \
+          sort -k 1 | uniq -c | sort -k 1nr
+
+# split_to_singles.awk is a short awk script not worth including here (it's on GitHub)
+```
+
+The number of unique _odd_ characters found in each dataset are 
+`r system("wc -l data/odd_chars.sorted.blogs.txt | awk '{print $1}'", intern = TRUE)` for blogs, 
+`r system("wc -l data/odd_chars.sorted.news.txt | awk '{print $1}'", intern = TRUE)` for news,
+`r system("wc -l data/odd_chars.sorted.twitter.txt | awk '{print $1}'", intern = TRUE)` for twitter.
+
+The following is the census of _odd characters_ appearing more than 500 times in each of the datasets 
+(the full sorted lists are available on the GitHub repo in the data directory).
+
+```
+   blogs           news              twitter
+-----------      ----------         ------------------------
+ 387317 [’]      102911 [’]         27440 [“]        726 [»]
+ 109154 [”]       48115 [—]         26895 [”]        718 [«]
+ 108769 [“]       47090 [“]         11419 [’]        715 [😔]
+  50176 [–]       43992 [”]          5746 [♥]        686 [😉]
+  41129 […]        8650 [–]          5241 […]        680 [😳]
+  23836 [‘]        6991 [ø]          3838 [|]        639 [{]
+  18757 [—]        6723 []          2353 [❤]        617 [•]
+   3963 [é]        6544 []          2314 [–]        593 [‘]
+   2668 [£]        6267 []          1799 [—]        578 [�]
+   1301 [′]        4898 [‘]          1333 [😊]        561 [💜]
+    914 [´]        3641 []          1211 [👍]        560 [😃]
+    755 [″]        3319 [é]          1149 [😂]        544 [😏]
+    643 [€]        3062 […]           977 [é]        506 [☀]
+    624 [ā]        2056 []           963 [😁]        503 [😜]
+    605 [½]        1408 []           955 [☺]
+    598 [á]        1152 [�]           926 [😒]
+    582 [ö]         971 [•]           802 [`]
+    555 [è]         837 [½]           758 [😍]
+    518 [°]         711 [`]           751 [😘]
+                    537 [ñ]           741 [}]
+```
+
+
+<a name="Homogeneization"></a>
+
+### Homogeneization of Characters
+
+[Back to the Top](#CONTENT)
+
+For this preliminary stage I decided to not worry about accented letters, and characters from
+non-latin alphabet (_e.g._ asian, emoticons), but I thought it would be helpful to standardize
+a small set of very frequent characters, whose "meaning" is substantially equivalent
+
+```
+                blogs    news  twitter      TOTAL
+        
+quotes    [‘]   23836    4898     593   =   29327
+          [’]  387317  102911   11419   =  501647
+          [“]  108769   47090   27440   =  183299
+          [”]  109154   43992   26895   =  180041
+          [«]       0       0     718   =     718
+          [»]       0       0     726   =     726
+                                
+dashes    [–]   50176    8650    2314   =   61140
+          [—]   48115   18757    1799   =   68671
+
+ellipsis  […]   41129    5241    3062   =   49432
+```
+
+The dataset where cleaned with this perl commands and saved.
+
+```
+  perl -pe "s|’|\'|g; s|…|...|g; s|–|\-|g; s|—|\-|g; s|‘|\'|g;" $1 |  \
+        perl -pe 's|«|"|g; s|»|"|g; s|”|"|g; s|“|"|g;' 
+```
+
+
+<a name="Contractions"></a>
+
+### Contractions, Profanities, Emoticons, Hashtags, etc... 
+
+[Back to the Top](#CONTENT)
+
+I have put a major effort into understanding the idiosyncrasies of the textual data, with the
+expectation that a deep cleaning would make a difference in the prediction context.
+
+One example of what I have in mind is that transforming to categorical generic "tag" frequent
+"items" with a lot of variations but broadly similar meaning (e.g. dates, money, possessive
+pronouns), could strengthen the predictive ability of any algorithm.   
+
+Most of the work was done with `perl` "offline" (can't beat it for `regex` work).   
+To match the application input with the data on which the application is built, all operations 
+were ported to `R` either directly or by relying on an external perl script.
+Among the main transformations applied to the text:
+
+* __Contractions__ (_e.g._ don't, isn't, I'll): this seem to be more commonly regarded as 
+      stopword, hence removed.  My take has been that they can provide meaning and it was worth 
+      preserving them, as well as they non-contracted counterparts.  I homogeneized all 
+      of them in forms like "I_will", "do_not", with an underscore gluing them together.
+* __Profanity filtering__: I based my cleaning on the "7 dirt words", and some words rooted on them.
+    + To preserve their potential predictive value, I replace them with a tag `<PROFANITY>`.
+    + User input is also filtered, but the information carried by a possible profanity can be used.
+* __Emoticons__: Recognized them with regex.  Marked with a tag, `<EMOJ>`.
+
+Other transformations done on the text before loading the data into R:
+
+- __Regularization/ Homogeneization of Characters__
+    - Mostly cleaning (not necessarily removing) _odd characters_ e.g. apostrophes, quotes, etc.
+    - Sequences of characters: inline and End-Of-Line _ellipsis_, and other "non-sense".
+    - Substitution on "|" that seem to be equivalent to end of sentences (i.e. a period).
+    - Substitution of `<==/<--` and `==>/-->` with `;`.
+    - Cleaning sequences of `!` and `?`.
+- __Hashtags__: Recognized and replaced with a generic tag `HASHTAG` 
+- __Acronyms__: limited to variations of `U.S.`, also replaced with a tag, `<USA>`.
+- __Number-related__:
+    + (likely) __dollar amounts__ by the presence of `$`: marked with `<MONEY>` tag.
+    + __dates__ (_e.g. 12/34/5678_): marked with `<DATE>` tag.
+    + __hours__ (_e.g. 1:30 p.m._): marked with `<HOUR>` tag.
+    + _percentages_: marked with `<PERCENTAGE>` tag.
+- __Repeated Consecutive Characters__: handled by type.  
+    + `$` signs, assumed to stand for a money: replaced with tag `<MONEY>`.
+    + `*`, within words usually are disguised profanities: replaced with `<PROFANITY>` tag.
+    + `-`: context/surroundings dependent replacement with regular punctuation.
+    + Some character sequences were entirely deleted: multiple `<`, `>`, `=`, `#`.
+        
+
+The rest of the analysis presented here is based on these _cleaned_ datasets.
+
+<a name="LOADING"></a>
+
+## LOADING THE DATA INTO R
+
+[Back to the Top](#CONTENT)
+
+The datasets are read-in separately into character vectors, using a user-defined compact function
+(`readByLine()`) (see [__Appendix__](#Appendix) for the short source).
+
+```{r load_data, eval = FALSE, cache = TRUE}
+in.blogs.CL <- readByLine("./data/en_US.blogs.CLEANED1.txt.gz", check_nl = FALSE, skipNul = TRUE)
+in.news.CL <- readByLine("./data/en_US.news.CLEANED1.txt.gz", check_nl = FALSE, skipNul = TRUE)
+in.twitter.CL <- readByLine("./data/en_US.twitter.CLEANED1.txt.gz", check_nl = FALSE, skipNul = TRUE)
+```
+
+Some basic statistics of the three datasets:
+
+```{r data-basic_stats, eval = TRUE, cache = TRUE}
+stats.blogs   <- as.numeric(system("gzip -dc ./data/en_US.blogs.CLEANED1.txt.gz | wc | awk '{print $1; print $2; print $3}'", intern = TRUE))
+stats.news    <- as.numeric(system("gzip -dc ./data/en_US.news.CLEANED1.txt.gz | wc | awk '{print $1; print $2; print $3}'", intern = TRUE))
+stats.twitter <- as.numeric(system("gzip -dc ./data/en_US.twitter.CLEANED1.txt.gz | wc | awk '{print $1; print $2; print $3}'", intern = TRUE))
+
+stats.df <- data.frame( blogs = stats.blogs, news = stats.news, twitter = stats.twitter, 
+                        row.names = c("lines", "words", "characters"), stringsAsFactors = FALSE)
+```
+
+```{r data-basic_stats-print, eval = TRUE}
+stats.df
+```
+
+
+<a name="FURTHER_CLEANING"></a>
+
+## FURTHER DATA CLEANING IN R
+
+[Back to the Top](#CONTENT)
+
+There are some common, customary, operations performed on a text dataset before proceeding to
+analyze it.  
+
+* __Make text lowercase__.
+* __Strip extra white spaces__.
+* __Remove numbers__.
+* Remove punctuation.
+* Remove _stopwords_.
+
+Given that the goal is to __predict words in a typing context__ I think that removing
+_stopwords_ does not make much sense.  
+Working with a text without _stopwords_ may be useful if one wanted to use in the
+prediction algorithm some information about words' association in sentences,
+which may help improve meaningful discrimination between different _next word_
+possibilities "proposed" by an algorithm based on _n-grams_.
+
+Because of the context, I also do not think that removing punctuation would be wise, nor make
+sense.  
+
+<a name="text_transformations"></a>
+
+### Text transformations
+
+[Back to the Top](#CONTENT)
+
+I have applied to the data the other three transformations, as follows (btw, a big obligatory
+acknowledgement and thank you to Hadley Wickham and Stefan Bache for bringing us `%>%`!).
+
+```{r preproc-transform, eval = FALSE, cache = TRUE}
+in.blogs.CL.cleaned <- tolower(in.blogs.CL) %>% removeNumbers() %>% stripWhitespace()
+in.news.CL.cleaned <- tolower(in.news.CL) %>% removeNumbers() %>% stripWhitespace()
+in.twitter.CL.cleaned <- tolower(in.twitter.CL) %>% removeNumbers() %>% stripWhitespace()
+```
+```{r load_cleaned_data, eval = TRUE, cache = TRUE, echo = FALSE}
+# NOT ECHOED
+load("data/in.blogs.CL.cleaned.RData")
+load("data/in.news.CL.cleaned.RData")
+load("data/in.twitter.CL.cleaned.RData")
+```
+
+
+<a name="few_chars"></a>
+
+### Excluding rows with too few characters
+
+[Back to the Top](#CONTENT)
+
+During my initial attempts it immediately emerged the problem of excessively short rows of text.
+In particular, because I decided to perform tokenization on individual sentences, not directly on
+individual rows, the tokenizer tripped and failed on empty "sentences" resulting from short 
+rows.
+
+I have then decided to set a cutoff to the minimum acceptable length of rows. 
+After some empirical testing and row-length analysis with command line tools (_e.g._ something 
+like `awk '{if(length <= 8){printf "%6d - %-s\n",NR,$0}}' `) I have set a threshold at 6 characters.
+
+```{r preproc-short_rows, eval = TRUE, cache = TRUE}
+nchar.min <- 6
+
+nchar.blogs.CL <- nchar(in.blogs.CL.cleaned)
+in.blogs.CL.cleaned <- in.blogs.CL.cleaned[nchar.blogs.CL > nchar.min]
+
+nchar.news.CL <- nchar(in.news.CL.cleaned)
+in.news.CL.cleaned <- in.news.CL.cleaned[nchar.news.CL > nchar.min]
+
+nchar.twitter.CL <- nchar(in.twitter.CL.cleaned)
+in.twitter.CL.cleaned <- in.twitter.CL.cleaned[nchar.twitter.CL > nchar.min]
+```
+
+```{r preproc-assign_working_files, eval = TRUE, cache = TRUE, echo = FALSE}
+# ECHO FALSE
+in.blogs <- in.blogs.CL.cleaned
+in.news <- in.news.CL.cleaned
+in.twitter <- in.twitter.CL.cleaned
+```
+
+
+<a name="subsetting"></a>
+
+### Subsetting of the data
+
+[Back to the Top](#CONTENT)
+
+It immediately became clear that analyzing the entire dataset requires fairly powerful computing
+resources and time, even on a very high-end laptop and workstation.
+
+Therefore, for exploration and prototyping I have been working with a subset of 20% of
+the data of each type.  
+
+
+```{r data-subsetting, eval = FALSE, cache = TRUE}
+fraction <- 0.2
+
+# for reproducibility set seed!
+set.seed(6420)
+idx.blogs   <- sample(1:length(in.blogs), ceiling(fraction*length(in.blogs)))
+idx.news    <- sample(1:length(in.news), ceiling(fraction*length(in.news)))
+idx.twitter <- sample(1:length(in.twitter), ceiling(fraction*length(in.twitter)))
+
+sel.blogs   <- in.blogs[idx.blogs]
+sel.news    <- in.news[idx.news]
+sel.twitter <- in.twitter[idx.twitter]
+```
+
+<a name="STEP1"></a>
+
+## ANALYSIS - STEP 1 : SENTENCE ANNOTATION
+
+[Back to the Top](#CONTENT)
+
+As noted, after some tests, I settled on an approach whereby _n-grams tokenization_ is performed 
+on separate individual sentences, instead of directly on individual rows as loaded from the dataset.
+
+This is motivated by the fact that the _tokenizer_ I have adopted because I found its performance
+to be more satisfactory, the _NGramTokenizer_ of the _RWeka_ package, does not seem to interrupt 
+its construction of _n-grams_ at what are very likely sentence boundaries.
+
+With _next word prediction_ in mind, it makes a lot of sense to restrict _n-grams_ to sequences
+of words within the boundaries of a sentence.
+
+Therefore, after cleaning, transforming and filtering the data, the first real operation 
+I perform is the annotation of sentences, for which I have been using the __openNLP__ sentence
+annotator `Maxent_Sent_Token_Annotator()`, with its default settings.
+
+```{r sentence_annotation-setup, eval = TRUE, cache = TRUE}
+sent_token_annotator <- Maxent_Sent_Token_Annotator()
+sent_token_annotator
+```
+
+I want the data in the form of a _vector with individual sentences_, and so I opted for `sapply()`
+combined with a function wrapping the operations necessary to prepare a row of data for
+annotation, the annotation itself and finally return a vector of sentences (the short function
+is shown in the [__Appendix__](#Appendix)).
+
+```{r sentence_annotation-read, eval = TRUE, cache = TRUE, echo = FALSE}
+# NOT ECHOED
+# load("data/sel.blogs.RData")
+# load("data/sel.news.RData")
+# load("data/sel.twitter.RData")
+load("data/sel.blogs.sentences.RData")
+load("data/sel.news.sentences.RData")
+load("data/sel.twitter.sentences.RData")
+```
+
+```{r sentence_annotation-run, eval = FALSE, cache = TRUE}
+sel.blogs.sentences <- sapply(sel.blogs, FUN = find_sentences, USE.NAMES = FALSE) %>% unlist 
+sel.news.sentences <- sapply(sel.news, FUN = find_sentences, USE.NAMES = FALSE) %>% unlist 
+sel.twitter.sentences <- sapply(sel.twitter, FUN = find_sentences, USE.NAMES = FALSE) %>% unlist 
+```
+
+```{r sentence_annotation-print_1, eval = TRUE, cache = TRUE}
+N.sentences <- c(length(sel.blogs.sentences), length(sel.news.sentences), length(sel.twitter.sentences))
+stats.df[4, ] <- as.numeric(5*N.sentences)
+row.names(stats.df)[4] <- "sentences"
+```
+
+The stats table, with the added _estimated number of sentences_ (because the analysis is on just
+20% of the data, the number tabulated is `5*N.sentences`) is as follows:
+
+```{r sentence_annotation-print_2, eval = TRUE, cache = TRUE}
+stats.df
+round(stats.df[4, ]/stats.df[1, ], 3)
+```
+
+<a name="STEP2"></a>
+
+## ANALYSIS - STEP 2 : N-GRAMS TOKENIZATION
+
+[Back to the Top](#CONTENT)
+
+For the _n-grams_ tokenization I have been using the __RWeka Tokenizer__ `NGramTokenizer`, passing
+to it a list of _token delimiters_.
+
+I have been extracting _n-grams_ for $n = 1, 2, 3, 4, 5$.
+It turns out that the _1-grams_ seem to represent a better definition of _words_ than what
+is produced by the `NWordTokenizer`.  For instance, this latter breaks _don't_ in 2,
+while the `NGramTokenizer` picks it up as a _1-gram_.
+
+I have not been able to run `NGramTokenizer` on the full vector of sentences for each data set.
+It fails on some variation of memory-allocation related error (that honestly does not make much
+sense to me considering that I am running it on machines with 12GB of RAM).
+
+So, I am processing data in chunks of 100,000 sentences, as exemplified by this block of code
+(the _n-grams_ data for the following section are loaded from saved previous analysis).
+
+
+```{r ngrams-1, eval = FALSE, cache = TRUE}
+token_delim <- " \\t\\r\\n.!?,;\"()"
+nl.chunk <- 100000
+N <- ceiling(length(sel.blogs.sentences)/nl.chunk)
+
+#----- BLOGS ------------------------------------
+end.blogs <- length(sel.blogs.sentences)
+
+#----- 2-grams -----
+cat(" *** Tokenizing : blogs : 2-grams ------------------------------------------------------------\n")
+n2grams.blogs.1 <- NGramTokenizer(sel.blogs.sentences[1:100000], 
+                                  Weka_control(min = 2, max = 2, delimiters = token_delim))
+n2grams.blogs.2 <- NGramTokenizer(sel.blogs.sentences[100001:200000], 
+                                  Weka_control(min = 2, max = 2, delimiters = token_delim))
+n2grams.blogs.3 <- NGramTokenizer(sel.blogs.sentences[200001:300000], 
+                                  Weka_control(min = 2, max = 2, delimiters = token_delim))
+n2grams.blogs.4 <- NGramTokenizer(sel.blogs.sentences[300001:400000], 
+                                  Weka_control(min = 2, max = 2, delimiters = token_delim))
+n2grams.blogs.5 <- NGramTokenizer(sel.blogs.sentences[400001:end.blogs], 
+                                  Weka_control(min = 2, max = 2, delimiters = token_delim))
+
+#----- 3-grams -----
+cat(" *** Tokenizing : blogs : 3-grams ------------------------------------------------------------\n")
+n3grams.blogs.1 <- NGramTokenizer(sel.blogs.sentences[1:100000], 
+                                  Weka_control(min = 3, max = 3, delimiters = token_delim))
+n3grams.blogs.2 <- NGramTokenizer(sel.blogs.sentences[100001:200000], 
+                                  Weka_control(min = 3, max = 3, delimiters = token_delim))
+n3grams.blogs.3 <- NGramTokenizer(sel.blogs.sentences[200001:300000], 
+                                  Weka_control(min = 3, max = 3, delimiters = token_delim))
+n3grams.blogs.4 <- NGramTokenizer(sel.blogs.sentences[300001:400000], 
+                                  Weka_control(min = 3, max = 3, delimiters = token_delim))
+n3grams.blogs.5 <- NGramTokenizer(sel.blogs.sentences[400001:end.blogs], 
+                                  Weka_control(min = 3, max = 3, delimiters = token_delim))
+
+# Combining split N-grams vector 
+source("./scripts/combine_nXgrams_blogs.R")
+```
+
+<a name="ngrams_tables"></a>
+
+### A look at the n-grams
+
+[Back to the Top](#CONTENT)
+
+From the _n-grams_ vectors we can compute frequencies, which will be an important basis for
+the prediction algorithms.
+
+For now we can take a peek at what are the most frequent _3-grams_ and _4-grams_ 
+in the three datasets.
+
+```{r load_ngrams, echo = FALSE, eval = TRUE, cache = TRUE}
+# ECHO FALSE
+ load("data/n3grams.blogs.all.RData")
+ load("data/n4grams.blogs.all.RData")
+#
+ load("data/n3grams.news.all.RData")
+ load("data/n4grams.news.all.RData")
+#
+ load("data/n3grams.twitter.all.RData")
+ load("data/n4grams.twitter.all.RData")
+
+# load from scratch
+# n3grams.blogs.all <- readByLine("../output/n3grams.blogs.all.gz")
+# n4grams.blogs.all <- readByLine("../output/n4grams.blogs.all.gz")
+# 
+# n3grams.news.all <- readByLine("../output/n3grams.news.all.gz")
+# n4grams.news.all <- readByLine("../output/n4grams.news.all.gz")
+# 
+# n3grams.twitter.all <- readByLine("../output/n3grams.twitter.all.gz")
+# n4grams.twitter.all <- readByLine("../output/n4grams.twitter.all.gz")
+```
+
+```{r ngrams_blogs_1, eval = TRUE, cache = TRUE, echo = FALSE}
+# ECHO FALSE
+
+n3g.blogs.freq <- as.data.frame(table(n3grams.blogs.all), stringsAsFactors = FALSE)
+n3g.blogs.freq <- n3g.blogs.freq[order(n3g.blogs.freq$Freq, decreasing = TRUE), ]
+row.names(n3g.blogs.freq) <- NULL
+
+n4g.blogs.freq <- as.data.frame(table(n4grams.blogs.all), stringsAsFactors = FALSE)
+n4g.blogs.freq <- n4g.blogs.freq[order(n4g.blogs.freq$Freq, decreasing = TRUE), ]
+row.names(n4g.blogs.freq) <- NULL
+
+colnames(n3g.blogs.freq) <- c("ngram", "count")
+colnames(n4g.blogs.freq) <- c("ngram", "count")
+```
+
+```{r ngrams_news_1, eval = TRUE, cache = TRUE, echo = FALSE}
+# ECHO FALSE
+
+n3g.news.freq <- as.data.frame(table(n3grams.news.all), stringsAsFactors = FALSE)
+n3g.news.freq <- n3g.news.freq[order(n3g.news.freq$Freq, decreasing = TRUE), ]
+row.names(n3g.news.freq) <- NULL
+
+n4g.news.freq <- as.data.frame(table(n4grams.news.all), stringsAsFactors = FALSE)
+n4g.news.freq <- n4g.news.freq[order(n4g.news.freq$Freq, decreasing = TRUE), ]
+row.names(n4g.news.freq) <- NULL
+
+colnames(n3g.news.freq) <- c("ngram", "count")
+colnames(n4g.news.freq) <- c("ngram", "count")
+```
+
+```{r ngrams_twitter_1, eval = TRUE, cache = TRUE, echo = FALSE}
+# ECHO FALSE
+
+n3g.twitter.freq <- as.data.frame(table(n3grams.twitter.all), stringsAsFactors = FALSE)
+n3g.twitter.freq <- n3g.twitter.freq[order(n3g.twitter.freq$Freq, decreasing = TRUE), ]
+row.names(n3g.twitter.freq) <- NULL
+
+n4g.twitter.freq <- as.data.frame(table(n4grams.twitter.all), stringsAsFactors = FALSE)
+n4g.twitter.freq <- n4g.twitter.freq[order(n4g.twitter.freq$Freq, decreasing = TRUE), ]
+row.names(n4g.twitter.freq) <- NULL
+
+colnames(n3g.twitter.freq) <- c("ngram", "count")
+colnames(n4g.twitter.freq) <- c("ngram", "count")
+```
+
+#### __3-grams__
+
+```{r top20_n3grams, eval = TRUE, cache = TRUE}
+print(cbind(head(n3g.blogs.freq, 20), head(n3g.news.freq, 20), head(n3g.twitter.freq, 20)), 
+      print.gap = 1, right = FALSE)
+```
+
+#### __4-grams__
+
+* __blogs__
+```{r top20_n4grams_blogs, eval = TRUE, cache = TRUE}
+print(head(n4g.blogs.freq, 20), print.gap = 3, right = FALSE)
+```
+
+* __news__
+```{r top20_n4grams_news, eval = TRUE, cache = TRUE}
+print(head(n4g.news.freq, 20), print.gap = 3, right = FALSE)
+```
+
+* __twitter__
+```{r top20_n4grams_twitter, eval = TRUE, cache = TRUE}
+print(head(n4g.twitter.freq, 20), print.gap = 3, right = FALSE)
+```
+
+It is apparent that there some work will be necessary on the validation of the _n-grams_, 
+or better still further text transformations, in particular of the _twitter_ data set that "suffers" 
+from the tendency of using _shorthand slang_ (_e.g._ "rt" for "re-tweet") that adds a lot of "noise" 
+to the data.
+
+<a name="ngrams_plots"></a>
+
+### Some Summary Plots for 4-grams
+
+[Back to the Top](#CONTENT)
+
+<a name="top30_mixed"></a>
+
+#### Top-30 all mixed
+
+```{r rank_mixed, eval = TRUE, cache = TRUE, echo = FALSE}
+n4g.t <- subset(n4g.twitter.freq, count >= 50)
+n4g.t$flag <- "twitter"
+n4g.b <- subset(n4g.blogs.freq, count >= 50)
+n4g.b$flag <- "blogs"
+n4g.n <- subset(n4g.news.freq, count >= 50)
+n4g.n$flag <- "news"
+
+n4g.high <- rbind(n4g.b, n4g.n, n4g.t)
+row.names(n4g.high) <- NULL
+n4g.high.sorted <- n4g.high[order(n4g.high$count, decreasing = TRUE), ]
+row.names(n4g.high.sorted) <- NULL
+```
+
+```{r barplot_mix, eval = TRUE, cache = TRUE, echo = FALSE, fig.width = 10, fig.height = 7}
+# ECHO FALSE
+mycolors <- c("deepskyblue3", "firebrick2", "forestgreen")
+data2pl <- n4g.high.sorted[1:30, ]
+bp_mix <- ggplot(data2pl, aes(x = reorder(ngram, count), y = count)) + theme_bw() + coord_flip() + xlab("") + 
+    theme(plot.title = element_text(face = "bold", size = 20)) + 
+    theme(axis.text = element_text(size = 10)) + 
+    scale_fill_manual(values = mycolors) + 
+    ggtitle("Top 30 4-grams : all sources") + 
+    geom_bar(stat = "identity", aes(fill = flag)) + 
+    geom_text(aes(label = count, hjust = 1.1, size = 10), col = "white", position = position_stack())
+
+bp_mix
+```
+
+<a name="top20_separate"></a>
+
+#### Top-20 by data source
+
+```{r barplot_together, eval = TRUE, cache = TRUE, echo = FALSE, fig.width = 7, fig.height = 15}
+# ECHO FALSE
+data.blogs <- n4g.blogs.freq[1:20, ]
+bp_blogs <- ggplot(data.blogs, aes(x = reorder(ngram, count), y = count)) + theme_bw() + coord_flip() + xlab("") + 
+    theme(plot.title = element_text(face = "bold", size = 20)) + 
+    theme(axis.text = element_text(size = 10)) + 
+    theme(legend.position = "none") + 
+    ggtitle("Top 20 4-grams : blogs") + 
+    geom_bar(stat = "identity", fill = mycolors[1]) + 
+    geom_text(aes(label = count, y = 100, size = 10), col = "white") 
+
+data.news <- n4g.news.freq[1:20, ]
+bp_news <- ggplot(data.news, aes(x = reorder(ngram, count), y = count)) + theme_bw() + coord_flip() + xlab("") + 
+    theme(plot.title = element_text(face = "bold", size = 20)) + 
+    theme(axis.text = element_text(size = 10)) + 
+    theme(legend.position = "none") + 
+    ggtitle("Top 20 4-grams : news") + 
+    geom_bar(stat = "identity", fill = mycolors[2]) + 
+    geom_text(aes(label = count, y = 100, size = 10), col = "white") 
+
+data.twitter <- n4g.twitter.freq[1:20, ]
+bp_twitter <- ggplot(data.twitter, aes(x = reorder(ngram, count), y = count)) + theme_bw() + coord_flip() + xlab("") + 
+    theme(plot.title = element_text(face = "bold", size = 20)) + 
+    theme(axis.text = element_text(size = 10)) + 
+    theme(legend.position = "none") + 
+    ggtitle("Top 20 4-grams : twitter") + 
+    geom_bar(stat = "identity", fill = mycolors[3]) + 
+    geom_text(aes(label = count, y = 100, size = 10), col = "white") 
+
+grid.arrange(bp_blogs, bp_news, bp_twitter, nrow = 3)
+```
+
+<a name="APPENDIX"></a>
+
+## APPENDIX 
+
+[Back to the Top](#CONTENT)
+
+
+<a name="my_functions"></a>
+
+### User Defined Functions
+
+These are two handy functions used in the analysis.
+
+* The first for reading the data.
+* The second is passed to `sapply()` to annotate sentences, allowing to work by row instead
+of converting the whole dataset into one document.
+
+```{r eval=FALSE}
+#-----------------------------------------------------------------------------------------
+# modified readLines
+
+readByLine <- function(fname, check_nl = TRUE, skipNul = TRUE) {
+    if( check_nl ) {
+        cmd.nl   <- paste("gzip -dc", fname, "| wc -l | awk '{print $1}'", sep = " ")
+        nl   <- system(cmd.nl, intern = TRUE)
+    } else {
+        nl   <- -1L
+    }
+    con <- gzfile(fname, open = "r")
+    on.exit(close(con))
+    readLines(con, n = nl, skipNul = skipNul) 
+}
+
+#-----------------------------------------------------------------------------------------
+# to use w/ sapply for finer sentence splitting.
+
+find_sentences <- function(x) {
+    s <- paste(x, collapse = " ") %>% as.String()
+    a <- NLP::annotate(s , sent_token_annotator) 
+    as.vector(s[a])
+}
+#-----------------------------------------------------------------------------------------
+```
+
+<a name="issue"></a>
+
+### Mysterious issue with `NGramTokenizer` 
+
+Because the `NGramTokenizer` would fail with a _java memory error_ if fed the full vector
+of sentences, but run when fed chunks of 100,000 sentences, I thought that turning 
+this into a basic loop handling the splitting in chunks, collecting the output and
+finally return just one vector of _n-grams_ would work, be compact and smarter.
+
+It turns out that it fails... and this puzzles me deeply.  
+Is R somehow handling the "stuff" in the loop in the same way it would if I run
+the tokenizer with the full vector?
+
+Any clue?
+
+
+```{r mystery_error, eval = FALSE}
+nl.chunk <- 100000
+N <- ceiling(length(sel.blogs.sentences)/nl.chunk)
+alt.n3grams.blogs <- vector("list", N)
+
+system.time({
+for( i in 1:N ) {
+    i <- i+1
+    n1 <- (i-1)*nl.chunk + 1
+    n2 <- min(i*nl.chunk, end.blogs)
+    cat(" ", i, n1, n2, "\n")
+    alt.n3grams.blogs[[i]] <- NGramTokenizer(sel.blogs.sentences[n1:n2], 
+                                             Weka_control(min = 3, max = 3, 
+                                                          delimiters = token_delim)) 
+}
+})
+```
+
+

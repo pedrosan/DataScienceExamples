@@ -1,0 +1,210 @@
+Text Prediction Challenge
+===
+author: Giovanni Fossati
+date: December 14 2014
+transition: rotate
+
+<small> 
+Rice University   
+Astrophysicist   
+[apologies for the temporary problem with ShinyApps.   
+I will put the URL here as soon as I manage to succeed with the deployment.
+</small>
+
+
+The Challenge
+===
+<small>
+- The goal of the project was to develop an application able to produce sensible prediction
+for the words following a short submitted text.
+
+- As a playground a fairly substantial dataset was made available, comprising text from
+various heterogenous sources (blogs, news, twitter).
+Despite its size, it did not take much to appreciate that the dataset could at
+best give a rough guidance.
+
+- I decided to invest a significant amount of time to explore the data, and delved (too) 
+deeply into data cleaning, making the unwise assumption that the effort would have
+paid off by making any algorithm more robust.
+
+- Unfortunately I ended up with too little time to devise and implement a smart algorithm,
+playing with the many very interesting ideas learned while reading about NLP.
+
+- What you will see, hopefully functioning, is not a very inspired and smart application,
+and I would like to apologized for it. 
+
+- As a personal note I would like to note that I did not know the first things about Language Processing
+and the experience in research (astrophysics) was nearly useless, if not counterproductive, contrary 
+to what happened previously in the Specialization.
+</small>
+
+Data Processing
+===
+
+<small>
+As noted I put a major effort into understanding the idiosyncrasies of the textual data,
+with the expectation that a deep cleaning would truly make a difference in the prediction context.
+One example of what I had in mind is that transforming to categorical generic "tag" frequent
+"items" with a lot of variations but broadly similar meaning (e.g. dates, money, possessive
+pronouns), could strengthen the predictive ability of any algorithm.
+
+Most of the work was done with perl "offline" (can't beat it for `regex` work).
+To match the application input with the data on which the application is built, all operations 
+were ported to `R` either directly or by relying on an external perl script.
+
+Among the main transformations applied to the text:
+
+- __Regularization/ Homogeneization of Characters__
+    - mostly cleaning (not necessarily removing) _odd characters_ the various apostrophes, quotes, etc.)
+    - Sequences of characters: inline and End-Of-Line _ellipsis_, and other "non-sense".
+    - Substitution on "|" that seem to be equivalent to end of sentences (i.e. a period).
+    - Substitution of `<==/<--` and `==>/-->` with `;`.
+    - Cleaning sequences of `!` and `?`.
+
+- __Hashtags__: Recognized and replaced with a generic tag `HASHTAG` 
+
+- __Number-related__:
+    + (likely) __dollar amounts__ by the presence of `$`: marked with `<MONEY>` tag.
+    + __dates__ (_e.g. 12/34/5678_): marked with `<DATE>` tag.
+    + __hours__ (_e.g. 1:30 p.m._): marked with `<HOUR>` tag.
+    + _percentages_: marked with `<PERCENTAGE>` tag.
+
+- __Acronyms__: limited to variations of `U.S.`, also replaced with a tag, `<USA>`.
+</small>
+
+
+Processing, cont'd
+===
+<small>
+- __Emoticons__: Recognized them with regex.  Marked with a tag, `<EMOJ>`.
+
+- __Repeated Consecutive Characters__: handled by type.  
+    + multiple `$` signs, assumed to stand for a money: replaced with tag `<MONEY>`.
+    + Multiple `*`, within words usually are disguised profanities: replaced with `<PROFANITY>` tag.
+    + Multiple `,`: collapsed to one.
+    + Multiple `+`: deleted with the exception of `A++` and `C++`.
+    + Multiple `-`: context/surroundings dependent replacement with regular punctuation.
+    + Some character sequences were entirely deleted: multiple `<`, `>`, `=`, `#`.
+        
+- __Contractions__ (_e.g._ don't, isn't, I'll): this seem to be more commonly regarded as 
+      stopword, hence removed.  My take has been that they can provide meaning and it was worth 
+      preserving them, as well as they non-contracted counterparts.  I homogeneized all 
+      of them in forms like "I_will", "do_not", with an underscore gluing them together.
+
+- __Possessive pronouns__: As noted I worked under the assumption that they can be predictive instead
+of being a nuisance, even more so if considered as a "category". 
+I implemented a replaced-and-tag approach to them as well.
+
+- __Profanity filtering__: I took based my cleaning on the "7 dirt words", and some words rooted on them.
+    + To preserve their potential predictive value, I replace them with a tag `<PROFANITY>`.
+    + User input is also filtered, but the information carried by a possible profanity can be used.
+</small>
+    
+Authoring content
+===
+- This is a fairly complete guide
+    - http://www.rstudio.com/ide/docs/presentations/overview
+- Quick start is
+    - `file` then `New File` then `R Presentation`
+    - (`alt-f` then `f` then `p` if you want key strokes)
+    - Use basically the same R markdown format for authoring as slidify/knitr
+        - Single quotes for inline code
+        - Tripple qutoes for block code
+        - Same options for code evaluation, caching, hiding etcetera
+
+Compiling and tools
+===
+- R Studio auto formats and runs the code when you save the document
+- Mathjax JS library is loaded by default so that `$x^2$` yields $x^2$
+- Slide navigation button on the preview; clicking on the notepad icon takes you to that slide in the deck
+- Clicking on `more` yields options for
+    - Clearning the knitr cache
+    - Viewing in a browser (creates a temporay html file in `AppData/local/temp` for me)
+    - Create a html file to save where you want)
+- A refresh button 
+- A zoom button that brings up a full window
+
+Visuals
+===
+transition: linear
+
+- R Studio has made it easy to get some cool html5 effects, like cube transitions
+with simple options in YAML-like code after the first slide such as
+`transition: rotate`
+- You can specify it in a slide-by-slide basis
+
+Here's the option "linear"
+===
+transition: linear
+
+- Just put `transition: linear` right after the slide creation (three equal signs or more in a row)
+- Tansition options 
+    - http://www.rstudio.com/ide/docs/presentations/slide_transitions_and_navigation
+
+Hierarchical organization
+===
+type: section
+- If you want a hierarchical organization structure, just add a `type: typename` option after the slide
+- This changes the default appearance
+    - http://www.rstudio.com/ide/docs/presentations/slide_transitions_and_navigation
+- This is of type `section`
+
+Here's a subsection
+===
+type: subsection
+
+Two columns
+===
+- Do whatever for column one
+- Then put `***` on a line by itself with blank lines before and after
+
+***
+
+- Then do whatever for column two
+
+
+Changing the slide font
+==========================================================
+font-import: http://fonts.googleapis.com/css?family=Risque
+font-family: 'Risque'
+
+- Add a `font-family: fontname` option after the slide
+    - http://www.rstudio.com/ide/docs/presentations/customizing_fonts_and_appearance
+- Specified in the same way as css font families
+    - http://www.w3schools.com/cssref/css_websafe_fonts.asp
+- Use `font-import: url` to import fonts
+- Important caveats
+    - Fonts must be present on the system that you're presenting on, or it will go to a fallback font
+    - You have to be connected to the internet to use an imported font (so don't rely on this for offline presentations)
+- This is the `Risque` 
+    - http://fonts.googleapis.com/css?family=Risque
+    
+Really changing things 
+===
+- If you know html5 and CSS well, then you can basically change whatever you want
+- A css file with the same names as your presentation will be autoimported 
+- You can use `css: file.css` to import a css file 
+- You have to create named classes and then use `class: classname` to get slide-specific style control from your css
+    - (Or you can apply then within a `<span>`)
+- Ultimately, you have an html file, that you can edit as you wish
+    - This should be viewed as a last resort, as the whole point is to have reproducible presentations, but may be the easiest way to get the exact style control you want for a final product
+
+Slidify versus R Studio Presenter
+===
+**Slidify**
+- Flexible control from the R MD file
+- Under rapid ongoing development
+- Large user base
+- Lots and lots of styles and options
+- Steeper learning curve
+- More command-line oriented
+
+***
+**R Studio Presenter**
+- Embedded in R Studio
+- More GUI oriented
+- Very easy to get started
+- Smaller set of easy styles and options
+- Default styles look very nice
+- Ultimately as flexible as slidify with a little CSS and HTML knowledge
+

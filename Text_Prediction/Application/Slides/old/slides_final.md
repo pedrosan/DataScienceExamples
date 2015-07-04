@@ -1,0 +1,121 @@
+Text Prediction Challenge
+===
+author: Giovanni Fossati
+date: December 15 2014
+transition: rotate
+css: gf_small_touches.css
+
+Rice University   
+Astrophysicist   
+   
+<div style="color: #EEDD00;">
+Apologies for the temporary problem with ShinyApps.    
+<br />
+I finally managed to deploy it at :   
+<a href="https://pedrosan.shinyapps.io/TextPredict/">this URL</a>
+</div>
+
+
+The Challenge
+===
+
+The goal of the project was to develop an application able to produce sensible prediction
+for the words following a short submitted text.
+- As a playground a fairly substantial dataset was made available, comprising text from
+various heterogenous sources (blogs, news, twitter).
+Despite its size, it did not take much to appreciate that the dataset could at
+best give a rough guidance.
+- I decided to invest a significant amount of time to explore the data, and delved (too) 
+deeply into data cleaning, making the unwise assumption that the effort would have
+paid off by making any algorithm more robust.
+    - Unfortunately I ended up with too little time to devise and implement a smart algorithm,
+    playing with the many very interesting ideas learned while reading about NLP. 
+- What you will see, _hopefully functioning_, is not a very inspired and smart application,
+and I would like to apologized for it. 
+- __Performance issues__: it is worth mentioning that one of the main challenges has been 
+dealing smartly with the computational load, that turned out to be a serious limiting factor, 
+even on a powerful workstation. 
+    - I did not use the suggest `tm` suite and relied instead heavily on `perl` and in `R` mainly
+    `dplyr`, `NLP` and `RWeka`.
+
+
+Data Processing
+===
+
+As noted I put a major effort into understanding the idiosyncrasies of the textual data,
+with the expectation that a deep cleaning would truly make a difference in the prediction context.
+One example of what I had in mind is that transforming to categorical generic "tag" frequent
+"items" with a lot of variations but broadly similar meaning (e.g. dates, money, possessive
+pronouns), could strengthen the predictive ability of any algorithm.   
+Most of the work was done with `perl` "offline" (can't beat it for `regex` work).   
+To match the application input with the data on which the application is built, all operations 
+were ported to `R` either directly or by relying on an external perl script.
+Among the main transformations applied to the text:
+- __Contractions__ (_e.g._ don't, isn't, I'll): this seem to be more commonly regarded as 
+      stopword, hence removed.  My take has been that they can provide meaning and it was worth 
+      preserving them, as well as they non-contracted counterparts.  I homogeneized all 
+      of them in forms like "I_will", "do_not", with an underscore gluing them together.
+- __Possessive pronouns__: As noted I worked under the assumption that they can be predictive instead
+of being a nuisance, even more so if considered as a "category". 
+I implemented a replaced-and-tag approach to them as well.
+- __Profanity filtering__: I based my cleaning on the "7 dirt words", and some words rooted on them.
+    + To preserve their potential predictive value, I replace them with a tag `<PROFANITY>`.
+    + User input is also filtered, but the information carried by a possible profanity can be used.
+- __Emoticons__: Recognized them with regex.  Marked with a tag, `<EMOJ>`.
+    
+
+About The Algorithm
+===
+My approach is based on _n-grams_, which seemed would be the most effective for the task.
+After much exploration, I settled on a _weighted combination_ of _3- 4- 5- 6- grams_,
+along the lines of what may be referred to as _linear interpolation_. 
+- Data are loaded in form of separate data frames for 3-,4-,5-,6- grams.
+- The _input text_ is parsed and cleaned with the same procedures applied to the Corpus.
+- Individual input words are checked (`grepl`) against each n-gram data frame.   
+For further processing I only use the union of the rows matching at least one word,
+a much smaller and manageable subset of data (~ 10000 rows instead of millions).
+- `agrep` has been the tool of choice to search among the n-grams for those who are
+closer to the input text.  `agrep` has given me much better results than other more
+"deterministic" approaches, going word-by-word, etc.
+- My tests suggests that number of overall matches is noticeably improved by testing
+multiple combinations of the n-gram (or input) words
+    - For instance the 4 words from the 5-grams are combined to form strings to compare against
+    the input text by taking the 2-3-4, 1-3-4, 1-2-4, 1-2-3, and "all" combinations.
+- Internally a loop adjusts the threshold of `agrep` aiming at a 20-100 matches.
+- The matches, _i.e._ predicted next-word, obtained from each set of n-grams, and each shuffling of
+the words are then combined, adding the contributions from each data set.
+- Each contribution combines the count, a weight that depends on the n-gram (higher for
+6-grams than for 3-grams), and a weight for the different kinds of shuffling of words.
+    - In practice this is effectively a linear combination of the data.
+- Each candidate word gets a score from this, which I divide by the logarithm 
+of its total counts in the dictionary drawn from the full dataset.
+- I only did some informal testing of how changing the weights and the shuffling affected
+the results, a "poor-man" training/testing protocol, and settled on some values that
+seemed to yield acceptable results (which is far from meaning that it predicts with
+great "accuracy" or good sense...)
+
+
+More About Processing
+===
+type: smaller
+A few more items illustrating other transformations done on the text.
+- __Regularization/ Homogeneization of Characters__
+    - Mostly cleaning (not necessarily removing) _odd characters_ e.g. apostrophes, quotes, etc.
+    - Sequences of characters: inline and End-Of-Line _ellipsis_, and other "non-sense".
+    - Substitution on "|" that seem to be equivalent to end of sentences (i.e. a period).
+    - Substitution of `<==/<--` and `==>/-->` with `;`.
+    - Cleaning sequences of `!` and `?`.
+- __Hashtags__: Recognized and replaced with a generic tag `HASHTAG` 
+- __Acronyms__: limited to variations of `U.S.`, also replaced with a tag, `<USA>`.
+- __Number-related__:
+    + (likely) __dollar amounts__ by the presence of `$`: marked with `<MONEY>` tag.
+    + __dates__ (_e.g. 12/34/5678_): marked with `<DATE>` tag.
+    + __hours__ (_e.g. 1:30 p.m._): marked with `<HOUR>` tag.
+    + _percentages_: marked with `<PERCENTAGE>` tag.
+- __Repeated Consecutive Characters__: handled by type.  
+    + `$` signs, assumed to stand for a money: replaced with tag `<MONEY>`.
+    + `*`, within words usually are disguised profanities: replaced with `<PROFANITY>` tag.
+    + `-`: context/surroundings dependent replacement with regular punctuation.
+    + Some character sequences were entirely deleted: multiple `<`, `>`, `=`, `#`.
+        
+

@@ -1,0 +1,112 @@
+====================================================================================================
+
+ PROCEDURE
+
+===========
+
+[1] Remove ngrams with non-ASCII characters.
+    They are a small fraction, and it makes sense to just remove them.
+
+    > gzip -dc n5grams.all.gz | grep -P -v '([^\x00-\x7F]+)' > n5grams.filtered_for_nonASCII
+
+[2] Pass the filtered list with script that
+      * cleans up some problematic words or rejects some excessively bad n-grams.
+      * reclassifies n-grams based on their adjusted number of words.
+
+    > gzip -dc n5grams.filtered_for_nonASCII.gz | reprocess_clean_and_classify_ngrams.pl -go -print
+
+    This script produces a set of 7 files tmp_n* containing:
+      * good 1-grams
+      * good 2-grams
+      * good 3-grams
+      * good 4-grams
+      * good 5-grams
+      * n > 5 grams 
+      * Trashed n-grams (full of problem not worth dealing with)
+
+[3] Merge the n-grams of each order produced by reprocessing all original n-grams.
+
+
+====================================================================================================
+NOTES ON ANALYSIS OF PROBLEMATIC N-GRAMS / WORDS
+----------------------------------------------------------------------------------------------------
+* non ASCII characters: just REMOVED the ngrams.
+
+gzip -dc ../n2grams.all.gz | grep -P -v '([^\x00-\x7F]+)' > n2grams.filtered_for_nonASCII &
+ N_lines = 77601372
+
+gzip -dc ../n3grams.all.gz | grep -P -v '([^\x00-\x7F]+)' > n3grams.filtered_for_nonASCII &
+ N_lines = 70930821
+
+gzip -dc ../n4grams.all.gz | grep -P -v '([^\x00-\x7F]+)' > n4grams.filtered_for_nonASCII &
+ N_lines = 64319180
+
+gzip -dc ../n5grams.all.gz | grep -P -v '([^\x00-\x7F]+)' > n5grams.filtered_for_nonASCII &
+ N_lines = 58020718
+
+
+----------------------------------------------------------------------------------------------------
+* checking lines with TAGS
+
+gzip -dc n3grams.filtered_for_nonASCII.gz | egrep '<[A-Z]+>' | wc -l
+814958
+
+gzip -dc n4grams.filtered_for_nonASCII.gz | egrep '<[A-Z]+>' | wc -l
+966201
+
+gzip -dc n5grams.filtered_for_nonASCII.gz | egrep '<[A-Z]+>' | wc -l
+1069343 (of 1/50)
+  57052 with more than one TAG
+   1847 with more than two TAGs
+
+   9555 <DATE>             <== REMOVE LINE
+  59489 <DECADE>           <== REMOVE LINE
+ 412533 <DOLLARAMOUNT>
+ 186846 <HOUR>             <== REMOVE LINE
+   3129 <MONEY>            <== REMOVE LINE
+   2430 <NUMBER>           <== REMOVE LINE
+ 210594 <ORDINAL>          <== REMOVE LINE
+ 131712 <PROFANITY>
+    711 <TIMEINTERVAL>     <== REMOVE LINE
+ 111371 <USA>              <== REMOVE LINE
+
+ * except for <PROFANITY>, for the others:
+    + if 1st or last word ==> REMOVE TAG
+    + if in the middle    ==> REMOVE LINE
+
+----------------------------------------------------------------------------------------------------
+* lines with '<' or '>' but NOT in TAGS
+  + there are 14069 in n5grams --> few ==> ELIMINATE ngrams
+
+* lines with / or \ 
+  + there are 4108 in sample_1M_n5g, 0.4%... not very few, but manageable ===> ELIMINATE
+
+* lines with isolated non-alnum characters
+
+  from sample_1M, the most common cases are (the X marks the end of the string)
+      10401  - X
+       1540  & X
+        626  ' X
+        317  / X
+        175  + X
+        112  -- X
+        103  = X
+         59  ~ X
+         31  * X
+         19  - - X
+         19  [ X
+         16  # X
+         12  ' - X
+         11  _ X
+          6  $ X
+
+
+gzip -dc n3grams.filtered_for_nonASCII.gz  | egrep  ' +([^[:alnum:]]+) +' | wc -l
+==> 401306
+
+
+egrep  ' +([^[:alnum:]]+) +' 
+egrep  '([[:alnum:]]+)([^[:alnum:] >]+) +' 
+egrep  ' +([^[:alnum:] <]+)([[:alnum:]]+)' 
+
+----------------------------------------------------------------------------------------------------

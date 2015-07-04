@@ -1,0 +1,106 @@
+====================================================================================================
+[1] SELECT NF >= 2
+    awk '{if(NF > 1){print $0}}' 
+
+[2] <ASS> ==> <PROFANITY>
+    <PROFANITY>hole... ==> <PROFANITY>
+
+[3] clean consecutive TAGS
+
+[4] remove excessive space
+
+[5] CLEAN NON-ALPHA BEGINNING OF SENTENCE
+    [5a] clean sentences "bracketed" by quotes or parenthesis (removing the "bracketing" character")
+    [5b] remove beginning quotes not paired in the rest of the sentence.
+    [5c] clean non-alpha beginning of sentence
+    [5d] non-alpha preceding a TAG (done separately to make life simpler)
+    [5e] catching up with more fixes for beginning
+
+[6] CLEAN NON-ALPHA END OF SENTENCE
+    [a] clean extra spaces before "good" sentence endings
+    [b] cleaning orphan " ' ) ] at the end match earlier in the sentence
+
+
+...
+
+
+cat REPRO_from_CLEANER_with_script+script+script+temp2 | awk '{if(NF<3){next};r=(length-NF+1)/NF;if(r>7.0){next};print $0}' > ! REPRO_from_CLEANER_with_script+script+script+temp2+filter_NF_and_Ratio
+
+gzip -dc all.sentences.ALL_CLEANER.gz | \
+    awk '{if(NF > 1){print $0}}' | \
+    ./post_sentences_cleaning.pl | \
+    ./post_sentences_cleaning.pl | \
+    ./post_sentences_cleaning.pl | \
+    ./temp_script_2.pl | \
+    ./post_sentences_cleaning.pl | \
+    awk '{if(NF<3){next};r=(length-NF+1)/NF;if(r>7.0){next};print $0}' > ! REPRO_from_CLEANER_with_script+script+script+temp2+filter_NF_and_Ratio
+
+REPRO_from_CLEANER_with_script+script+script+temp2+filter_NF_and_Ratio 
+
+  renamed
+
+all.sentences.GO (6655304 lines)
+
+
+
+---
+
+[_] TAGS at beginning of sentence
+
+[_] TAGS at end of sentence
+
+====================================================================================================
+
+  egrep -io '^[^[:alpha:]]*?<[A-Z]+>' | sort | uniq -c | sort -k 2 > qqq1
+  egrep -io '^[^[:alpha:]]+?<[A-Z]+>' | sort | uniq -c | sort -k 2 > qqq2
+# IDENTICAL?
+  egrep -io '^[^[:alpha:]]+<[A-Z]+>' | sort | uniq -c | sort -k 2 > qqq3
+
+---  
+
+  egrep -io '^[^[:alpha:]]+[[:alpha:]]+' all.sentences.ALL | egrep -v '^<[A-Z]{2,}' | perl -pe 's|<[A-Z]+$||;' > all.non_alpha_BEGIN
+  egrep -io '^[^[:alpha:]]+' all.non_alpha_BEGIN | sort | uniq -c | sort -k 1n | perl -pe 's|$|[END]|;' > all.non_alpha_BEGIN.catalogued
+
+  egrep -io '^[^[:alpha:]]+[[:alpha:]]+' all.sentences.ALL | egrep -v '^<[A-Z]' | egrep -io '^[^[:alpha:]]+' | sort | uniq -c | sort -k 1nr -k 2 | perl -pe 's|$|[END]|;' > all.non_alpha_BEGIN.catalogued
+
+
+  egrep -io '^[^[:alpha:]]+[[:alpha:]]+' all.sentences.ALL-NODUP_TAGS-TAGGED_WEIRDO | egrep -v '^<[A-Z]{2,}' | perl -pe 's|<[A-Z]+$||;' > all.non_alpha_BEGIN_v2
+  egrep -io '^[^[:alpha:]]+' all.non_alpha_BEGIN_v2 | sort | uniq -c | sort -k 1n | perl -pe 's|$|[END]|;' > all.non_alpha_BEGIN_v2.catalogued
+
+
+  cat  all.non_alpha_BEGIN_v2 | perl -pe 's|^(?\![^[:alpha:]]*<[A-Z])([^[:alpha:]]+)|PATTERN_$1_PATTERN|;' | less
+# the above does not work well: somehow it inserts a newline if a row ends with a space
+#
+# the below works... or so it seems
+  cat  all.non_alpha_BEGIN_v2 | perl -pe 's|^(?\![^[:alpha:]]*<[A-Z])([^[:alpha:]\n]+)|PATTERN_$1_PATTERN|;' | less
+
+----
+
+  egrep ' <[A-Z]+$' all.non_alpha_BEGIN | less
+  
+  egrep -io '^[^[:alpha:]]+[[:alpha:]]+' all.sentences.ALL | egrep -v '^<[A-Z]' | egrep '<'
+  egrep -io '^[^[:alpha:]]+[[:alpha:]]+' all.sentences.ALL | egrep -v '^<[A-Z]' | egrep '<[A-Z]+$'
+  
+  perl -pe 's|<[A-Z]+$||;' all.non_alpha_BEGIN | less
+  perl -pe 's|<[A-Z]+$||;' all.non_alpha_BEGIN > POP
+ 
+====================================================================================================
+
+  egrep -io '[[:alpha:]]+[^[:alpha:]>]{2,}$' all.sentences.ALL | egrep -io '[^[:alpha:]>]+$' | less
+  egrep -io '[[:alpha:]]+[^[:alpha:]>]{2,}$' all.sentences.ALL | egrep -io '[^[:alpha:]>]+$' | sort | uniq -c | sort -k 1nr -k 2 > all.odd_END.catalogued
+
+  egrep -io '[[:alpha:]]+[^[:alpha:]>]{2,}$' > temp-END_with_ge_2_nonalpha_characters
+
+====================================================================================================
+
+egrep -i '[[:alpha:]]+[^[:alpha:]]{2,}$' all.sentences.NF_ge_2 > TEST_endings-with_ge_nonalpha_characters_ANY2
+
+cat TEST_endings-with_ge_nonalpha_characters_ANY_v2 | egrep -o '[ .,;:~({*_^+=&#$</\[-]+\.$' | sort | uniq -c | sort -k 1n | less
+
+egrep '<[A-Z]+>' TEST_endings-with_ge_nonalpha_characters_ANY_v2_TAG_cleaned | egrep -o '.{0,3}[^[:alpha:]]{2,}$' | egrep -v '[A-Z]' | egrep -o '[^[:alpha:]]{2,}$' | sort | uniq -c | sort -k 1nr
+
+egrep '<[A-Z]+>' TEST_endings-with_ge_nonalpha_characters_ANY_v2_TAG_cleaned | egrep -o '.{0,3}[^[:alpha:]]{2,}$' | egrep -v '[A-Z]' | egrep -o '[ .,;:~({*_^+=&#$</\[-]+\.$' | sort | uniq -c | sort -k 1n | less
+egrep '<[A-Z]+>' TEST_endings-with_ge_nonalpha_characters_ANY_v2_TAG_cleaned | egrep -o '.{0,3}[^[:alpha:]]{2,}$' | egrep -v '[A-Z]' | egrep -v '[ .,;:~({*_^+=&#$</\[-]+\.$' | sort | uniq -c | sort -k 1n | less
+egrep '<[A-Z]+>' TEST_endings-with_ge_nonalpha_characters_ANY_v2_TAG_cleaned | egrep -o '.{0,3}[^[:alpha:]]{2,}$' | egrep -v '[A-Z]' | egrep -v '[ .,;:~({*_^+=&#$</\[-]+\.$' | egrep -o '[^[:alpha:]]{2,}$' | less
+
+====================================================================================================

@@ -1,0 +1,9 @@
+body {font-size: 12pt !important; }
+h2 { font-size:1.4em; color: #AF0810 !important; }
+h3 { font-size:1.8em; color: #2C2072; }
+h4 { font-size:1.2em; color: #1C6C17; }
+ul { margin-top: -0.5em !important; margin-bottom: 0.5em !important; }
+li { padding: 0px !important; margin: 0px !important; }
+strong { font-weight: bold !important; }
+p { margin-top: 0.5em !important; }
+slide.title-slide {background-color: #CCEEFF !important; }
