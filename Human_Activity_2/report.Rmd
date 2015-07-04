@@ -1,0 +1,648 @@
+---
+title   : Machine-Learning-based Assessment of the quality of weight-lifting exercises
+subtitle: 
+author  : Giovanni Fossati
+job     : null
+output  : 
+  html_document:
+    self_contained: true
+    css: css/gf_small_touches.css
+    theme: cerulean
+    highlight: tango
+    keep_md: yes
+    mathjax: default
+    toc: no
+---
+
+```{r setup, cache = FALSE, echo = FALSE, message = FALSE, warning = FALSE, tidy = FALSE}
+require(knitr)
+# make this an external chunk that can be included in any file
+options(width = 100)
+# opts_chunk$set(message = FALSE, error = FALSE, warning = FALSE, collapse = TRUE, fig.align = 'left', dpi = 100, tidy = FALSE, cache.path = '.cache/', fig.path = 'figures/')
+opts_chunk$set(message = FALSE, 
+               error = FALSE, 
+               warning = FALSE, 
+               collapse = TRUE, 
+               tidy = FALSE,
+               cache = FALSE, 
+               cache.path = '.cache/', 
+               comment = '#',
+               fig.align = 'center', 
+               dpi = 100, 
+               fig.path = 'figures/')
+
+```
+
+```{r load_packages, cache = FALSE, echo = FALSE, message = FALSE, warning = FALSE, tidy = FALSE}
+require(plyr)
+#
+require(ggplot2)
+require(gtable)
+require(gridExtra)
+require(corrplot)
+require(rattle)
+#
+require(caret)
+require(randomForest)
+require(partykit)
+require(gbm)
+require(rpart)
+#
+require(pROC)
+```
+
+```{r my_defs, echo=FALSE}
+source("./scripts/my_defs.R")
+```
+
+## INTRODUCTION
+
+The rapid diffusion of sensors able to record physical parameters associated with motion (_e.g._ accelerometers),
+in dedicated devices and more importantly in general consumer electronics available/used by a broader population
+has sparked a great interest in developing applications taking advantage of these motion-related data.
+One area of particular interest concerns fitness-related activities.
+
+This report summarizes the results of the development, and testing, of a _Machine Learning_ model able
+to recognize the _quality_ of a simple weight lifting exercise, namely whether
+or not it was performed appropropriately (and hence safely and effectively).
+
+We used the dataset put together by the [research group on Human Activity Recognition](http://groupware.les.inf.puc-rio.br/har)
+at the PUC of Rio de Janeiro.
+
+
+<a name="SUMMARY"></a>
+
+## SUMMARY OF RESULTS
+
+We tested three types of ML algorithms, all _tree-based_ methods: _CART_ trees, _boosted_ trees, and _random forest_.
+
+The first two methods failed to yield high quality results.
+This may have been caused by less than ideal choice of parameters, although in most cases
+we run them with the default values from `caret`, which are expected to be 
+reasonable for decent results.   
+
+__Random forest__ models produced high quality results, with accuracies
+exceeding 99%, both in the built-in _Out Of the Bag_ resampling, and on our
+separate _testing_ subset.
+
+Beside its clearly better performance, the choice of a random forest as an
+ensemble method is supported by its ability to handle multi-class problems.
+
+We ran _random forest_ models with __three different _internal_
+cross-validation__ setups (implemented through the `trainControl()` function of `caret`):
+* 4-fold Cross-Validation, 
+* bootstrap, and 
+* _Leave Group Out Cross Validation_.
+
+As noted, the trained models achieved exceptional accuracy in the ability of predicting the _outcome_
+variable `classe`, not only when tested against the 20-entries project benchmark, but more importantly
+when tested against the portion (25%) of the full dataset that we set aside for __validation_.
+
+The results of a _random forest_ model are not easily interpretable, even in
+presence of physically/motion based predictors.
+Nevertheless, as illustrated in some example plots, the data contain fairly clear pattern and differences
+between categories of exercise quality, that can be related to the slight differences in the motion
+of the body and weight dumbbell, and that are apparently very well picked out by the algorithm.
+
+
+<hr class="separator">
+<a name="THE_DATA_SET"></a>
+
+## THE DATA SET
+
+The data for the project were made available from the Coursera ML course webpage.
+Two separate sets were posted:
+
+* [a _training_ dataset](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv).  This set comprises a little over 16,000 entries for 160 variables.
+* [a _testing_ dataset](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv), to be used as a final project benchmark, comprising 20 "anonymized" entries.
+
+### Structure
+
+The dataset comprises 160 variables:
+
+* 152 actual _predictors_, _i.e._ the sensor data.
+* 1 is the quality _class_ of the exercise (`classe`, taking values _A_, _B_, _C_, _D_, _E_).
+* 7 are auxiliary variables: 
+	* the _user_ name (`user_name`).
+	* 3 time stamp related variables: `raw_timestamp_part_1`, `raw_timestamp_part_2`, `cvtd_timestamp`.
+	* 2 _exercise window_ markers/counters: `new_window`, `num_window`.
+
+### The sensor data
+
+As described in the paper by Velloso et al. [REF], four _inertial measurement units_ (IMU) where setup, placed  
+on _belt_, _arm_, _forearm_, _dumbbell_.
+Each sensor measured 3-axes acceleration, gyroscope and magnetometer data at high cadence (45 Hz).
+These data were processed to yield 13 timed variables for each sensor: 
+
+* _total acceleration_.
+* _roll_, _pitch_, _yaw_ angles.
+* _x_, _y_, _z_ values for _gyroscope_, _acceleleration_, and _magnetometer_. 
+
+For instance, for the _belt_ sensor the _basic timed data_ are: 
+`total_accel_belt`, 
+`roll_belt`, `pitch_belt`, `yaw_belt`, 
+`gyros_belt_x`, `gyros_belt_y`, `gyros_belt_z`, 
+`accel_belt_x`, `accel_belt_y`, `accel_belt_z`, 
+`magnet_belt_x`, `magnet_belt_y`, `magnet_belt_z`.
+
+The dataset therefore comprises $4 \times 13 = 52$ _basic timed data_.
+
+In addition to these, several statistical summaries are computed and reported for each exercise _window_, for each sensor:
+
+* For `total_accel`, its variance `var_accel`.
+* For each of the three angles: `avg`, `stddev`, `var`, `kurtosis`, `skewness`, `max`, `min`, `amplitude` ($3 \times 8$ variables).
+
+These $1 + 24 = 25$ statistical summaries for each sensor add another $100$ variables to the dataset for a total of $152$ variables.
+
+It is worth emphasizing that the dataset presents _timed_ and _summary_ variables all together in one table.
+While this may be practically convenient, it makes this dataset _un-tidy_ by combining variables of different nature.
+Fortunately the two types of variables can be easily separated on the basis of the value of the `new_window` auxiliary variable,
+which has value `no` for entries corresponding to timed data, and `yes` for their statistical summaries over each exercise window.
+
+
+<hr class="separator">
+<a name="DATA_PREPARATION"></a>
+
+## DATA PREPARATION
+
+### Loading
+
+```{r load_training_dataset}
+full <- read.csv("./data/pml-training.csv.gz", na.strings=c("#DIV/0!","","NA"), stringsAsFactors=FALSE)
+full <- add_new_variables(full)
+alt.full <- tidy_df(full)
+```
+
+```{r load_TEST_dataset}
+TEST <- read.csv("./data/pml-testing.csv.gz", na.strings=c("#DIV/0!","","NA"), stringsAsFactors=FALSE)
+alt.TEST <- tidy_df(TEST)
+```
+
+### Cleaning/Tidying
+
+#### Non-sensor variables
+
+Some variables should be discarded because associated with very specific aspects of the 
+experiment that should be irrelevant from the point of view of its goal, such as _window_ flags 
+and _time stamps_.  
+These are the excluded variables:  `X`,  `user_name`,  `new_window`,  `num_window`, 
+`cvtd_timestamp`,  `raw_timestamp_part_1`,  `raw_timestamp_part_2`.
+
+Beside their intrinsic irrelevance, keeping these in would likely strongly drive the results 
+in a completely spurious and meaningless way, because for instance the algorithm may hook on the
+`user_name` or `num_window`.
+
+
+
+#### Individual measurements _vs_ _summaries_ : the `new_window` variable
+
+To the best of my understanding, the dataset combines two different kinds of _observations_:
+
+* single measurements of the main observables from the sensors, with some time cadence, and 
+organized in _windows_, which are numbered (`num_window` variable).   
+These data have `new_window == "no"`.
+* statistical summaries of the measurements of each main observable over each _window_.   
+These data have `new_window == "yes"`, and 
+
+We restricted our analysis to the 52 variables representing individual _timed_ measurements, discarding the _summary_ data.
+
+```{r clean_data}
+alt.full <- subset(alt.full, new_window == "no")
+alt.full.good <- select_proper_vars(alt.full)
+alt.TEST.good <- select_proper_vars(alt.TEST)
+alt.user <- alt.full$user_name
+```
+
+We also filtered out variables with `NA`, which basically means filtering against the _summary_ variables.
+
+```{r data_stats}
+# columns without ANY NA
+alt.tt <- colSums(is.na(alt.full.good)) == 0
+
+alt.full.select <- alt.full.good[, alt.tt]
+alt.TEST.select <- alt.TEST.good[, alt.tt]
+```
+
+```{r cleaning-1, echo=FALSE}
+# rm(alt.tt, alt.full.noNA, alt.TEST.noNA)
+```
+
+### Some exploratory plots
+
+#### Features plotted vs. sequence index, and color coded by `user_name` and `classe`
+
+These kind of plots shows that some of the features seem to correlated very strongly with the
+_user_, even more than with their `classe`, somewhat oddly.
+
+This suggest that the training to predict the quality parameter of the weight lifting exercise (`classe`) 
+that we can achieve with this dataset may not be easily generalized.
+
+
+```{r plots-examine2b, fig.width=6, fig.height=6, echo=FALSE}
+df <- alt.full
+#   8 = roll_belt
+#   9 = pitch_belt
+#  10 = yaw_belt
+#  46 = roll_arm
+# 122 = roll_forearm
+ii <- 46
+
+title_string <- paste(colnames(df)[ii], "by user and classe", sep=" ")
+p1 <- ggplot(df, aes(1:nrow(df), df[, ii])) + theme_bw() + geom_point(aes(col=user_name)) + theme(legend.position = "top") 
+p1 <- p1 + ylab(colnames(df)[ii]) + ggtitle(title_string)
+
+p2 <- ggplot(df, aes(1:nrow(df), df[, ii])) + theme_bw() + geom_point(aes(col=classe)) + theme(legend.position = "bottom") 
+p2 <- p2 + ylab(colnames(df)[ii]) 
+
+grid.arrange(p1, p2, nrow=2)
+```
+
+```{r plots-examine2c, fig.width=6, fig.height=6, echo=FALSE}
+df <- alt.full
+#   8 = roll_belt
+#   9 = pitch_belt
+#  10 = yaw_belt
+#  46 = roll_arm
+# 122 = roll_forearm
+ii <- 9
+
+title_string <- paste(colnames(df)[ii], "by user and classe", sep=" ")
+p1 <- ggplot(df, aes(1:nrow(df), df[, ii])) + theme_bw() + geom_point(aes(col=user_name)) + theme(legend.position = "top") 
+p1 <- p1 + ylab(colnames(df)[ii]) + ggtitle(title_string)
+p2 <- ggplot(df, aes(1:nrow(df), df[, ii])) + theme_bw() + geom_point(aes(col=classe)) + theme(legend.position = "bottom") 
+p2 <- p2 + ylab(colnames(df)[ii]) 
+grid.arrange(p1, p2, nrow=2)
+```
+
+#### Feature vs. Feature plots with separate panels by `classe`
+
+This second set of example plots shows that there are indeed some reasonably recognizable patterns allowing to
+distinguish between different `classe` categories.
+
+The expectation is that the ML algorithm will be able to identify them and build on them a classification scheme.
+
+
+```{r plots-more_1, fig.width=6, fig.height=6, echo=FALSE}
+df <- alt.full.select 
+p <- ggplot(df, aes(pitch_arm, roll_arm)) + theme_bw() + geom_point(aes(col=classe)) + 
+     ggtitle("pitch_arm vs. roll_arm by classe")
+p + facet_grid(classe ~ .)
+```
+
+```{r plots-more_2, fig.width=6, fig.height=6, echo=FALSE}
+df <- alt.full.select 
+p <- ggplot(df, aes(pitch_forearm, roll_forearm)) + theme_bw() + geom_point(aes(col=classe)) + 
+     ggtitle("pitch_forearm vs. roll_forearm by classe")
+p + facet_grid(classe ~ .)
+```
+
+
+<hr class="separator">
+<a name="FEATURE_SELECTION"></a>
+
+## ABOUT FEATURE SELECTION
+
+### Zero/low variance predictors
+
+We checked the dataset for _un-informative_ predictors, namely variables taking (nearly) unique values or having 
+very little variance in their values.    
+The `caret` package provides a very convenient function to perform this quality-check, `nearZeroVar()`.  
+
+None of the 52 features meets the criteria for exclusion on the basis of _near Zero Variance_.   
+The full results of running it on our dataset (`nearZeroVar(alt.full.select, saveMetrics=TRUE)`) are reported
+in the __Appendix__.
+
+
+### _Collinearity_ between predictors
+
+The presence of correlated predictor is undesirable because it can bias/mislead the modeling
+and in any case it may lead to run a model with an unnecessarily large(r) number of predictors.
+Although some ML algorithms are not negatively affected, it is generally safe to exclude
+correlated pr edictors.   
+
+For _tree-based_ models it is actually recommended to clean the data set of
+correlated predictors because they end up sharing their overall _importance_,
+thus appearing to be less significant than they actually are.
+
+We took advantage of the `caret` function `findCorrelation()` to identify variables whose absolute
+correlation value exceeds a set threshold (we chose 0.75) and obtain a list of variables to exclude
+selected among those with high correlation. 
+
+The actual predictors filtering was done applying this method just on the _training_ subset (see below).
+
+
+<hr class="separator">
+<a name="DATA_SPLITTING"></a>
+
+## DATA SPLITTING: "NEW" _TRAINING_ AND _TESTING_ SUBSETS
+
+For validation purposes we split the full dataset in two subsets:
+
+* a _training_ subset, comprising 75% of the data.
+* a _testing_ subset, comprising 25% of the data.
+
+__This _training_ / _testing_ split should not be confused with the original two datasets__, 
+which unfortunately are named also _training_ and _testing_.  
+
+We are splitting the original _training_ large dataset in two to be able to have
+an independent validation of the models, beyond what may already be done internally
+by some ML algorithms or by `caret` wrapped around them (_e.g._ by bootstrapping, or
+the built-in randomization and subsetting of _random forest_ methods).
+
+
+```{r split_data-1}
+seed.split <- 12468
+set.seed(seed.split)
+i.train.alt <- createDataPartition(y = alt.full.select$classe, p=0.75, list=FALSE)
+
+alt.training <- alt.full.select[i.train.alt, ]
+alt.testing <- alt.full.select[-i.train.alt, ]
+```
+
+### Feature selection on _training_ / _testing_ subsets
+
+In the spirit of truly preserving the independence of the _testing_ data
+subset, we performed the correlation-based feature reduction on the basis of
+the correlation between variables computed on the _training_ subset instead of
+the full dataset, and applied the same variables filtering to the _testing_ subset.
+
+```{r split_data-2}
+# correlation filtering done on the training subset
+alt.allCorr <- cor(alt.training[, -1])
+i.fC.75.alt <- findCorrelation(alt.allCorr, cutoff=0.75)
+```
+
+The following plot shows the correlation matrix, with variables ordered on the basis of their _clustering_.
+
+```{r split_data-3, fig.width=8, fig.height=8}
+corrplot(alt.allCorr, order="hclust", method="color", 
+         col=color1(20), cl.length=21, tl.cex=0.8, tl.col="black", mar=c(1,1,1,0))
+```
+
+On the basis of their correlation, with a threshold of 0.75, these are the variables that would be excluded.
+
+```{r split_data-4}
+# variables to be excluded
+colnames(alt.training)[i.fC.75.alt+1]
+
+# variables selection
+alt.training.cut75 <- alt.training[, -(i.fC.75.alt+1)]
+alt.testing.cut75 <- alt.testing[, -(i.fC.75.alt+1)]
+```
+
+
+
+<hr class="separator">
+<a name="MODELING"></a>
+
+## MODELING
+
+We tested three types of ML algorithms, all within the framework provided by `caret`, and all
+generally speaking _tree-based_ models.
+
+* CART trees, namely `rpart2`.
+* _boosted_ tree, namely `gbm`.
+* _random forest_, namely `rf`.
+
+The first two methods failed to yield high quality results, in fact in some cases their 
+performance on the _testing_ subset was very poor.  
+This may have been caused by less than ideal choice of parameters, but in most cases
+we let the modeling run with the default values from `caret`, which are expected to be 
+reasonable for decent results.   
+We have to acknowledge that in some cases, in particular for the `gbm` models,
+the running time turned out to be very long and the memory requirements large
+enough to make it impractical, and we did not pursue those models more extensively.
+
+On the other hand __random forest__ models produced high quality results, with
+accuracies exceeding 99%, both in the built-in _Out Of the Bag_ resampling, and 
+on our separate _testing_ subset.
+
+In the next three sections we illustrate the results of __random forest__ models
+run with __three different _internal_ cross-validation__ setups, implemented 
+through the `trainControl()` function of `caret`:
+
+* `cv`: Cross-Validation, 4-fold (_i.e._ 75%/25% splits).
+* `boot` (the default): bootstrap, 25 repeats.
+* 'LGOCV`: Leave Group Out Cross Validation, 25 repeats, 75%/25% train/test splits of the data.
+
+In all cases we also tried a set of values for `mtry`, which regulates how many
+predictors are selected in the _random forest_ random subsetting of variables.
+
+
+```{r load_data_rf, echo=FALSE}
+mod.alt.rf1c <- readRDS("./data/mod.alt.rf1c.RDS")
+mod.alt.rf1e <- readRDS("./data/mod.alt.rf1e.RDS")
+
+mod.rf1b <- readRDS("./data/mod.rf1b.RDS")
+mod.rf1d <- readRDS("./data/mod.rf1d.RDS")
+load("./data/SAVE.old_format_data_files.RData")
+```
+
+### _Random Forest_ case 1 : 4-fold _CV_
+
+With `mtry = 2, 6, 10, 18, 26, 34`.
+
+
+```{r rf1c_run, eval=FALSE}
+mtry.values <- c(2, 6, 10, 18, 26, 34)
+
+ctrl.rf1c <- trainControl(method = "cv", number=4)
+
+seed.rf1c <- 16790; set.seed(seed.rf1c)
+mod.alt.rf1c <- train(x = alt.training.cut75[, -1], 
+                      y = alt.training.cut75$classe, 
+                      method = "rf", 
+                      trControl = ctrl.rf1c,
+                      tuneGrid = data.frame(mtry = mtry.values),
+                      importance = TRUE, 
+                      proximity = TRUE)
+```
+
+#### Fit Summary
+
+```{r rf1c_post-summary}
+mod.alt.rf1c
+
+mod.alt.rf1c$finalModel
+
+mod.alt.rf1c$results
+```
+
+#### Predictions on _testing_ subset
+
+```{r rf1c_post-predictions-out_of_sample}
+pred.rf1c.test75 <- predict(mod.alt.rf1c, alt.testing.cut75, type="raw")
+
+confusionMatrix(alt.testing.cut75$classe, pred.rf1c.test75)
+```
+
+#### Predictions on _TEST_ subset (the 20 benchmark values for the Project)
+
+```{r rf1c_post-predictions-TEST_data}
+pred.rf1c.TEST <- predict(mod.alt.rf1c, alt.TEST.select, type="raw")
+
+# comparison with "truth"
+pred.rf1c.TEST == answers
+```
+
+#### Variable Importance 
+
+```{r rf1c_post-var_imp}
+varImp(mod.alt.rf1c, useModel=TRUE, scale=FALSE)
+```
+
+```{r rf1c_post-plots, fig.width=7, fig.height=7}
+# plot(varImp(mod.alt.rf1c, useModel=TRUE, scale=FALSE), top=ncol(mod.alt.rf1c$trainingData)-1)
+dotPlot(varImp(mod.alt.rf1c, useModel=TRUE, scale=FALSE), top=ncol(mod.alt.rf1c$trainingData)-1)
+```
+
+
+### _Random Forest_ case 2 : bootstrap, 25 reps
+
+With `mtry = 2, 6, 10, 18, 26, 34`
+
+```{r rf1b_run, eval=FALSE}
+mtry.values <- c(2, 6, 10, 18, 26, 34)
+
+seed.rf1b <- 16789; set.seed(seed.rf1b)
+mod.rf1b <- train(x = training.cut75[, -1], 
+                      y = training.cut75$classe, 
+                      method = "rf", 
+                      tuneGrid = data.frame(mtry = mtry.values))
+```
+
+#### Fit Summary
+
+```{r rf1b_post-summary}
+mod.rf1b
+
+mod.rf1b$finalModel
+
+mod.rf1b$results
+```
+
+#### Predictions on _testing_ subset
+
+```{r rf1b_post-predictions-out_of_sample}
+pred.rf1b.test75 <- predict(mod.rf1b, testing.cut75, type="raw")
+
+confusionMatrix(testing.cut75$classe, pred.rf1b.test75)
+```
+
+#### Predictions on _TEST_ subset (the 20 benchmark values for the Project)
+
+```{r rf1b_post-predictions-TEST_data}
+pred.rf1b.TEST <- predict(mod.rf1b, TEST.select, type="raw")
+
+# comparison with "truth"
+pred.rf1b.TEST == answers
+```
+
+#### Variable Importance 
+
+```{r rf1b_post-var_imp}
+varImp(mod.rf1b, useModel=TRUE, scale=FALSE)
+```
+
+```{r rf1b_post-plots, fig.width=7, fig.height=7}
+# plot(varImp(mod.rf1b, useModel=TRUE, scale=FALSE), top=ncol(mod.rf1b$trainingData)-1)
+dotPlot(varImp(mod.rf1b, useModel=TRUE, scale=FALSE), top=ncol(mod.rf1b$trainingData)-1)
+```
+
+
+### _Random Forest_ case 3 : LGOCV, 25 repeats, 75%/25% splits
+
+With `mtry = 2, 4, 6, 8, 10`.
+
+```{r rf1e_run, eval=FALSE}
+mtryValues <- c(2, 4, 6, 8, 10)
+
+ctrl <- trainControl(method = "LGOCV",
+                     classProbs = TRUE)
+
+seed.rf1e <- 17891; set.seed(seed.rf1e)
+mod.alt.rf1e <- train(x = alt.training.cut75[, -1], 
+                  y = alt.training.cut75$classe, 
+                  method = "rf", 
+                  tuneGrid = data.frame(mtry=mtryValues),
+                  trControl = ctrl,
+                  importance = TRUE, 
+                  proximity = TRUE)
+```
+
+#### Fit Summary
+
+```{r rf1e_post-summary}
+mod.alt.rf1e
+
+mod.alt.rf1e$finalModel
+
+mod.alt.rf1e$results
+```
+
+#### Predictions on _testing_ subset
+
+```{r rf1e_post-predictions-out_of_sample}
+pred.rf1e.test75 <- predict(mod.alt.rf1e, alt.testing.cut75, type="raw")
+
+confusionMatrix(alt.testing.cut75$classe, pred.rf1e.test75)
+```
+
+#### Predictions on _TEST_ subset (the 20 benchmark values for the Project)
+
+```{r rf1e_post-predictions-TEST_data}
+pred.rf1e.TEST <- predict(mod.alt.rf1e, alt.TEST.select, type="raw")
+
+# comparison with "truth"
+pred.rf1e.TEST == answers
+```
+
+#### Variable Importance 
+
+```{r rf1e_post-plots, fig.width=7, fig.height=7}
+# plot(varImp(mod.alt.rf1e, useModel=TRUE, scale=FALSE), top=ncol(mod.alt.rf1e$trainingData)-1)
+dotPlot(varImp(mod.alt.rf1e, useModel=TRUE, scale=FALSE), top=ncol(mod.alt.rf1e$trainingData)-1)
+```
+
+
+<hr class="separator">
+<a name="APPENDIX"></a>
+
+# APPENDIX
+
+### _Timed_ vs. _summary_ data entries 
+
+```{r appendix-statsNA}
+alt.statsNA <- as.data.frame(t(sapply(alt.full.good, function(x){ c(good = sum(!is.na(x)), bad = sum(is.na(x)))})))
+print(alt.statsNA, quote=FALSE, print.gap=5)
+```
+
+### Checking for zero/low variance predictors.
+
+```{r appendix-near_zero_vars}
+nzv <- nearZeroVar(alt.full.select, saveMetrics=TRUE)
+nzv
+```
+
+### Some handy functions
+
+```{r echo = FALSE, cache = FALSE}
+read_chunk("./scripts/my_defs.R")
+```
+
+Additional locally defined functions, sourced from the external file.
+```{r eval = FALSE, cache = FALSE}
+<<my_defs>>
+```
+
+
+<hr class="thin_separator">
+<a name="SessionInfo"></a>
+
+## R Session Info
+
+```{r R_session_info}
+sessionInfo()
+```
+
+---
