@@ -1,18 +1,49 @@
-# Bike Sharing Data
-Giovanni Fossati  
+---
+title: "Bike Sharing Data Challenge"
+subtitle: 
+author  : Giovanni Fossati
+job     : null
+output  : 
+  html_document:
+    self_contained: false
+    css: css/gf_small_touches.css
+    theme: cerulean
+    highlight: tango
+    keep_md: no
+    mathjax: default
+    toc: no
+---
 
-
+```{r setup, cache = FALSE, echo = FALSE, message = FALSE, warning = FALSE, tidy = FALSE}
+require(knitr)
+options(width = 100, 
+        scipen = 5)
+# options(width = 100, digits = 7)
+opts_chunk$set(message = FALSE, 
+               error = FALSE, 
+               warning = FALSE, 
+               collapse = TRUE, 
+               tidy = FALSE,
+               cache = FALSE, 
+               cache.path = '.cache/', 
+               comment = '#',
+               fig.align = 'center', 
+               dpi = 100, 
+               fig.path = 'figures/')
+# opts_chunk$set(dev="png", 
+#                dev.args=list(type="cairo"),
+#                dpi=96)
+```
 
 ## PREAMBLE
 
-The source files are posted at [https://github.com/pedrosan/DaInCh](https://github.com/pedrosan/DaInCh)
+The source files are posted on [GitHub](https://github.com/pedrosan/DataScienceExamples/tree/master/Bike_Sharing/)
 
 ## PRELIMINARIES
 
 Libraries needed for data processing and plotting:
 
-
-```r
+```{r load_packages, cache = FALSE, echo = TRUE, message = FALSE, warning = FALSE, tidy = FALSE}
 library("lubridate")
 library("plyr")
 library("ggplot2")
@@ -30,8 +61,7 @@ are perfomed:
 * the data frame is sorted by `bike` and `time`.
 * row names are removed.
 
-
-```r
+```{r load_data, cache = TRUE}
 Classes <- c("character", "character", "character", "character", "character")
 data <- read.csv("data/bike_sharing_data.csv.gz", colClasses = Classes, nrows = 1804000, strip.white = TRUE)
 colnames(data) <- c("bike", "station2", "station1", "time1", "time2")
@@ -54,34 +84,20 @@ row.names(data) <- NULL
 ```
 
 The resulting data frame has the following structure:
-
-```r
+```{r}
 str(data)
-# 'data.frame':	1802997 obs. of  6 variables:
-#  $ bike    : chr  "000a8008" "000a8008" "000a8008" "000a8008" ...
-#  $ station1: chr  "2f4a41" "68c784" "fa4911" "47dfc2" ...
-#  $ station2: chr  "68c784" "fa4911" "47dfc2" "57e7d6" ...
-#  $ time1   : POSIXct, format: "2013-10-02 06:46:13" "2013-10-02 07:13:58" "2013-10-02 07:35:56" ...
-#  $ time2   : POSIXct, format: "2013-10-02 06:53:54" "2013-10-02 07:19:07" "2013-10-02 07:54:03" ...
-#  $ dt      :Class 'difftime'  atomic [1:1802997] 461 309 1087 1062 245 ...
-#   .. ..- attr(*, "units")= chr "secs"
 ```
 
 ### Checks on `NA` and stats on some variables
 
-
-```r
+```{r data_checks}
 # checking for NA
 sum(is.na(data))
-# [1] 0
 
 # checking number of "levels" 
 length(unique(data$bike))    
-# [1] 6549
 length(unique(data$station1))
-# [1] 330
 length(unique(data$station2))
-# [1] 329
 
 # create arrays of unique values for bike, station1, station2 IDs
 bikes <- unique(data$bike)
@@ -90,9 +106,7 @@ stations2 <- unique(data$station2)
 
 # check cross-matching of station lists
 sum(! (stations1 %in% stations2) )  # 1 false ?
-# [1] 1
 sum(! (stations2 %in% stations1) )  # all true
-# [1] 0
 ```
  
 <hr class="thin_separator">
@@ -102,15 +116,12 @@ sum(! (stations2 %in% stations1) )  # all true
 
 Average trip duration computed straight from the `dt` variable.
 
-
-```r
+```{r trip_duration}
 summary(as.numeric(data$dt))
-#    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-#    60.0   412.0   664.0   886.6  1099.0 24830.0
 ```
 
-The range of trip durations is quite wide, with __mean =886.6__, 
-but the __median = 664__ may be a better metric.
+The range of trip durations is quite wide, with __mean =`r summary(as.numeric(data$dt))[4]`__, 
+but the __median = `r summary(as.numeric(data$dt))[3]`__ may be a better metric.
 
 
 <hr class="thin_separator">
@@ -127,8 +138,7 @@ for instance to keep their distribution optimal.
 
 Nevertheless, here we look at individual bike trips searching for non-matching consecutive stations.
 
-
-```r
+```{r mismatches, cache = TRUE}
 # finding mis-matching stations over the full data set
 bike.stats <- ddply(data, .(bike), summarize, 
                     Ntrips = length(time1),
@@ -141,10 +151,10 @@ N.mismatches <- sum(bike.stats$mismatches)
 min.missing.fraction <- N.mismatches / ( nrow(data) + N.mismatches )
 ```
 
-* We find that the number of non-matching consecutive (arrival/departure) stations is 215592.
+* We find that the number of non-matching consecutive (arrival/departure) stations is `r N.mismatches`.
 
 * Based on this approach the __minimum fraction of data that must be missing__ from original data set is
-$N_{mismatches} / (N_{data} + N_{mismatches})$, that is __0.107__.
+$N_{mismatches} / (N_{data} + N_{mismatches})$, that is __`r round(min.missing.fraction, 3)`__.
 
 
 <hr class="thin_separator">
@@ -158,8 +168,7 @@ We need to select the entries where a bike arrived and left for the next trip fr
 Since the data frame is already ordered by bike ID and time (`time1`), we can compare the values
 of `station1` and `station2` offset by one row at once on the full data frame.
 
-
-```r
+```{r parking_time-1}
 # on the full dataset
 main <- data[-nrow(data), ]
 main$tdiff <- difftime(data$time1[-1], data$time2[-nrow(data)])
@@ -169,32 +178,27 @@ main$flag.station <- c(main$station1[-1] == main$station2[-nrow(main)], NA)
 
 good.tdiff <- main$tdiff[main$flag.combined & as.numeric(main$tdiff) > 0]
 length(good.tdiff)
-# [1] 1580813
 ```
 
-There are 43 valid (same bike, same station) 
+There are `r sum(main$flag.combined & as.numeric(main$tdiff) < 0)` valid (same bike, same station) 
 parking intervals with NEGATIVE DURATION (!?).   
 We can safely ignore them for now considering that they are a tiny fraction of the accepted _stays_, i.e. 
-1580813.
+`r sum(main$flag.combined & as.numeric(main$tdiff) > 0)`.
 
 The statistics of the duration of _stays_ are therefore:
 
-
-```r
+```{r parking_time-3}
 ss <- summary(as.numeric(good.tdiff))
 ss
-#    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-#       1     433    1721   10090    7115 4088000
 ```
 
 As it was the case for trip durations, the range of _stays_ durations is quite wide, in fact even wider and it makes
 sense considering that there is really no limit in principle to for how a bike may remain unused.
 
-At any rate, the __mean time spent by a bike at a station is 10090__, 
-while its __median__ is __1721__.
+At any rate, the __mean time spent by a bike at a station is `r ss[4]`__, 
+while its __median__ is __`r ss[3]`__.
 
-
-```r
+```{r parking_time-2, eval = FALSE}
 # quick check of +/- 1 row around each of the odd ones
 neg.rows <- (1:nrow(main))[main$flag.combined & as.numeric(main$tdiff) < 0]
 rows2check <- sort(c(neg.rows, (neg.rows-1), (neg.rows+1)))
@@ -213,8 +217,7 @@ Let's first extract the relevant data, adding columns with the _time-during-the-
 each entry involving the two stations under examination.   
 We also add flags for whether a given activity was in/out, or during the week (M-F) or week end.
 
-
-```r
+```{r patterns-prepare_data}
 sid1 <- "fe2a5f"
 sid2 <- "fec8ff"
 
@@ -289,14 +292,11 @@ are summarized in the following simple plots, which show two clear qualitative d
 	big peak of usage in the afternoon is almost entirely _leaving_.
 
 
-
-```r
+```{r patterns-plots-by_hour, fig.width=7, fig.height=5, echo=TRUE}
 p1 <- ggplot(data = both, aes(x = t1hc, fill = type)) + theme_bw() + xlab("hour of the day")
 # density plot
 p1 + geom_density(alpha = 0.3) + facet_wrap(~ ID, ncol = 1) + scale_fill_brewer(palette = "Set1")
 ```
-
-<img src="figures/patterns-plots-by_hour-1.png" title="" alt="" style="display: block; margin: auto;" />
 
 
 ### Plots : by day of the week
@@ -312,14 +312,11 @@ There is instead a hint of increase of activity for station `fe2a5f` during the 
 that lends further support to the idea that its location may be more residential.
 
 
-
-```r
+```{r patterns-plots-by_wday, fig.width=7, fig.height=5, echo=TRUE}
 p2 <- ggplot(data = both, aes(x = as.factor(wday1), fill = ID)) + theme_bw() + xlab("day of the week") + theme(legend.position="none") 
 # histogram w/ free Y-scale
 p2 +  geom_bar(stat = "bin", alpha = 0.75, width = 0.8) + facet_wrap(~ ID, ncol = 1, scale = "free_y") + scale_fill_brewer(palette = "Set2")
 ```
-
-<img src="figures/patterns-plots-by_wday-1.png" title="" alt="" style="display: block; margin: auto;" />
 
 
 <hr class="thin_separator">
@@ -329,8 +326,7 @@ p2 +  geom_bar(stat = "bin", alpha = 0.75, width = 0.8) + facet_wrap(~ ID, ncol 
 
 ### Data preparation
 
-
-```r
+```{r bikes_at_stations-prepare_data_1}
 # station IDs
 sid1 <- "8f0f64" 
 sid2 <- "4a4b61"
@@ -345,8 +341,7 @@ We want to work with a new data frames, for lighter handling.
 For further convenience, we shift columns to align time and stations of the
 potential arrive-depart intervals to be on the same row.
 
-
-```r
+```{r bikes_at_stations-prepare_data_2-new_df}
 T_at_St <- data[, c(1, 3, 5, 2, 4)]
 colnames(T_at_St) <- c("bike", "St_in", "T_in", "St_out", "T_out")
 
@@ -379,8 +374,7 @@ We define a few flags to summarize the _"quality"_ of the data.
 * `flag.T.within` : TRUE is the stay is fully contained within the valid time window.
 
 
-
-```r
+```{r bikes_at_stations-prepare_data_3-conditions_st1}
 st1$flag.in  <- st1$St_in  == sid1
 st1$flag.out <- st1$St_out == sid1
 st1$flag.within <- st1$flag.in & st1$flag.out
@@ -396,8 +390,7 @@ st1.cond.xbad  <- (st1$check + st1$check.T) == 3
 st1.cond.clean <- st1$check == 7 & st1$check.T == 7
 ```
 
-
-```r
+```{r bikes_at_stations-prepare_data_3-conditions_st2}
 st2$flag.in  <- st2$St_in  == sid2
 st2$flag.out <- st2$St_out == sid2
 st2$flag.within <- st2$flag.in & st2$flag.out
@@ -413,8 +406,7 @@ st2.cond.xbad  <- (st2$check + st2$check.T) == 3
 st2.cond.clean <- st2$check == 7 & st2$check.T == 7
 ```
 
-
-```r
+```{r bikes_at_stations-filtering_data-1}
 best1 <- st1[st1.cond.clean, ]
 best2 <- st2[st2.cond.clean, ]
 ```
@@ -439,8 +431,7 @@ with _hour-marks_ it encompasses, encoding it into a vector.
 We then use these indices to mark times with a 0/1 in a matrix comprising all stays
 for each station.
 
-
-```r
+```{r bikes_at_stations-stats-1}
 # * The +1 is to shift the number to match a valid index value.
 # * Hours are 0-23, but indices are 1-24.
 st1.x1 <- hour(best1$T_in) + 1 + 1
@@ -456,8 +447,7 @@ for(j in 1:nrow(best1)) {
 byHour1 <- colSums(presence1)
 ```
 
-
-```r
+```{r bikes_at_stations-stats-2}
 st2.x1 <- hour(best2$T_in) + 1 + 1
 st2.x2 <- hour(best2$T_out) + 1
 st2.x1 <- ifelse(st2.x1 > 24, 23, st2.x1)
@@ -471,8 +461,7 @@ for(j in 1:nrow(best2)) {
 byHour2 <- colSums(presence2)
 ```
 
-
-```r
+```{r bikes_at_stations-stats-3}
 df1 <- data.frame(ID = sid1, hour = 0:23, number = byHour1)
 df2 <- data.frame(ID = sid2, hour = 0:23, number = byHour2)
 df <- rbind(df1, df2)
@@ -483,44 +472,16 @@ colnames(df.wide) <- c("hour", sid1, sid2)
 # write.csv(df.wide, file = "presence_by_hour.csv", row.names = FALSE, quote = FALSE)
 
 print(df.wide, row.names = FALSE)
-#  hour 8f0f64 4a4b61
-#     0      0      0
-#     1      0      2
-#     2      0      2
-#     3      0      1
-#     4      0      1
-#     5      0      1
-#     6      0      2
-#     7      1      7
-#     8      4     24
-#     9     28     34
-#    10     27     44
-#    11     27     43
-#    12     27     43
-#    13     28     40
-#    14     29     36
-#    15     28     38
-#    16     26     34
-#    17     16     29
-#    18      2      6
-#    19      1      6
-#    20      4      7
-#    21      4      4
-#    22      1      1
-#    23      0      1
 ```
 
 
 ### Plot
 
-
-```r
+```{r bikes_at_stations-plot, fig.width=7, fig.height=5, echo=TRUE}
 p3 <- ggplot(data = df, aes(x = hour, y = number, fill = ID)) + theme_bw() + xlab("hour") + theme(legend.position="none") 
 # histogram
 p3 +  geom_bar(stat = "identity", alpha = 0.5, width = 0.8) + facet_grid(ID ~ .) + scale_fill_brewer(palette = "Set1")
 ```
-
-<img src="figures/bikes_at_stations-plot-1.png" title="" alt="" style="display: block; margin: auto;" />
 
 
 
@@ -531,8 +492,7 @@ p3 +  geom_bar(stat = "identity", alpha = 0.5, width = 0.8) + facet_grid(ID ~ .)
 
 _To clarify, a bicycle arriving at 1:45PM would count as arriving during hour 13._
 
-
-```r
+```{r predict-1}
 sid1 <- "912d97"
 sid2 <- "2da8d7"
 sid3 <- "010d01"
@@ -546,30 +506,7 @@ sid5 <- "fa4911"
 
 # APPENDIX
 
-
-```r
+```{r R_session_info}
 sessionInfo()
-# R version 3.1.3 (2015-03-09)
-# Platform: x86_64-pc-linux-gnu (64-bit)
-# Running under: Ubuntu 14.04.2 LTS
-# 
-# locale:
-#  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8       
-#  [4] LC_COLLATE=C               LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
-#  [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                  LC_ADDRESS=C              
-# [10] LC_TELEPHONE=C             LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
-# 
-# attached base packages:
-# [1] grid      stats     graphics  grDevices utils     datasets  methods   base     
-# 
-# other attached packages:
-# [1] gridExtra_0.9.1 ggplot2_1.0.1   plyr_1.8.2      lubridate_1.3.3 knitr_1.10.5   
-# 
-# loaded via a namespace (and not attached):
-#  [1] MASS_7.3-40        RColorBrewer_1.1-2 Rcpp_0.11.6        colorspace_1.2-6   digest_0.6.8      
-#  [6] evaluate_0.7       formatR_1.2        gtable_0.1.2       htmltools_0.2.6    labeling_0.3      
-# [11] magrittr_1.5       memoise_0.2.1      munsell_0.4.2      proto_0.3-10       reshape2_1.4.1    
-# [16] rmarkdown_0.6.1    scales_0.2.4       stringi_0.4-1      stringr_1.0.0      tools_3.1.3       
-# [21] yaml_2.1.13
 ```
 ---

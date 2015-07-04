@@ -5,7 +5,7 @@ author  : Giovanni Fossati
 job     : null
 output  : 
   html_document:
-    self_contained: true
+    self_contained: false
     css: css/gf_small_touches.css
     theme: cerulean
     highlight: tango
@@ -37,7 +37,7 @@ opts_chunk$set(message = FALSE,
 
 ## PREAMBLE
 
-The source files are posted at [https://github.com/pedrosan/DaInCh](https://github.com/pedrosan/DaInCh)
+The source files are posted on [GitHub](https://github.com/pedrosan/DataScienceExamples/tree/master/Bike_Sharing/)
 
 ## PRELIMINARIES
 
@@ -481,23 +481,6 @@ print(df.wide, row.names = FALSE)
 p3 <- ggplot(data = df, aes(x = hour, y = number, fill = ID)) + theme_bw() + xlab("hour") + theme(legend.position="none") 
 # histogram
 p3 +  geom_bar(stat = "identity", alpha = 0.5, width = 0.8) + facet_grid(ID ~ .) + scale_fill_brewer(palette = "Set1")
-```
-
-
-
-<hr class="thin_separator">
-<a name="question_F"></a>
-
-## [F] Predict the number of bicycles arriving at stations "912d97", "2da8d7", "010d01", "36ba2f", and "fa4911" on 2013-11-26 in each hour
-
-_To clarify, a bicycle arriving at 1:45PM would count as arriving during hour 13._
-
-```{r predict-1}
-sid1 <- "912d97"
-sid2 <- "2da8d7"
-sid3 <- "010d01"
-sid4 <- "36ba2f"
-sid5 <- "fa4911"
 ```
 
 
