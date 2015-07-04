@@ -1,0 +1,35 @@
+body {
+  max-width: 860px;
+  margin: auto;
+  padding: 1em;
+  font-size: 14px; 
+}
+h2 { font-size:1.8em; color: #2C2072; }
+h3 { font-size:1.4em; color: #AF0810; }
+h4 { font-size:1.2em; color: #1C6C17; }
+
+pre {
+   margin: 2px 3% 10px 3%;
+   max-width: 94%;
+   white-space: pre-wrap;
+}
+code {
+  font-size: 84%;
+  border: 1px solid #944;
+  background-color: #EEEEEE;
+  padding: 0px 2px 0px 2px;
+  color: #222292;
+}
+code.r {
+  background-color: #EFEFEF;
+  border: 1px solid #AA3333;
+}
+code.quote {
+  background-color: #FFEEEE;
+  color: #7A0F14;
+}
+img {
+   margin: 2px 5% 10px 5%;
+   /* padding: 5px 0.5em 5px 0.5em; */
+   /* border: 1px solid #000000; */
+}

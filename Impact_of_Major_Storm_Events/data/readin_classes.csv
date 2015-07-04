@@ -1,0 +1,38 @@
+variable,oldclass,newclass1,newclass2
+STATE__    ,numeric ,numeric   ,  numeric
+BGN_DATE   ,factor  ,character ,character
+BGN_TIME   ,factor  ,character ,character
+TIME_ZONE  ,factor  ,factor    ,   factor
+COUNTY     ,numeric ,numeric   ,  numeric
+COUNTYNAME ,factor  ,character ,character
+STATE      ,factor  ,factor    ,   factor
+EVTYPE     ,factor  ,character ,character
+BGN_RANGE  ,numeric ,numeric   ,  numeric
+BGN_AZI    ,factor  ,character ,character
+BGN_LOCATI ,factor  ,character ,character
+END_DATE   ,factor  ,character ,character
+END_TIME   ,factor  ,character ,character
+COUNTY_END ,numeric ,numeric   ,  numeric
+COUNTYENDN ,logical ,character ,character
+END_RANGE  ,numeric ,numeric   ,  numeric
+END_AZI    ,factor  ,character ,character
+END_LOCATI ,factor  ,character ,character
+LENGTH     ,numeric ,numeric   ,  numeric
+WIDTH      ,numeric ,numeric   ,  numeric
+F          ,integer ,factor    ,   factor
+MAG        ,numeric ,numeric   ,  numeric
+FATALITIES ,numeric ,numeric   ,  numeric
+INJURIES   ,numeric ,numeric   ,  numeric
+PROPDMG    ,numeric ,numeric   ,  numeric
+PROPDMGEXP ,factor  ,character ,character
+CROPDMG    ,numeric ,numeric   ,  numeric
+CROPDMGEXP ,factor  ,character ,character
+WFO        ,factor  ,factor    ,character
+STATEOFFIC ,factor  ,factor    ,character
+ZONENAMES  ,factor  ,character ,character
+LATITUDE   ,numeric ,numeric   ,  numeric
+LONGITUDE  ,numeric ,numeric   ,  numeric
+LATITUDE_E ,numeric ,numeric   ,  numeric
+LONGITUDE_ ,numeric ,numeric   ,  numeric
+REMARKS    ,factor  ,character ,character
+REFNUM     ,numeric ,numeric   ,  numeric

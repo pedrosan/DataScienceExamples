@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="author" content="Giovanni Fossati" />
+
+
+<title>Human and Economic Cost of Major Storm Events: An Analysis of the NOAA/NCDC Database</title>
+
+<script src="main_files/jquery-1.11.0/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="main_files/bootstrap-3.3.1/css/cerulean.min.css" rel="stylesheet" />
+<script src="main_files/bootstrap-3.3.1/js/bootstrap.min.js"></script>
+<script src="main_files/bootstrap-3.3.1/shim/html5shiv.min.js"></script>
+<script src="main_files/bootstrap-3.3.1/shim/respond.min.js"></script>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; background-color: #f8f8f8; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+pre, code { background-color: #f8f8f8; }
+code > span.kw { color: #204a87; font-weight: bold; }
+code > span.dt { color: #204a87; }
+code > span.dv { color: #0000cf; }
+code > span.bn { color: #0000cf; }
+code > span.fl { color: #0000cf; }
+code > span.ch { color: #4e9a06; }
+code > span.st { color: #4e9a06; }
+code > span.co { color: #8f5902; font-style: italic; }
+code > span.ot { color: #8f5902; }
+code > span.al { color: #ef2929; }
+code > span.fu { color: #000000; }
+code > span.er { font-weight: bold; }
+</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<link rel="stylesheet" href="css/gf_small_touches.css" type="text/css" />
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img { 
+  max-width:100%; 
+  height: auto; 
+}
+</style>
+<div class="container-fluid main-container">
+
+
+<div id="header">
+<h1 class="title">Human and Economic Cost of Major Storm Events: An Analysis of the NOAA/NCDC Database</h1>
+<h4 class="author"><em>Giovanni Fossati</em></h4>
+</div>
+
+
+<div id="preamble" class="section level2">
+<h2>PREAMBLE</h2>
+<p>Report for the first assignment of the <a href="https://www.coursera.org/course/repdata"><em>Reproducible Research</em></a> course of the <em>Coursera/JHSPH Data Science Specialization</em>.</p>
+<p>The source files are posted on <a href="https://github.com/pedrosan/DataScienceExamples/tree/master/Impact_of_Major_Storm_Events">GitHub</a>.</p>
+</div>
+<div id="synopsis" class="section level2">
+<h2>Synopsis</h2>
+<p>This project involves exploring the U.S. National Oceanic and Atmospheric Administration’s (NOAA) storm database. This database records major weather-related events in the United States, tracking their times and locations as well as estimates of fatalities, injuries, property and agricultural damages that may be associated with them.</p>
+<p>We seek to identify which type of storm events have the greatest impact on the population both from the point of view of their health and of the economic consequences. To address these questions, our analysis aggregates the data by storm event type to identify the storm events categories responsible for the largest impact as measured by <em>fatalities</em>, <em>injuries</em>, <em>property damage</em>, <em>crop damage</em>.</p>
+<div id="findings" class="section level3">
+<h3>Findings</h3>
+<p>Looking separately at each harm/damage category separately based on our analysis we can say that the most severe impact comes from the following types of events:</p>
+<ul>
+<li><p><strong>agricultural damage</strong>: <em>hurricanes</em> and <em>drought</em>, both in terms of total economic cost and fraction of events that cause significant damage.<br />It is worth noting that in addition to events directly classified as <em>hurricane</em>, among the most impactful event types there are others that are/can be related to <em>hurricanes</em> themselves or other kind of tropical storm activity (e.g. <em>tropical storms</em>, <em>storm surge</em>).</p></li>
+<li><p><strong>property damage</strong>: in absolute terms <em>hurricanes</em> and <em>floods</em> dominate the economic impact (and here again one may want to look at a broader “tropical event” category). When we consider the likelihood that a storm causes “recordable” damages, <em>wind</em> and <em>snow</em> emerge at the top. While their cumulative cost may not be as substantial as that of major events like hurricanes, the damage caused by <em>wind</em> and <em>snow</em> can have a serious impact on the life and economic activity of a wider range of families and communities across the country and it warrants attention and adequate preparation.</p></li>
+<li><p><strong>human fatalities/injuries</strong>: <em>tornadoes</em>, <em>floods</em> (including <em>flash floods</em>) and <em>excessive heat</em> emerge as the most serious threats to human health in absolute terms. It is interesting however, to note that in terms of fraction of events with fatalities/injuries, <em>rip currents</em> and <em>avalanches</em> take the top spots (with “likelihood” &gt;= 50% of fatalities and about 25% of injuries on a given event).<br />This may suggest that people expose themselves to avoidable risks, given that one can think of associating <em>rip currents</em> and <em>avalanches</em> with leisure activities.</p></li>
+</ul>
+</div>
+<div id="future-work" class="section level3">
+<h3>Future Work</h3>
+<p>The scope and time for this investigation were limited, but there are clear directions worth further investigation, such as</p>
+<ul>
+<li>Geographic analysis, clearly necessary given the fairy localized impact of different type of events.</li>
+<li>Variation over time, perhaps reflecting changes in behavior, preparation and policies.</li>
+</ul>
+<hr class="thin_separator">
+<p><a name="DATA_PROCESSING"></a></p>
+</div>
+</div>
+<div id="data-processing" class="section level2">
+<h2>Data Processing</h2>
+<p>The data structure and definition documentation is at the following URLs of the NOAA National Climatic Data Center (NCDC):</p>
+<ul>
+<li><a href="http://www.ncdc.noaa.gov/stormevents/details.jsp">Storm Events Database</a></li>
+<li><a href="http://www.ncdc.noaa.gov/stormevents/pd01016005curr.pdf">Storm Data Documentation</a></li>
+<li><a href="http://www.ncdc.noaa.gov/oa/climate/sd/sdfaq.html">FAQ</a></li>
+</ul>
+<p>The raw data comprise 37 variables with 902,297 observation from years 1950-2011.</p>
+<div id="the-data-and-the-aim-of-our-analysis" class="section level3">
+<h3>The data and the aim of our analysis</h3>
+<p>The objective of this research is to address two main questions:</p>
+<ul>
+<li>which events have the greatest health consequences measured by <em>fatalities</em> and <em>injuries</em>.</li>
+<li>Which events have the greatest economic consequences measured by <em>property damage</em>, <em>crop damage</em>, <em>total economic damage</em>.</li>
+</ul>
+<p>The main variables in the NOAA/NCDC Storm Event databases that we will consider are:</p>
+<ul>
+<li><p>For storm event date and type:</p>
+<ul>
+<li><strong>BGN_DATE</strong>: begin date of event.</li>
+<li><strong>EVTYPE</strong>: event type (see discussion later).</li>
+</ul></li>
+<li><p>For human and economic damages associated with each storm event:</p>
+<ul>
+<li><strong>FATALITIES</strong>: number of fatalities.</li>
+<li><strong>INJURIES</strong>: number of injuries.</li>
+<li><strong>PROPDMG</strong>: property damage assessment.</li>
+<li><strong>CROPDMG</strong>: agricultural damage assessment.</li>
+</ul></li>
+</ul>
+<p>The values reported for these two latter have to be converted in actual US dollar amounts by multiplying them by a scaling factor coded in two other variables (<code>PROPDMGEXP</code>, <code>CROPDMGEXP</code>) as the power of 10 of the multiplier. These two auxiliary variables seem to suffer from some data-entry issues, which we will address below.</p>
+</div>
+<div id="loading-the-dataset" class="section level3">
+<h3>Loading the dataset</h3>
+<p>The data set comes as a compressed <em>csv</em> file, which can be read directly with <code>read.csv()</code>. After reviewing the data we set our preferred values for the classes of the variables loaded in the data-frame and we set them on loading via the <code>colClasses</code> option, using a character vector read from an auxiliary file.</p>
+<p>NOTE: given the substantial size of the data set we set the options <code>cache=TRUE</code> to reduce the <code>knitr</code> processing time to a manageable length.</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># col.cl &lt;- read.csv(&quot;data/readin_classes.csv&quot;, stringsAsFactors=FALSE, strip.white=TRUE)</span>
+<span class="co"># col.cl$newclass2</span></code></pre>
+<pre class="sourceCode r"><code class="sourceCode r">col.cl &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class="st">&quot;data/readin_classes.csv&quot;</span>, <span class="dt">stringsAsFactors=</span><span class="ot">FALSE</span>, <span class="dt">strip.white=</span><span class="ot">TRUE</span>)
+col.cl$newclass2
+<span class="co">#  [1] &quot;numeric&quot;   &quot;character&quot; &quot;character&quot; &quot;factor&quot;    &quot;numeric&quot;   &quot;character&quot; &quot;factor&quot;    &quot;character&quot;</span>
+<span class="co">#  [9] &quot;numeric&quot;   &quot;character&quot; &quot;character&quot; &quot;character&quot; &quot;character&quot; &quot;numeric&quot;   &quot;character&quot; &quot;numeric&quot;  </span>
+<span class="co"># [17] &quot;character&quot; &quot;character&quot; &quot;numeric&quot;   &quot;numeric&quot;   &quot;factor&quot;    &quot;numeric&quot;   &quot;numeric&quot;   &quot;numeric&quot;  </span>
+<span class="co"># [25] &quot;numeric&quot;   &quot;character&quot; &quot;numeric&quot;   &quot;character&quot; &quot;character&quot; &quot;character&quot; &quot;character&quot; &quot;numeric&quot;  </span>
+<span class="co"># [33] &quot;numeric&quot;   &quot;numeric&quot;   &quot;numeric&quot;   &quot;character&quot; &quot;numeric&quot;</span>
+
+<span class="kw">system.time</span>( data &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class="st">&quot;data/StormData.csv.bz2&quot;</span>, <span class="dt">colClasses=</span> col.cl$newclass2, <span class="dt">nrows=</span><span class="dv">1300000</span>, <span class="dt">strip.white=</span><span class="ot">TRUE</span>) )
+<span class="co">#    user  system elapsed </span>
+<span class="co">#  52.506   0.240  52.810</span>
+<span class="co"># data2 &lt;- readRDS(&quot;data/df_good_saved.rds&quot;)</span></code></pre>
+<p>This is the structure of the data-frame as loaded.</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">str</span>(data)
+<span class="co"># &#39;data.frame&#39;: 902297 obs. of  37 variables:</span>
+<span class="co">#  $ STATE__   : num  1 1 1 1 1 1 1 1 1 1 ...</span>
+<span class="co">#  $ BGN_DATE  : chr  &quot;4/18/1950 0:00:00&quot; &quot;4/18/1950 0:00:00&quot; &quot;2/20/1951 0:00:00&quot; &quot;6/8/1951 0:00:00&quot; ...</span>
+<span class="co">#  $ BGN_TIME  : chr  &quot;0130&quot; &quot;0145&quot; &quot;1600&quot; &quot;0900&quot; ...</span>
+<span class="co">#  $ TIME_ZONE : Factor w/ 22 levels &quot;ADT&quot;,&quot;AKS&quot;,&quot;AST&quot;,..: 6 6 6 6 6 6 6 6 6 6 ...</span>
+<span class="co">#  $ COUNTY    : num  97 3 57 89 43 77 9 123 125 57 ...</span>
+<span class="co">#  $ COUNTYNAME: chr  &quot;MOBILE&quot; &quot;BALDWIN&quot; &quot;FAYETTE&quot; &quot;MADISON&quot; ...</span>
+<span class="co">#  $ STATE     : Factor w/ 72 levels &quot;AK&quot;,&quot;AL&quot;,&quot;AM&quot;,..: 2 2 2 2 2 2 2 2 2 2 ...</span>
+<span class="co">#  $ EVTYPE    : chr  &quot;TORNADO&quot; &quot;TORNADO&quot; &quot;TORNADO&quot; &quot;TORNADO&quot; ...</span>
+<span class="co">#  $ BGN_RANGE : num  0 0 0 0 0 0 0 0 0 0 ...</span>
+<span class="co">#  $ BGN_AZI   : chr  &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...</span>
+<span class="co">#  $ BGN_LOCATI: chr  &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...</span>
+<span class="co">#  $ END_DATE  : chr  &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...</span>
+<span class="co">#  $ END_TIME  : chr  &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...</span>
+<span class="co">#  $ COUNTY_END: num  0 0 0 0 0 0 0 0 0 0 ...</span>
+<span class="co">#  $ COUNTYENDN: chr  &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...</span>
+<span class="co">#  $ END_RANGE : num  0 0 0 0 0 0 0 0 0 0 ...</span>
+<span class="co">#  $ END_AZI   : chr  &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...</span>
+<span class="co">#  $ END_LOCATI: chr  &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...</span>
+<span class="co">#  $ LENGTH    : num  14 2 0.1 0 0 1.5 1.5 0 3.3 2.3 ...</span>
+<span class="co">#  $ WIDTH     : num  100 150 123 100 150 177 33 33 100 100 ...</span>
+<span class="co">#  $ F         : Factor w/ 7 levels &quot;&quot;,&quot;0&quot;,&quot;1&quot;,&quot;2&quot;,..: 5 4 4 4 4 4 4 3 5 5 ...</span>
+<span class="co">#  $ MAG       : num  0 0 0 0 0 0 0 0 0 0 ...</span>
+<span class="co">#  $ FATALITIES: num  0 0 0 0 0 0 0 0 1 0 ...</span>
+<span class="co">#  $ INJURIES  : num  15 0 2 2 2 6 1 0 14 0 ...</span>
+<span class="co">#  $ PROPDMG   : num  25 2.5 25 2.5 2.5 2.5 2.5 2.5 25 25 ...</span>
+<span class="co">#  $ PROPDMGEXP: chr  &quot;K&quot; &quot;K&quot; &quot;K&quot; &quot;K&quot; ...</span>
+<span class="co">#  $ CROPDMG   : num  0 0 0 0 0 0 0 0 0 0 ...</span>
+<span class="co">#  $ CROPDMGEXP: chr  &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...</span>
+<span class="co">#  $ WFO       : chr  &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...</span>
+<span class="co">#  $ STATEOFFIC: chr  &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...</span>
+<span class="co">#  $ ZONENAMES : chr  &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...</span>
+<span class="co">#  $ LATITUDE  : num  3040 3042 3340 3458 3412 ...</span>
+<span class="co">#  $ LONGITUDE : num  8812 8755 8742 8626 8642 ...</span>
+<span class="co">#  $ LATITUDE_E: num  3051 0 0 0 0 ...</span>
+<span class="co">#  $ LONGITUDE_: num  8806 0 0 0 0 ...</span>
+<span class="co">#  $ REMARKS   : chr  &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...</span>
+<span class="co">#  $ REFNUM    : num  1 2 3 4 5 6 7 8 9 10 ...</span></code></pre>
+</div>
+<div id="cleaning-reformatting-and-new-variables" class="section level3">
+<h3>Cleaning, reformatting, and new variables</h3>
+<p>Due to the nature of the development of this dataset several variables suffer from inconsistent formatting and in order to make our analysis as robust as possible we cleaned and reformatted some of the potentially useful variables, as well as created ones for further convenience.</p>
+<div id="remarks-and-evtype-tidying-up-spaces-and-letters-case" class="section level4">
+<h4><em>REMARKS</em> and <em>EVTYPE</em>: tidying up spaces and letters’ case</h4>
+<pre class="sourceCode r"><code class="sourceCode r">data$REMARKS &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;^ *&quot;</span>, <span class="st">&quot;&quot;</span>, data$REMARKS, <span class="dt">perl=</span><span class="ot">TRUE</span>)
+data$REMARKS &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot; *$&quot;</span>, <span class="st">&quot;&quot;</span>, data$REMARKS, <span class="dt">perl=</span><span class="ot">TRUE</span>)
+data$REMARKS &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;[ ]{2,}&quot;</span>, <span class="st">&quot; &quot;</span>, data$REMARKS, <span class="dt">perl=</span><span class="ot">TRUE</span>)
+
+data$EVTYPE &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;^ *&quot;</span>, <span class="st">&quot;&quot;</span>, data$EVTYPE, <span class="dt">perl=</span><span class="ot">TRUE</span>)
+data$EVTYPE &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot; *$&quot;</span>, <span class="st">&quot;&quot;</span>, data$EVTYPE, <span class="dt">perl=</span><span class="ot">TRUE</span>)
+data$EVTYPE &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;[ ]{2,}&quot;</span>, <span class="st">&quot; &quot;</span>, data$EVTYPE, <span class="dt">perl=</span><span class="ot">TRUE</span>)
+
+data$COUNTYNAME &lt;-<span class="st"> </span><span class="kw">toupper</span>(data$COUNTYNAME)
+data$EVTYPE     &lt;-<span class="st"> </span><span class="kw">toupper</span>(data$EVTYPE)
+data$PROPDMGEXP &lt;-<span class="st"> </span><span class="kw">toupper</span>(data$PROPDMGEXP)
+data$CROPDMGEXP &lt;-<span class="st"> </span><span class="kw">toupper</span>(data$CROPDMGEXP)</code></pre>
+</div>
+<div id="setting-missing-coordinates-to-na" class="section level4">
+<h4>Setting “missing” coordinates to <em>NA</em></h4>
+<pre class="sourceCode r"><code class="sourceCode r">data$LATITUDE[data$LATITUDE &lt;=<span class="st"> </span><span class="dv">0</span>]  &lt;-<span class="st"> </span><span class="ot">NA</span>
+data$LONGITUDE[data$LONGITUDE &lt;=<span class="st"> </span><span class="dv">0</span>]  &lt;-<span class="st"> </span><span class="ot">NA</span></code></pre>
+</div>
+<div id="times" class="section level4">
+<h4>Times</h4>
+<p>First a small fix motivated by the discovery of <code>O</code> instead of a <code>0</code> in the <code>BGN_TIME</code> variable:</p>
+<pre class="sourceCode r"><code class="sourceCode r">data$BGN_TIME &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;([0-9])O(.*)([^M])$&quot;</span>,<span class="st">&quot;</span><span class="ch">\\</span><span class="st">10</span><span class="ch">\\</span><span class="st">2</span><span class="ch">\\</span><span class="st">3&quot;</span>, data$BGN_TIME, <span class="dt">perl=</span><span class="ot">TRUE</span>)</code></pre>
+<p>It is better to work with properly constructed time variables, hence we convert <code>BGN_DATE</code> and <code>END_DATE</code> into <code>POSIXlt</code> class variables.</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># making BGN and END dates dates</span>
+data$BGN_DATE.new &lt;-<span class="st"> </span><span class="kw">strptime</span>(<span class="kw">as.character</span>(data$BGN_DATE), <span class="st">&quot;%m/%d/%Y %H:%M:%S&quot;</span>)
+data$END_DATE.new &lt;-<span class="st"> </span><span class="kw">strptime</span>(<span class="kw">as.character</span>(data$END_DATE), <span class="st">&quot;%m/%d/%Y %H:%M:%S&quot;</span>)</code></pre>
+<p>Finally, we define a <em>factor</em> variable <code>YEAR</code>.</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># create a 4-digit year factor variable</span>
+<span class="co"># data$YEAR &lt;- as.factor(substr(as.character(data$BGN_DATE.new),0,4))</span>
+data$YEAR &lt;-<span class="st"> </span><span class="kw">substr</span>(<span class="kw">as.character</span>(data$BGN_DATE.new),<span class="dv">0</span>,<span class="dv">4</span>)</code></pre>
+</div>
+</div>
+<div id="subsetting-full-data-frame-to-good-data-frame" class="section level3">
+<h3>Subsetting full data-frame to <em>good</em> data-frame</h3>
+<p>For ease of processing it is practical to work with a reduced set of variables.<br />Our choice was the following:</p>
+<pre class="sourceCode r"><code class="sourceCode r">sel.columns.n &lt;-<span class="st"> </span><span class="kw">c</span>( <span class="dv">37</span>, <span class="dv">7</span>, <span class="dv">5</span>, <span class="dv">40</span>, <span class="dv">38</span>, <span class="dv">39</span>, <span class="dv">8</span>, <span class="dv">23</span>, <span class="dv">24</span>, <span class="dv">25</span>, <span class="dv">26</span>, <span class="dv">27</span>, <span class="dv">28</span>, <span class="dv">36</span>)
+<span class="kw">colnames</span>(data)[sel.columns.n]
+<span class="co">#  [1] &quot;REFNUM&quot;       &quot;STATE&quot;        &quot;COUNTY&quot;       &quot;YEAR&quot;         &quot;BGN_DATE.new&quot; &quot;END_DATE.new&quot;</span>
+<span class="co">#  [7] &quot;EVTYPE&quot;       &quot;FATALITIES&quot;   &quot;INJURIES&quot;     &quot;PROPDMG&quot;      &quot;PROPDMGEXP&quot;   &quot;CROPDMG&quot;     </span>
+<span class="co"># [13] &quot;CROPDMGEXP&quot;   &quot;REMARKS&quot;</span></code></pre>
+<p>After creating the new data-frame, we rename the newly created time variables to take the original names, and sort the data-frame by <code>BGN_DATE</code>.</p>
+<pre class="sourceCode r"><code class="sourceCode r">good &lt;-<span class="st"> </span>data[, sel.columns.n]
+
+<span class="kw">colnames</span>(good)[<span class="dv">5</span>] &lt;-<span class="st"> &quot;BGN_DATE&quot;</span>
+<span class="kw">colnames</span>(good)[<span class="dv">6</span>] &lt;-<span class="st"> &quot;END_DATE&quot;</span>
+
+<span class="co"># sorting data frame chronologically </span>
+good &lt;-<span class="st"> </span>good[<span class="kw">order</span>(good$BGN_DATE), ]</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">str</span>(good)
+<span class="co"># &#39;data.frame&#39;: 902297 obs. of  14 variables:</span>
+<span class="co">#  $ REFNUM    : num  28479 28480 83316 114844 6348 ...</span>
+<span class="co">#  $ STATE     : Factor w/ 72 levels &quot;AK&quot;,&quot;AL&quot;,&quot;AM&quot;,..: 20 20 37 48 5 20 37 63 63 63 ...</span>
+<span class="co">#  $ COUNTY    : num  119 135 189 161 113 91 93 47 39 201 ...</span>
+<span class="co">#  $ YEAR      : chr  &quot;1950&quot; &quot;1950&quot; &quot;1950&quot; &quot;1950&quot; ...</span>
+<span class="co">#  $ BGN_DATE  : POSIXlt, format: &quot;1950-01-03&quot; &quot;1950-01-03&quot; &quot;1950-01-03&quot; ...</span>
+<span class="co">#  $ END_DATE  : POSIXlt, format: NA NA NA ...</span>
+<span class="co">#  $ EVTYPE    : chr  &quot;TORNADO&quot; &quot;TORNADO&quot; &quot;TORNADO&quot; &quot;TORNADO&quot; ...</span>
+<span class="co">#  $ FATALITIES: num  0 0 0 0 1 0 0 0 0 1 ...</span>
+<span class="co">#  $ INJURIES  : num  0 3 3 1 1 0 5 2 0 12 ...</span>
+<span class="co">#  $ PROPDMG   : num  250 250 2.5 25 2.5 250 250 0 25 25 ...</span>
+<span class="co">#  $ PROPDMGEXP: chr  &quot;K&quot; &quot;K&quot; &quot;M&quot; &quot;K&quot; ...</span>
+<span class="co">#  $ CROPDMG   : num  0 0 0 0 0 0 0 0 0 0 ...</span>
+<span class="co">#  $ CROPDMGEXP: chr  &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...</span>
+<span class="co">#  $ REMARKS   : chr  &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...</span></code></pre>
+<div id="the-evtype-problem" class="section level4">
+<h4>The <em>EVTYPE</em> problem!</h4>
+<p>We perform some more cleaning steps on this leaner data-frame to <em>regularize</em> the <code>EVTYPE</code> variable.<br />Because of historical reasons, namely the heterogenous sources of the data compiled into the Storm Event database, the <code>EVTYPE</code> variable requires a significant amount of work to tidy it up into a more usable form.</p>
+<p>While in theory since 1996 NOAA has codified a set of 48 type of events <a href="http://www.ncdc.noaa.gov/stormevents/pd01016005curr.pdf">See NWS Directive</a> to be used in the classification of storm events, a quick review of the different <code>EVTYPE</code> values for each year shows that their number remained higher until much more recently.</p>
+<pre class="sourceCode r"><code class="sourceCode r">EVTYPE.by.year &lt;-<span class="st"> </span><span class="kw">tapply</span>(good$EVTYPE, good$YEAR, function(x) <span class="kw">table</span>(x), <span class="dt">simplify=</span><span class="ot">TRUE</span>)
+<span class="kw">sapply</span>(EVTYPE.by.year, function(x) <span class="kw">length</span>(<span class="kw">names</span>(x)))
+<span class="co"># 1950 1951 1952 1953 1954 1955 1956 1957 1958 1959 1960 1961 1962 1963 1964 1965 1966 1967 1968 1969 </span>
+<span class="co">#    1    1    1    1    1    3    3    3    3    3    3    3    3    3    3    3    3    3    3    3 </span>
+<span class="co"># 1970 1971 1972 1973 1974 1975 1976 1977 1978 1979 1980 1981 1982 1983 1984 1985 1986 1987 1988 1989 </span>
+<span class="co">#    3    3    3    3    3    3    3    3    3    3    3    3    3    3    3    3    3    3    3    3 </span>
+<span class="co"># 1990 1991 1992 1993 1994 1995 1996 1997 1998 1999 2000 2001 2002 2003 2004 2005 2006 2007 2008 2009 </span>
+<span class="co">#    3    3    3  160  266  384  199  135  122  118  110  120   99   51   38   46   50   46   46   46 </span>
+<span class="co"># 2010 2011 </span>
+<span class="co">#   46   46</span></code></pre>
+<p>Until 1993 <em>“Tornado”</em>“, <em>“Thunderstorm Wind”</em>” and <em>“Hail”</em>&quot; type of events were recorded. The 1993 and 1995 data have been extracted from unformatted text files, and this helps explain the high level of <em>noise</em> of <code>EVTYPE</code> during those years. It is less clear why after the Directive of 1996 the data have not become</p>
+<p>A quick census of the most frequent <code>EVTYPE</code> can be extracted with <code>table()</code></p>
+<pre class="sourceCode r"><code class="sourceCode r">evt.census &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(<span class="kw">table</span>(data$EVTYPE))
+<span class="kw">head</span>(evt.census[<span class="kw">order</span>(evt.census$Freq, <span class="dt">decreasing=</span><span class="ot">TRUE</span>),],<span class="dv">10</span>)
+<span class="co">#                   Var1   Freq</span>
+<span class="co"># 203               HAIL 288661</span>
+<span class="co"># 766          TSTM WIND 219946</span>
+<span class="co"># 672  THUNDERSTORM WIND  82564</span>
+<span class="co"># 745            TORNADO  60652</span>
+<span class="co"># 129        FLASH FLOOD  54278</span>
+<span class="co"># 145              FLOOD  25327</span>
+<span class="co"># 698 THUNDERSTORM WINDS  20850</span>
+<span class="co"># 309          HIGH WIND  20214</span>
+<span class="co"># 407          LIGHTNING  15755</span>
+<span class="co"># 265         HEAVY SNOW  15708</span>
+
+<span class="kw">nrow</span>(evt.census)
+<span class="co"># [1] 883</span></code></pre>
+<p>The full database comprises 883 unique <code>EVTYPE</code> values!<br />It is immediately obvious the problem with inconsistent naming, as in the top-10 there are three entries for the same storm event type, <em>Thunderstorm Wind</em>: <code>TSTM WIND</code>, <code>THUNDERSTORM WIND</code>, <code>THUNDERSTORM WINDS</code> .</p>
+<p>After an extensive analysis of the <code>EVTYPE</code>, we put together a lengthy set of substitutions via <code>gsub()</code> and <code>grepl()</code> to consolidate as many related types as possible. We run this by calling an external script to avoid clogging the document, but we include the source of the script in the Appendix.<br />The script creates a new character vector added to the <code>good</code> data-frame as <code>EVTYPE</code>.</p>
+<ul>
+<li>show percentage “recovered”, number of <code>EVTYPE</code> per year, etc…</li>
+</ul>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Calling &#39;grepl.R&#39; script to clean the EVTYPE entries</span>
+<span class="kw">source</span>(<span class="st">&quot;./scripts/evtype_regularization.R&quot;</span>)
+<span class="co"># # Entering &#39;evtype_regularization&#39; script</span>
+<span class="co"># # Leaving &#39;evtype_regularization&#39; script</span>
+
+<span class="co"># colnames(good)[7] &lt;- &quot;old.EVTYPE&quot;</span>
+good$EVTYPE &lt;-<span class="st"> </span>TESTvec</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">str</span>(good)
+<span class="co"># &#39;data.frame&#39;: 902297 obs. of  14 variables:</span>
+<span class="co">#  $ REFNUM    : num  28479 28480 83316 114844 6348 ...</span>
+<span class="co">#  $ STATE     : Factor w/ 72 levels &quot;AK&quot;,&quot;AL&quot;,&quot;AM&quot;,..: 20 20 37 48 5 20 37 63 63 63 ...</span>
+<span class="co">#  $ COUNTY    : num  119 135 189 161 113 91 93 47 39 201 ...</span>
+<span class="co">#  $ YEAR      : chr  &quot;1950&quot; &quot;1950&quot; &quot;1950&quot; &quot;1950&quot; ...</span>
+<span class="co">#  $ BGN_DATE  : POSIXlt, format: &quot;1950-01-03&quot; &quot;1950-01-03&quot; &quot;1950-01-03&quot; ...</span>
+<span class="co">#  $ END_DATE  : POSIXlt, format: NA NA NA ...</span>
+<span class="co">#  $ EVTYPE    : chr  &quot;TORNADO&quot; &quot;TORNADO&quot; &quot;TORNADO&quot; &quot;TORNADO&quot; ...</span>
+<span class="co">#  $ FATALITIES: num  0 0 0 0 1 0 0 0 0 1 ...</span>
+<span class="co">#  $ INJURIES  : num  0 3 3 1 1 0 5 2 0 12 ...</span>
+<span class="co">#  $ PROPDMG   : num  250 250 2.5 25 2.5 250 250 0 25 25 ...</span>
+<span class="co">#  $ PROPDMGEXP: chr  &quot;K&quot; &quot;K&quot; &quot;M&quot; &quot;K&quot; ...</span>
+<span class="co">#  $ CROPDMG   : num  0 0 0 0 0 0 0 0 0 0 ...</span>
+<span class="co">#  $ CROPDMGEXP: chr  &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...</span>
+<span class="co">#  $ REMARKS   : chr  &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...</span>
+
+<span class="kw">dim</span>( <span class="kw">table</span>(good$EVTYPE) )
+<span class="co"># [1] 373</span></code></pre>
+</div>
+<div id="the-propdmgexp-and-cropdmgexp-problem" class="section level4">
+<h4>The <em>PROPDMGEXP</em> and <em>CROPDMGEXP</em> problem</h4>
+<p>The variables <code>PROPDMGEXP</code> and <code>CROPDMGEXP</code> are supposed to encode exponents for <em>power of 10 units</em> for multiplying factors for their respective economic damage variables.<br />They too suffer from inconsistent data entry in the <em>transition years</em> around 1995 as it can be seen by this quick analysis of the number of unique values for each year, accompanied by the list of values for the years with the highest number of them:</p>
+<pre class="sourceCode r"><code class="sourceCode r">PROPDMGEXP.by.year &lt;-<span class="st"> </span><span class="kw">tapply</span>(good$PROPDMGEXP, good$YEAR, function(x) <span class="kw">table</span>(x), <span class="dt">simplify=</span><span class="ot">TRUE</span>)
+<span class="kw">sapply</span>(PROPDMGEXP.by.year, function(x) <span class="kw">length</span>(<span class="kw">names</span>(x)))
+<span class="co"># 1950 1951 1952 1953 1954 1955 1956 1957 1958 1959 1960 1961 1962 1963 1964 1965 1966 1967 1968 1969 </span>
+<span class="co">#    2    2    2    2    2    3    3    3    3    3    3    3    3    3    3    3    3    3    3    3 </span>
+<span class="co"># 1970 1971 1972 1973 1974 1975 1976 1977 1978 1979 1980 1981 1982 1983 1984 1985 1986 1987 1988 1989 </span>
+<span class="co">#    3    3    3    3    3    3    3    3    3    3    3    3    3    3    3    3    3    3    3    3 </span>
+<span class="co"># 1990 1991 1992 1993 1994 1995 1996 1997 1998 1999 2000 2001 2002 2003 2004 2005 2006 2007 2008 2009 </span>
+<span class="co">#    3    3    3    7    9   17    3    4    4    4    4    4    3    4    4    4    4    2    3    2 </span>
+<span class="co"># 2010 2011 </span>
+<span class="co">#    3    4</span>
+
+PROPDMGEXP.by.year[<span class="kw">which.max</span>(<span class="kw">sapply</span>(PROPDMGEXP.by.year, function(x) <span class="kw">length</span>(<span class="kw">names</span>(x))))]
+<span class="co"># $`1995`</span>
+<span class="co"># x</span>
+<span class="co">#           +     -     0     1     2     3     4     5     6     7     8     ?     B     H     K </span>
+<span class="co"># 18331     4     1   186    25    13     4     3    26     3     5     1     5     5     6  8768 </span>
+<span class="co">#     M </span>
+<span class="co">#   584</span>
+
+CROPDMGEXP.by.year &lt;-<span class="st"> </span><span class="kw">tapply</span>(good$CROPDMGEXP, good$YEAR, function(x) <span class="kw">table</span>(x), <span class="dt">simplify=</span><span class="ot">TRUE</span>)
+<span class="kw">sapply</span>(CROPDMGEXP.by.year, function(x) <span class="kw">length</span>(<span class="kw">names</span>(x)))
+<span class="co"># 1950 1951 1952 1953 1954 1955 1956 1957 1958 1959 1960 1961 1962 1963 1964 1965 1966 1967 1968 1969 </span>
+<span class="co">#    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1 </span>
+<span class="co"># 1970 1971 1972 1973 1974 1975 1976 1977 1978 1979 1980 1981 1982 1983 1984 1985 1986 1987 1988 1989 </span>
+<span class="co">#    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1    1 </span>
+<span class="co"># 1990 1991 1992 1993 1994 1995 1996 1997 1998 1999 2000 2001 2002 2003 2004 2005 2006 2007 2008 2009 </span>
+<span class="co">#    1    1    1    6    5    7    3    3    3    3    3    3    3    3    3    4    4    2    2    2 </span>
+<span class="co"># 2010 2011 </span>
+<span class="co">#    2    3</span>
+
+CROPDMGEXP.by.year[<span class="kw">which.max</span>(<span class="kw">sapply</span>(CROPDMGEXP.by.year, function(x) <span class="kw">length</span>(<span class="kw">names</span>(x))))]
+<span class="co"># $`1995`</span>
+<span class="co"># x</span>
+<span class="co">#           0     2     ?     B     K     M </span>
+<span class="co"># 27019     8     1     5     3   800   134</span></code></pre>
+<p>We corrected their values according to the following interpretation: + The exponents are considered for the base of 10 as the base. + Missing values (NA) or empty strings are considered as <span class="math">\(10^0=1\)</span>. + <code>H</code>, <code>K</code>, <code>M</code>, <code>B</code> are interpreted as: <em>hecto</em> (=2), <em>kilo</em> (=3), <em>mega</em> (=6), <em>billion</em> (=9). + Numeric exponents are interpreted as its corresponding power of 10 as the base. + The rest of effectively undefined exponents are also interpreted to be spurious and set to 0. After these conversions the <code>PROPDMGEXP</code> and <code>CROPDMGEXP</code> variable are changed to <em>numeric</em> class.</p>
+<pre class="sourceCode r"><code class="sourceCode r">good$PROPDMGEXP[good$PROPDMGEXP ==<span class="st"> &quot;?&quot;</span> |<span class="st"> </span>good$PROPDMGEXP ==<span class="st"> &quot;+&quot;</span> |<span class="st"> </span>
+<span class="st">                </span>good$PROPDMGEXP ==<span class="st"> &quot;-&quot;</span> |<span class="st"> </span>good$PROPDMGEXP ==<span class="st"> &quot;&quot;</span>] &lt;-<span class="st"> </span><span class="dv">0</span>
+good$PROPDMGEXP[good$PROPDMGEXP ==<span class="st"> &quot;B&quot;</span>] &lt;-<span class="st"> </span><span class="dv">9</span>
+good$PROPDMGEXP[good$PROPDMGEXP ==<span class="st"> &quot;M&quot;</span>] &lt;-<span class="st"> </span><span class="dv">6</span>
+good$PROPDMGEXP[good$PROPDMGEXP ==<span class="st"> &quot;K&quot;</span>] &lt;-<span class="st"> </span><span class="dv">3</span>
+good$PROPDMGEXP[good$PROPDMGEXP ==<span class="st"> &quot;H&quot;</span>] &lt;-<span class="st"> </span><span class="dv">2</span>
+
+good$CROPDMGEXP[good$CROPDMGEXP ==<span class="st"> &quot;?&quot;</span> |<span class="st"> </span>good$CROPDMGEXP ==<span class="st"> &quot;+&quot;</span> |<span class="st"> </span>
+<span class="st">                </span>good$CROPDMGEXP ==<span class="st"> &quot;-&quot;</span> |<span class="st"> </span>good$CROPDMGEXP ==<span class="st"> &quot;&quot;</span>] &lt;-<span class="st"> </span><span class="dv">0</span>
+good$CROPDMGEXP[good$CROPDMGEXP ==<span class="st"> &quot;B&quot;</span>] &lt;-<span class="st"> </span><span class="dv">9</span>
+good$CROPDMGEXP[good$CROPDMGEXP ==<span class="st"> &quot;M&quot;</span>] &lt;-<span class="st"> </span><span class="dv">6</span>
+good$CROPDMGEXP[good$CROPDMGEXP ==<span class="st"> &quot;K&quot;</span>] &lt;-<span class="st"> </span><span class="dv">3</span>
+good$CROPDMGEXP[good$CROPDMGEXP ==<span class="st"> &quot;H&quot;</span>] &lt;-<span class="st"> </span><span class="dv">2</span>
+
+good$PROPDMGEXP &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(good$PROPDMGEXP)
+good$CROPDMGEXP &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(good$CROPDMGEXP)</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">str</span>(good)
+<span class="co"># &#39;data.frame&#39;: 902297 obs. of  14 variables:</span>
+<span class="co">#  $ REFNUM    : num  28479 28480 83316 114844 6348 ...</span>
+<span class="co">#  $ STATE     : Factor w/ 72 levels &quot;AK&quot;,&quot;AL&quot;,&quot;AM&quot;,..: 20 20 37 48 5 20 37 63 63 63 ...</span>
+<span class="co">#  $ COUNTY    : num  119 135 189 161 113 91 93 47 39 201 ...</span>
+<span class="co">#  $ YEAR      : chr  &quot;1950&quot; &quot;1950&quot; &quot;1950&quot; &quot;1950&quot; ...</span>
+<span class="co">#  $ BGN_DATE  : POSIXlt, format: &quot;1950-01-03&quot; &quot;1950-01-03&quot; &quot;1950-01-03&quot; ...</span>
+<span class="co">#  $ END_DATE  : POSIXlt, format: NA NA NA ...</span>
+<span class="co">#  $ EVTYPE    : chr  &quot;TORNADO&quot; &quot;TORNADO&quot; &quot;TORNADO&quot; &quot;TORNADO&quot; ...</span>
+<span class="co">#  $ FATALITIES: num  0 0 0 0 1 0 0 0 0 1 ...</span>
+<span class="co">#  $ INJURIES  : num  0 3 3 1 1 0 5 2 0 12 ...</span>
+<span class="co">#  $ PROPDMG   : num  250 250 2.5 25 2.5 250 250 0 25 25 ...</span>
+<span class="co">#  $ PROPDMGEXP: num  3 3 6 3 3 3 3 3 3 3 ...</span>
+<span class="co">#  $ CROPDMG   : num  0 0 0 0 0 0 0 0 0 0 ...</span>
+<span class="co">#  $ CROPDMGEXP: num  0 0 0 0 0 0 0 0 0 0 ...</span>
+<span class="co">#  $ REMARKS   : chr  &quot;&quot; &quot;&quot; &quot;&quot; &quot;&quot; ...</span></code></pre>
+<hr class="thin_separator">
+<p><a name="PERIOD_LIMIT"></a></p>
+</div>
+</div>
+</div>
+<div id="the-choice-of-limiting-the-analysis-to-recent-years-1996" class="section level2">
+<h2>The choice of limiting the analysis to recent years (&gt;=1996)</h2>
+<p>After reviewing and cleaning the data, we choose to limit our analysis to the data since 1996-01-01. There are two main motivations for this choice: + As noted above, before 1996 the NCDC database only tracked three event types <em>“Tornado”</em>“, <em>“Thunderstorm Wind”</em>” and <em>“Hail”</em>. While it would certainly be interesting to perform an analysis of the longer time baseline for these three categories, here we are mostly interested in assessing the impact of storm events from a broader, more inclusive perspective. + Imposing this cut yields a significantly <em>cleaner</em> data set, for instance with respect to the <code>DMGEXP</code> and <code>EVTYPE</code> variables (but also the various date/time variables.)</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># subsetting &#39;good&#39; to &#39;recent&#39; taking only events since 1996</span>
+recent &lt;-<span class="st"> </span><span class="kw">subset</span>(good, BGN_DATE &gt;<span class="st"> </span><span class="kw">as.POSIXlt</span>(<span class="st">&quot;1996-01-01&quot;</span>))
+<span class="kw">row.names</span>(recent) &lt;-<span class="st"> </span><span class="ot">NULL</span></code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">str</span>(recent)
+<span class="co"># &#39;data.frame&#39;: 653507 obs. of  14 variables:</span>
+<span class="co">#  $ REFNUM    : num  249653 251131 251416 252425 252426 ...</span>
+<span class="co">#  $ STATE     : Factor w/ 72 levels &quot;AK&quot;,&quot;AL&quot;,&quot;AM&quot;,..: 7 8 9 10 10 13 13 13 13 13 ...</span>
+<span class="co">#  $ COUNTY    : num  12 11 4 1 2 105 19 19 19 109 ...</span>
+<span class="co">#  $ YEAR      : chr  &quot;1996&quot; &quot;1996&quot; &quot;1996&quot; &quot;1996&quot; ...</span>
+<span class="co">#  $ BGN_DATE  : POSIXlt, format: &quot;1996-01-02&quot; &quot;1996-01-02&quot; &quot;1996-01-02&quot; ...</span>
+<span class="co">#  $ END_DATE  : POSIXlt, format: &quot;1996-01-02&quot; &quot;1996-01-02&quot; &quot;1996-01-05&quot; ...</span>
+<span class="co">#  $ EVTYPE    : chr  &quot;HIGH WIND&quot; &quot;HIGH WIND&quot; &quot;HEAVY SNOW&quot; &quot;HEAVY SNOW&quot; ...</span>
+<span class="co">#  $ FATALITIES: num  0 0 0 0 0 0 0 0 0 0 ...</span>
+<span class="co">#  $ INJURIES  : num  0 0 0 0 0 0 0 0 0 0 ...</span>
+<span class="co">#  $ PROPDMG   : num  0 0 0 0 0 50 1.5 2 5 1.5 ...</span>
+<span class="co">#  $ PROPDMGEXP: num  0 0 0 0 0 3 3 3 3 3 ...</span>
+<span class="co">#  $ CROPDMG   : num  0 1 0 0 0 0 0 0 0 0 ...</span>
+<span class="co">#  $ CROPDMGEXP: num  0 6 0 0 0 0 3 3 3 3 ...</span>
+<span class="co">#  $ REMARKS   : chr  &quot;Wind Damage in Flagstaff, AZ. Non-convective winds knocked down trees, large branches, and power lines. No estimated or measure&quot;| __truncated__ &quot;Strong Santa Ana winds caused widespread tree and crop damage and downed power lines. Premature fruit was knocked off trees, ca&quot;| __truncated__ &quot;Snowfall totals included: Vail 46 inches, Steamboat Springs 45 inches, Beaver Creek 38 inches, Arrowhead ski resort 30 inches, &quot;| __truncated__ &quot;A major winter storm developed over the Gulf coast states on January 2nd and tracked northeast along the eastern seaboard durin&quot;| __truncated__ ...</span></code></pre>
+<div id="computing-actual-values-for-property-and-crop-damages" class="section level3">
+<h3>Computing actual values for property and crop damages</h3>
+<p>Final step of the data processing is the computation of actual straight US Dollar values for damages combining the <code>DMG</code> and <code>DMGEXP</code> variables.</p>
+<p><strong>NOTE</strong>: before we compute them, we make an <em>ad hoc</em> fix to the value of <code>PROPDMGEXP</code> for one specific entry, a flood in Napa in 2005. More details about this can be found in the Appendix.</p>
+<pre class="sourceCode r"><code class="sourceCode r">recent$PROPDMGEXP[<span class="kw">which.max</span>(recent$PropDamage)] &lt;-<span class="st"> </span><span class="dv">6</span>
+recent$PropDamage &lt;-<span class="st"> </span>recent$PROPDMG *<span class="st"> </span><span class="dv">10</span>^recent$PROPDMGEXP
+recent$CropDamage &lt;-<span class="st"> </span>recent$CROPDMG *<span class="st"> </span><span class="dv">10</span>^recent$CROPDMGEXP
+<span class="kw">str</span>(recent)
+<span class="co"># &#39;data.frame&#39;: 653507 obs. of  16 variables:</span>
+<span class="co">#  $ REFNUM    : num  249653 251131 251416 252425 252426 ...</span>
+<span class="co">#  $ STATE     : Factor w/ 72 levels &quot;AK&quot;,&quot;AL&quot;,&quot;AM&quot;,..: 7 8 9 10 10 13 13 13 13 13 ...</span>
+<span class="co">#  $ COUNTY    : num  12 11 4 1 2 105 19 19 19 109 ...</span>
+<span class="co">#  $ YEAR      : chr  &quot;1996&quot; &quot;1996&quot; &quot;1996&quot; &quot;1996&quot; ...</span>
+<span class="co">#  $ BGN_DATE  : POSIXlt, format: &quot;1996-01-02&quot; &quot;1996-01-02&quot; &quot;1996-01-02&quot; ...</span>
+<span class="co">#  $ END_DATE  : POSIXlt, format: &quot;1996-01-02&quot; &quot;1996-01-02&quot; &quot;1996-01-05&quot; ...</span>
+<span class="co">#  $ EVTYPE    : chr  &quot;HIGH WIND&quot; &quot;HIGH WIND&quot; &quot;HEAVY SNOW&quot; &quot;HEAVY SNOW&quot; ...</span>
+<span class="co">#  $ FATALITIES: num  0 0 0 0 0 0 0 0 0 0 ...</span>
+<span class="co">#  $ INJURIES  : num  0 0 0 0 0 0 0 0 0 0 ...</span>
+<span class="co">#  $ PROPDMG   : num  0 0 0 0 0 50 1.5 2 5 1.5 ...</span>
+<span class="co">#  $ PROPDMGEXP: num  0 0 0 0 0 3 3 3 3 3 ...</span>
+<span class="co">#  $ CROPDMG   : num  0 1 0 0 0 0 0 0 0 0 ...</span>
+<span class="co">#  $ CROPDMGEXP: num  0 6 0 0 0 0 3 3 3 3 ...</span>
+<span class="co">#  $ REMARKS   : chr  &quot;Wind Damage in Flagstaff, AZ. Non-convective winds knocked down trees, large branches, and power lines. No estimated or measure&quot;| __truncated__ &quot;Strong Santa Ana winds caused widespread tree and crop damage and downed power lines. Premature fruit was knocked off trees, ca&quot;| __truncated__ &quot;Snowfall totals included: Vail 46 inches, Steamboat Springs 45 inches, Beaver Creek 38 inches, Arrowhead ski resort 30 inches, &quot;| __truncated__ &quot;A major winter storm developed over the Gulf coast states on January 2nd and tracked northeast along the eastern seaboard durin&quot;| __truncated__ ...</span>
+<span class="co">#  $ PropDamage: num  0 0 0 0 0 50000 1500 2000 5000 1500 ...</span>
+<span class="co">#  $ CropDamage: num  0e+00 1e+06 0e+00 0e+00 0e+00 0e+00 0e+00 0e+00 0e+00 0e+00 ...</span></code></pre>
+<hr class="thin_separator">
+<p><a name="RESULTS"></a></p>
+</div>
+</div>
+<div id="results" class="section level2">
+<h2>Results</h2>
+<p>We aim to answer two questions concerning the impact of different type of events across the United States:</p>
+<ol style="list-style-type: decimal">
+<li>which types of events are most harmful with respect to population health?</li>
+<li>which types of events have the greatest economic consequences?</li>
+</ol>
+<div id="further-data-manipulation" class="section level3">
+<h3>Further data manipulation</h3>
+<p>We work with a data-frame comprising a subset of variables and summarize the data for human and economic impact in two final data-frames: <code>human</code> and <code>economic</code>. In each of them, we aggregate data by <code>EVTYPE</code> and compute:</p>
+<ul>
+<li>number of events of that type.</li>
+<li>number of events with given <em>impact</em> (that is fatalities, injuries, property and crop damages, all counted separately).</li>
+<li>fraction (%) of events with <em>impact</em>.</li>
+<li>cumulative number of <em>impact</em> (e.g. fatalities, or Dollar-amount damage).</li>
+<li>average number of <em>impact</em> (computed considering only the number of events with <code>&gt;0</code> <em>impact</em>).</li>
+</ul>
+<p>We keep only <code>EVTYPE</code> with at least 100 occurrences.</p>
+<pre class="sourceCode r"><code class="sourceCode r">lean &lt;-<span class="st"> </span>recent[<span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">4</span>,<span class="dv">7</span>,<span class="dv">8</span>,<span class="dv">9</span>,<span class="dv">14</span>:<span class="dv">16</span>)]
+human &lt;-<span class="st"> </span><span class="kw">ddply</span>(lean, .(EVTYPE), summarize, 
+               <span class="dt">N.tot =</span> <span class="kw">length</span>(FATALITIES), 
+               <span class="dt">N.with.F =</span> <span class="kw">length</span>(FATALITIES[FATALITIES&gt;<span class="dv">0</span>]), 
+               <span class="dt">pct.with.F =</span> <span class="kw">length</span>(FATALITIES[FATALITIES&gt;<span class="dv">0</span>])/<span class="kw">length</span>(FATALITIES)*<span class="dv">100</span>.,
+               <span class="dt">F.tot =</span> <span class="kw">sum</span>(FATALITIES), 
+               <span class="dt">F.avrg =</span> <span class="kw">sum</span>(FATALITIES)/<span class="kw">length</span>(FATALITIES[FATALITIES&gt;<span class="dv">0</span>]), 
+               <span class="dt">N.with.I =</span> <span class="kw">length</span>(INJURIES[INJURIES&gt;<span class="dv">0</span>]), 
+               <span class="dt">pct.with.I =</span> <span class="kw">length</span>(INJURIES[INJURIES&gt;<span class="dv">0</span>])/<span class="kw">length</span>(FATALITIES)*<span class="dv">100</span>., 
+               <span class="dt">I.tot =</span> <span class="kw">sum</span>(INJURIES), 
+               <span class="dt">I.avrg =</span> <span class="kw">sum</span>(INJURIES)/<span class="kw">length</span>(INJURIES[INJURIES&gt;<span class="dv">0</span>]), 
+               <span class="dt">flag =</span>  (<span class="kw">sum</span>(FATALITIES) +<span class="st"> </span><span class="kw">sum</span>(INJURIES))&gt;<span class="dv">0</span> ) 
+human &lt;-<span class="st"> </span><span class="kw">subset</span>(human, N.tot &gt;<span class="dv">100</span>)
+
+economic &lt;-<span class="st"> </span><span class="kw">ddply</span>(lean, .(EVTYPE), summarize, 
+                  <span class="dt">N.tot =</span> <span class="kw">length</span>(PropDamage), 
+                  <span class="dt">N.with.PrDmg =</span> <span class="kw">length</span>(PropDamage[PropDamage&gt;<span class="dv">0</span>]),
+                  <span class="dt">pct.with.PrDmg =</span> <span class="kw">length</span>(PropDamage[PropDamage&gt;<span class="dv">0</span>])/<span class="kw">length</span>(PropDamage)*<span class="dv">100</span>., 
+                  <span class="dt">PrDmg.tot =</span> <span class="kw">sum</span>(PropDamage), 
+                  <span class="dt">PrDmg.avrg =</span> <span class="kw">sum</span>(PropDamage)/<span class="kw">length</span>(PropDamage[PropDamage&gt;<span class="dv">0</span>]),
+                  <span class="dt">N.with.CrDmg =</span> <span class="kw">length</span>(CropDamage[CropDamage&gt;<span class="dv">0</span>]),
+                  <span class="dt">pct.with.CrDmg =</span> <span class="kw">length</span>(CropDamage[CropDamage&gt;<span class="dv">0</span>])/<span class="kw">length</span>(PropDamage)*<span class="dv">100</span>., 
+                  <span class="dt">CrDmg.tot =</span> <span class="kw">sum</span>(CropDamage), 
+                  <span class="dt">CrDmg.avrg =</span> <span class="kw">sum</span>(CropDamage)/<span class="kw">length</span>(CropDamage[CropDamage&gt;<span class="dv">0</span>]),
+                  <span class="dt">flag =</span>  (<span class="kw">sum</span>(PropDamage) +<span class="st"> </span><span class="kw">sum</span>(CropDamage))&gt;<span class="dv">0</span> ) 
+economic &lt;-<span class="st"> </span><span class="kw">subset</span>(economic, N.tot &gt;<span class="dv">100</span>)</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">str</span>(human)
+<span class="co"># &#39;data.frame&#39;: 42 obs. of  11 variables:</span>
+<span class="co">#  $ EVTYPE    : chr  &quot;ASTRONOMICAL LOW TIDE&quot; &quot;AVALANCHE&quot; &quot;BLIZZARD&quot; &quot;COASTAL FLOOD&quot; ...</span>
+<span class="co">#  $ N.tot     : int  277 378 2634 795 643 618 2479 173 559 1851 ...</span>
+<span class="co">#  $ N.with.F  : int  0 173 46 8 93 14 0 3 9 565 ...</span>
+<span class="co">#  $ pct.with.F: num  0 45.77 1.75 1.01 14.46 ...</span>
+<span class="co">#  $ F.tot     : num  0 223 70 10 131 ...</span>
+<span class="co">#  $ F.avrg    : num  NaN 1.29 1.52 1.25 1.41 ...</span>
+<span class="co">#  $ N.with.I  : int  0 105 41 6 4 14 1 9 50 163 ...</span>
+<span class="co">#  $ pct.with.I: num  0 27.778 1.557 0.755 0.622 ...</span>
+<span class="co">#  $ I.tot     : num  0 156 385 10 24 ...</span>
+<span class="co">#  $ I.avrg    : num  NaN 1.49 9.39 1.67 6 ...</span>
+<span class="co">#  $ flag      : logi  FALSE TRUE TRUE TRUE TRUE TRUE ...</span>
+
+<span class="kw">str</span>(economic)
+<span class="co"># &#39;data.frame&#39;: 42 obs. of  11 variables:</span>
+<span class="co">#  $ EVTYPE        : chr  &quot;ASTRONOMICAL LOW TIDE&quot; &quot;AVALANCHE&quot; &quot;BLIZZARD&quot; &quot;COASTAL FLOOD&quot; ...</span>
+<span class="co">#  $ N.tot         : int  277 378 2634 795 643 618 2479 173 559 1851 ...</span>
+<span class="co">#  $ N.with.PrDmg  : int  10 52 193 197 19 193 53 66 150 23 ...</span>
+<span class="co">#  $ pct.with.PrDmg: num  3.61 13.76 7.33 24.78 2.95 ...</span>
+<span class="co">#  $ PrDmg.tot     : num  9.74e+06 3.71e+06 5.26e+08 4.07e+08 2.54e+06 ...</span>
+<span class="co">#  $ PrDmg.avrg    : num  974500 71381 2723622 2067861 133895 ...</span>
+<span class="co">#  $ N.with.CrDmg  : int  0 0 3 0 6 2 243 6 4 2 ...</span>
+<span class="co">#  $ pct.with.CrDmg: num  0 0 0.114 0 0.933 ...</span>
+<span class="co">#  $ CrDmg.tot     : num  0 0 7060000 0 30742500 ...</span>
+<span class="co">#  $ CrDmg.avrg    : num  NaN NaN 2353333 NaN 5123750 ...</span>
+<span class="co">#  $ flag          : logi  TRUE TRUE TRUE TRUE TRUE TRUE ...</span></code></pre>
+<p>With the data summarized we can easily slice them in different ways.<br />In the next two sections we review the evidence emerging from the data collected and organized as described so far.</p>
+</div>
+<div id="population-health-injuries-and-fatalities" class="section level3">
+<h3>Population Health: injuries and fatalities</h3>
+<div id="fatalities" class="section level4">
+<h4>Fatalities</h4>
+<p>The first table shows the top ten event types by total cumulative number of fatalities.</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(human[<span class="kw">order</span>(human$F.tot, <span class="dt">decreasing=</span><span class="ot">TRUE</span>),][<span class="dv">1</span>:<span class="dv">10</span>,<span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">5</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>)], <span class="dt">quote=</span><span class="ot">FALSE</span>, <span class="dt">row.names=</span><span class="ot">FALSE</span>)
+<span class="co">#                   EVTYPE F.tot  N.tot N.with.F pct.with.F</span>
+<span class="co">#           EXCESSIVE HEAT  1799   1851      565 30.5240411</span>
+<span class="co">#                  TORNADO  1511  23154      459  1.9823789</span>
+<span class="co">#              FLASH FLOOD   887  51005      584  1.1449858</span>
+<span class="co">#                LIGHTNING   650  13203      608  4.6050140</span>
+<span class="co">#              RIP CURRENT   542    734      480 65.3950954</span>
+<span class="co">#                    FLOOD   444  27761      294  1.0590397</span>
+<span class="co">#        THUNDERSTORM WIND   379 211197      327  0.1548317</span>
+<span class="co">#  EXTREME COLD/WIND CHILL   265   1892      195 10.3065539</span>
+<span class="co">#                HIGH WIND   254  20240      194  0.9584980</span>
+<span class="co">#                     HEAT   237    829      133 16.0434258</span></code></pre>
+<p>This instead ranks event types by the fraction (%) of events that caused fatalities.</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(human[<span class="kw">order</span>(human$pct.with.F, <span class="dt">decreasing=</span><span class="ot">TRUE</span>),][<span class="dv">1</span>:<span class="dv">10</span>,<span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">4</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">5</span>)], <span class="dt">quote=</span><span class="ot">FALSE</span>, <span class="dt">row.names=</span><span class="ot">FALSE</span>)
+<span class="co">#                   EVTYPE pct.with.F N.tot N.with.F F.tot</span>
+<span class="co">#              RIP CURRENT  65.395095   734      480   542</span>
+<span class="co">#                AVALANCHE  45.767196   378      173   223</span>
+<span class="co">#           EXCESSIVE HEAT  30.524041  1851      565  1799</span>
+<span class="co">#                     HEAT  16.043426   829      133   237</span>
+<span class="co">#                HURRICANE  15.498155   271       42   125</span>
+<span class="co">#          COLD/WIND CHILL  14.463453   643       93   131</span>
+<span class="co">#  EXTREME COLD/WIND CHILL  10.306554  1892      195   265</span>
+<span class="co">#                HIGH SURF   9.646609  1047      101   142</span>
+<span class="co">#                LIGHTNING   4.605014 13203      608   650</span>
+<span class="co">#           TROPICAL STORM   3.519062   682       24    57</span></code></pre>
+</div>
+<div id="injuries" class="section level4">
+<h4>Injuries</h4>
+<p>Injuries data can be looked at in the same two ways, ranked by total number of injuries and fraction that caused injuries.</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(human[<span class="kw">order</span>(human$I.tot, <span class="dt">decreasing=</span><span class="ot">TRUE</span>),][<span class="dv">1</span>:<span class="dv">10</span>,<span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">9</span>,<span class="dv">2</span>,<span class="dv">7</span>,<span class="dv">8</span>)], <span class="dt">quote=</span><span class="ot">FALSE</span>, <span class="dt">row.names=</span><span class="ot">FALSE</span>)
+<span class="co">#             EVTYPE I.tot  N.tot N.with.I pct.with.I</span>
+<span class="co">#            TORNADO 20667  23154     1877  8.1065907</span>
+<span class="co">#              FLOOD  6838  27761      169  0.6087677</span>
+<span class="co">#     EXCESSIVE HEAT  6461   1851      163  8.8060508</span>
+<span class="co">#  THUNDERSTORM WIND  5129 211197     2108  0.9981202</span>
+<span class="co">#          LIGHTNING  4140  13203     2250 17.0415815</span>
+<span class="co">#        FLASH FLOOD  1674  51005      335  0.6567984</span>
+<span class="co">#           WILDFIRE  1458   4176      315  7.5431034</span>
+<span class="co">#          HURRICANE  1328    271       27  9.9630996</span>
+<span class="co">#       WINTER STORM  1292  11315      144  1.2726469</span>
+<span class="co">#               HEAT  1239    829       40  4.8250905</span></code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(human[<span class="kw">order</span>(human$pct.with.I, <span class="dt">decreasing=</span><span class="ot">TRUE</span>),][<span class="dv">1</span>:<span class="dv">10</span>,<span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">8</span>,<span class="dv">2</span>,<span class="dv">7</span>,<span class="dv">9</span>)], <span class="dt">quote=</span><span class="ot">FALSE</span>, <span class="dt">row.names=</span><span class="ot">FALSE</span>)
+<span class="co">#          EVTYPE pct.with.I N.tot N.with.I I.tot</span>
+<span class="co">#       AVALANCHE  27.777778   378      105   156</span>
+<span class="co">#     RIP CURRENT  26.021798   734      191   503</span>
+<span class="co">#       LIGHTNING  17.041581 13203     2250  4140</span>
+<span class="co">#       HURRICANE   9.963100   271       27  1328</span>
+<span class="co">#      DUST STORM   8.944544   559       50   415</span>
+<span class="co">#  EXCESSIVE HEAT   8.806051  1851      163  6461</span>
+<span class="co">#         TORNADO   8.106591 23154     1877 20667</span>
+<span class="co">#        WILDFIRE   7.543103  4176      315  1458</span>
+<span class="co">#       HIGH SURF   6.781280  1047       71   238</span>
+<span class="co">#     FOG GENERAL   5.233540  1777       93   855</span></code></pre>
+<pre class="sourceCode r"><code class="sourceCode r">hum20ft &lt;-<span class="st"> </span>human[<span class="kw">order</span>(human$F.tot, <span class="dt">decreasing=</span><span class="ot">TRUE</span>),][<span class="dv">1</span>:<span class="dv">20</span>,]
+hum20fp &lt;-<span class="st"> </span>human[<span class="kw">order</span>(human$pct.with.F, <span class="dt">decreasing=</span><span class="ot">TRUE</span>),][<span class="dv">1</span>:<span class="dv">20</span>,]
+hum20it &lt;-<span class="st"> </span>human[<span class="kw">order</span>(human$I.tot, <span class="dt">decreasing=</span><span class="ot">TRUE</span>),][<span class="dv">1</span>:<span class="dv">20</span>,]
+hum20ip &lt;-<span class="st"> </span>human[<span class="kw">order</span>(human$pct.with.I, <span class="dt">decreasing=</span><span class="ot">TRUE</span>),][<span class="dv">1</span>:<span class="dv">20</span>,]</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r">ph.ft &lt;-<span class="st"> </span><span class="kw">ggplot</span>(<span class="dt">data=</span>hum20ft, <span class="kw">aes</span>(<span class="dt">x=</span>EVTYPE)) +<span class="st"> </span><span class="kw">theme_bw</span>()
+ph.fp &lt;-<span class="st"> </span><span class="kw">ggplot</span>(<span class="dt">data=</span>hum20fp, <span class="kw">aes</span>(<span class="dt">x=</span>EVTYPE)) +<span class="st"> </span><span class="kw">theme_bw</span>()
+
+hplot.f1 &lt;-<span class="st"> </span>ph.ft +<span class="st"> </span><span class="kw">geom_bar</span>(<span class="dt">stat=</span><span class="st">&quot;identity&quot;</span>, <span class="kw">aes</span>(<span class="dt">y=</span>F.tot), <span class="dt">fill=</span><span class="st">&quot;red2&quot;</span>) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">45</span>, <span class="dt">hjust =</span> <span class="dv">1</span>)) +<span class="st"> </span><span class="kw">theme</span>(<span class="dt">legend.position=</span><span class="st">&quot;none&quot;</span>) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">xlab</span>(<span class="st">&quot;Event Type&quot;</span>) +<span class="st"> </span><span class="kw">ylab</span>(<span class="st">&quot;Fatalities Count&quot;</span>) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">ggtitle</span>(<span class="st">&quot;Events Causing Fatalities&quot;</span>)
+
+hplot.f2 &lt;-<span class="st"> </span>ph.fp +<span class="st"> </span><span class="kw">geom_bar</span>(<span class="dt">stat=</span><span class="st">&quot;identity&quot;</span>, <span class="kw">aes</span>(<span class="dt">y=</span>pct.with.F), <span class="dt">fill=</span><span class="st">&quot;red2&quot;</span>) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">45</span>, <span class="dt">hjust =</span> <span class="dv">1</span>)) +<span class="st"> </span><span class="kw">theme</span>(<span class="dt">legend.position=</span><span class="st">&quot;none&quot;</span>) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">xlab</span>(<span class="st">&quot;Event Type&quot;</span>) +<span class="st"> </span><span class="kw">ylab</span>(<span class="st">&quot;Percentage&quot;</span>) +<span class="st"> </span><span class="kw">ylim</span>(<span class="kw">c</span>(-<span class="dv">5</span>,<span class="dv">75</span>)) +
+<span class="st">    </span><span class="kw">ggtitle</span>(<span class="st">&quot;Fraction of Events Causing Fatalities&quot;</span>)
+
+<span class="kw">grid.draw</span>(<span class="kw">rbind</span>(<span class="kw">ggplotGrob</span>(hplot.f1), <span class="kw">ggplotGrob</span>(hplot.f2),  <span class="dt">size=</span><span class="st">&quot;last&quot;</span>))</code></pre>
+<p><img src="figures/plot-hum-1.png" title="" alt="" width="768" style="display: block; margin: auto;" /></p>
+<hr class="thin_separator">
+</div>
+</div>
+<div id="economic-impact-property-agricultural-and-total-damages" class="section level3">
+<h3>Economic impact: property, agricultural and total damages</h3>
+<p>As in the previous section, we report events ranked by total damage and by fraction of events causing a recorded amount of damages.</p>
+<div id="property" class="section level4">
+<h4>Property</h4>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(economic[<span class="kw">order</span>(economic$pct.with.PrDmg, <span class="dt">decreasing=</span><span class="ot">TRUE</span>),][<span class="dv">1</span>:<span class="dv">10</span>,<span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">4</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">5</span>)], <span class="dt">quote=</span><span class="ot">FALSE</span>, <span class="dt">row.names=</span><span class="ot">FALSE</span>)
+<span class="co">#             EVTYPE pct.with.PrDmg  N.tot N.with.PrDmg   PrDmg.tot</span>
+<span class="co">#        STRONG WIND       86.21607   3758         3240   176994240</span>
+<span class="co">#         LIGHT SNOW       81.03448    174          141     2513000</span>
+<span class="co">#          HURRICANE       72.32472    271          196 81718889010</span>
+<span class="co">#          LIGHTNING       66.22737  13203         8744   743077080</span>
+<span class="co">#     TROPICAL STORM       57.18475    682          390  7642475550</span>
+<span class="co">#        STORM SURGE       52.86783    401          212 47834724000</span>
+<span class="co">#            TORNADO       51.16611  23154        11847 24616905710</span>
+<span class="co">#  THUNDERSTORM WIND       49.00306 211197       103493  7913540880</span>
+<span class="co">#     DRY MICROBURST       38.15029    173           66     1732600</span>
+<span class="co">#        FLASH FLOOD       36.56504  51005        18650 15222268910</span></code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(economic[<span class="kw">order</span>(economic$PrDmg.tot, <span class="dt">decreasing=</span><span class="ot">TRUE</span>),][<span class="dv">1</span>:<span class="dv">10</span>,<span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">5</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>)], <span class="dt">quote=</span><span class="ot">FALSE</span>, <span class="dt">row.names=</span><span class="ot">FALSE</span>)
+<span class="co">#             EVTYPE    PrDmg.tot  N.tot N.with.PrDmg pct.with.PrDmg</span>
+<span class="co">#              FLOOD 144129580200  27761         9838      35.438205</span>
+<span class="co">#          HURRICANE  81718889010    271          196      72.324723</span>
+<span class="co">#        STORM SURGE  47834724000    401          212      52.867830</span>
+<span class="co">#            TORNADO  24616905710  23154        11847      51.166105</span>
+<span class="co">#        FLASH FLOOD  15222268910  51005        18650      36.565043</span>
+<span class="co">#               HAIL  14595213420 207767        20004       9.628093</span>
+<span class="co">#  THUNDERSTORM WIND   7913540880 211197       103493      49.003063</span>
+<span class="co">#           WILDFIRE   7760449500   4176         1026      24.568966</span>
+<span class="co">#     TROPICAL STORM   7642475550    682          390      57.184751</span>
+<span class="co">#          HIGH WIND   5250667860  20240         5258      25.978261</span></code></pre>
+</div>
+<div id="agricultural" class="section level4">
+<h4>Agricultural</h4>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(economic[<span class="kw">order</span>(economic$CrDmg.tot, <span class="dt">decreasing=</span><span class="ot">TRUE</span>),][<span class="dv">1</span>:<span class="dv">10</span>,<span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">9</span>,<span class="dv">2</span>,<span class="dv">7</span>,<span class="dv">8</span>)], <span class="dt">quote=</span><span class="ot">FALSE</span>, <span class="dt">row.names=</span><span class="ot">FALSE</span>)
+<span class="co">#                   EVTYPE   CrDmg.tot  N.tot N.with.CrDmg pct.with.CrDmg</span>
+<span class="co">#                  DROUGHT 13367566000   2479          243       9.802340</span>
+<span class="co">#                HURRICANE  5350107800    271           85      31.365314</span>
+<span class="co">#                    FLOOD  5013161500  27761         1722       6.202947</span>
+<span class="co">#                     HAIL  2496822450 207767         8109       3.902930</span>
+<span class="co">#              FLASH FLOOD  1334901700  51005         1845       3.617292</span>
+<span class="co">#  EXTREME COLD/WIND CHILL  1326023000   1892           50       2.642706</span>
+<span class="co">#             FROST/FREEZE  1094186000   1343          103       7.669397</span>
+<span class="co">#        THUNDERSTORM WIND  1016942600 211197         4453       2.108458</span>
+<span class="co">#               HEAVY RAIN   729669800  11546          124       1.073965</span>
+<span class="co">#           TROPICAL STORM   677711000    682           59       8.651026</span></code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(economic[<span class="kw">order</span>(economic$pct.with.CrDmg, <span class="dt">decreasing=</span><span class="ot">TRUE</span>),][<span class="dv">1</span>:<span class="dv">10</span>,<span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">8</span>,<span class="dv">2</span>,<span class="dv">7</span>,<span class="dv">9</span>)], <span class="dt">quote=</span><span class="ot">FALSE</span>, <span class="dt">row.names=</span><span class="ot">FALSE</span>)
+<span class="co">#          EVTYPE pct.with.CrDmg  N.tot N.with.CrDmg   CrDmg.tot</span>
+<span class="co">#       HURRICANE      31.365314    271           85  5350107800</span>
+<span class="co">#         DROUGHT       9.802340   2479          243 13367566000</span>
+<span class="co">#  TROPICAL STORM       8.651026    682           59   677711000</span>
+<span class="co">#    FROST/FREEZE       7.669397   1343          103  1094186000</span>
+<span class="co">#           FLOOD       6.202947  27761         1722  5013161500</span>
+<span class="co">#         TORNADO       5.415911  23154         1254   283425010</span>
+<span class="co">#            HAIL       3.902930 207767         8109  2496822450</span>
+<span class="co">#     FLASH FLOOD       3.617292  51005         1845  1334901700</span>
+<span class="co">#  DRY MICROBURST       3.468208    173            6       15000</span>
+<span class="co">#        WILDFIRE       2.969349   4176          124   402255130</span></code></pre>
+<pre class="sourceCode r"><code class="sourceCode r">eco20plot &lt;-<span class="st"> </span>economic[<span class="kw">order</span>(economic$PrDmg.tot, <span class="dt">decreasing=</span><span class="ot">TRUE</span>),][<span class="dv">1</span>:<span class="dv">20</span>,]
+order.pdt &lt;-<span class="st"> </span><span class="kw">order</span>(eco20plot$PrDmg.tot, <span class="dt">decreasing=</span><span class="ot">TRUE</span>)
+order.pdp &lt;-<span class="st"> </span><span class="kw">order</span>(eco20plot$pct.with.PrDmg, <span class="dt">decreasing=</span><span class="ot">TRUE</span>)
+order.cdt &lt;-<span class="st"> </span><span class="kw">order</span>(eco20plot$CrDmg.tot, <span class="dt">decreasing=</span><span class="ot">TRUE</span>)
+order.cdp &lt;-<span class="st"> </span><span class="kw">order</span>(eco20plot$pct.with.CrDmg, <span class="dt">decreasing=</span><span class="ot">TRUE</span>)
+eco20plot$PrDmg.tot.rank &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="dv">0</span>,<span class="dv">20</span>) ;  eco20plot$PrDmg.tot.rank[order.pdt] &lt;-<span class="st"> </span><span class="dv">1</span>:<span class="dv">20</span>
+eco20plot$PrDmg.pct.rank &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="dv">0</span>,<span class="dv">20</span>) ;  eco20plot$PrDmg.pct.rank[order.pdp] &lt;-<span class="st"> </span><span class="dv">1</span>:<span class="dv">20</span>
+eco20plot$CrDmg.tot.rank &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="dv">0</span>,<span class="dv">20</span>) ;  eco20plot$CrDmg.tot.rank[order.cdt] &lt;-<span class="st"> </span><span class="dv">1</span>:<span class="dv">20</span>
+eco20plot$CrDmg.pct.rank &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="dv">0</span>,<span class="dv">20</span>) ;  eco20plot$CrDmg.pct.rank[order.cdp] &lt;-<span class="st"> </span><span class="dv">1</span>:<span class="dv">20</span>
+eco20plot$PrDmg.tot.rank &lt;-<span class="st"> </span><span class="kw">factor</span>(eco20plot$PrDmg.tot.rank, <span class="dt">levels=</span><span class="dv">1</span>:<span class="dv">20</span>, <span class="dt">ordered=</span><span class="ot">TRUE</span>)
+eco20plot$PrDmg.pct.rank &lt;-<span class="st"> </span><span class="kw">factor</span>(eco20plot$PrDmg.pct.rank, <span class="dt">levels=</span><span class="dv">1</span>:<span class="dv">20</span>, <span class="dt">ordered=</span><span class="ot">TRUE</span>)
+eco20plot$CrDmg.tot.rank &lt;-<span class="st"> </span><span class="kw">factor</span>(eco20plot$CrDmg.tot.rank, <span class="dt">levels=</span><span class="dv">1</span>:<span class="dv">20</span>, <span class="dt">ordered=</span><span class="ot">TRUE</span>)
+eco20plot$CrDmg.pct.rank &lt;-<span class="st"> </span><span class="kw">factor</span>(eco20plot$CrDmg.pct.rank, <span class="dt">levels=</span><span class="dv">1</span>:<span class="dv">20</span>, <span class="dt">ordered=</span><span class="ot">TRUE</span>)</code></pre>
+<hr class="thin_separator">
+<pre class="sourceCode r"><code class="sourceCode r">p &lt;-<span class="st"> </span><span class="kw">ggplot</span>(<span class="dt">data=</span>eco20plot, <span class="kw">aes</span>(<span class="dt">x=</span>EVTYPE)) +<span class="st"> </span><span class="kw">theme_bw</span>()
+
+ecoplot.p1 &lt;-<span class="st"> </span>p +<span class="st"> </span><span class="kw">geom_bar</span>(<span class="dt">stat=</span><span class="st">&quot;identity&quot;</span>, <span class="kw">aes</span>(<span class="dt">y=</span>PrDmg.tot/<span class="fl">1.0e6</span>, <span class="dt">fill=</span>PrDmg.tot.rank)) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">45</span>, <span class="dt">hjust =</span> <span class="dv">1</span>)) +<span class="st"> </span><span class="kw">theme</span>(<span class="dt">legend.position=</span><span class="st">&quot;none&quot;</span>) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">scale_y_log10</span>() +<span class="st"> </span><span class="kw">coord_cartesian</span>(<span class="dt">ylim=</span><span class="kw">c</span>(<span class="fl">1e1</span>, <span class="fl">3e5</span>)) +
+<span class="st">    </span><span class="kw">xlab</span>(<span class="st">&quot;&quot;</span>) +<span class="st"> </span><span class="kw">ylab</span>(<span class="st">&quot;Damages (Million of Dollars)&quot;</span>) +
+<span class="st">    </span><span class="kw">ggtitle</span>(<span class="st">&quot;Total Property Damages by Event Type&quot;</span>) 
+
+ecoplot.p2 &lt;-<span class="st"> </span>p +<span class="st"> </span><span class="kw">geom_bar</span>(<span class="dt">stat=</span><span class="st">&quot;identity&quot;</span>, <span class="kw">aes</span>(<span class="dt">y=</span>pct.with.PrDmg, <span class="dt">fill=</span>PrDmg.pct.rank)) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">45</span>, <span class="dt">hjust =</span> <span class="dv">1</span>)) +<span class="st"> </span><span class="kw">theme</span>(<span class="dt">legend.position=</span><span class="st">&quot;none&quot;</span>) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">xlab</span>(<span class="st">&quot;Event Type&quot;</span>) +<span class="st"> </span><span class="kw">ylab</span>(<span class="st">&quot;Percentage&quot;</span>) +<span class="st"> </span><span class="kw">ylim</span>(<span class="kw">c</span>(-<span class="dv">5</span>,<span class="dv">105</span>)) +
+<span class="st">    </span><span class="kw">ggtitle</span>(<span class="st">&quot;Fraction of Events Causing Damages&quot;</span>)
+
+<span class="kw">grid.draw</span>(<span class="kw">rbind</span>(<span class="kw">ggplotGrob</span>(ecoplot.p1), <span class="kw">ggplotGrob</span>(ecoplot.p2),  <span class="dt">size=</span><span class="st">&quot;last&quot;</span>))</code></pre>
+<p><img src="figures/plot-econ-1.png" title="" alt="" width="768" style="display: block; margin: auto;" /></p>
+<p>Next, we can apply the same logic to identify the events which cause the greatest economic impacts. First, we’ll split the dataframe in order to sum the total property damages and crop damages per event type and then we’ll sort the data and extract the top 10 events which cause the most economic damages to properties and to crops.</p>
+<hr class="separator">
+<p><a name="APPENDIX"></a></p>
+</div>
+</div>
+</div>
+<div id="appendix" class="section level1">
+<h1>APPENDIX</h1>
+<div id="the-anomalous-2005-napa-valley-flood" class="section level2">
+<h2>The <em>“anomalous”</em> 2005 Napa Valley Flood</h2>
+<p>Going by the “raw” data, the event that caused the highest property damage, was a flood event in Napa, California, at the end of 2005, reported at over 100 Billion USD. However, the <code>REMARKS</code> entry in the database itsels raises doubts about this figure, and a USGS report assessing the impact of the late 2005 storms confirms that.<br />Our best guess is that the value of the <code>EXP</code> parameter for this event should been <code>M</code> instead of <code>M</code> as this would bring the damages amount in line with the narrative remarks and USGS report. We therefore adjusted accordingly the <code>PROPDMGEXP</code> for this specific event.</p>
+<p>Here is the original data:</p>
+<pre class="sourceCode r"><code class="sourceCode r">recent[<span class="kw">which.max</span>(tmp.PropDamage),]
+<span class="co">#        REFNUM STATE COUNTY YEAR   BGN_DATE   END_DATE EVTYPE FATALITIES INJURIES PROPDMG PROPDMGEXP</span>
+<span class="co"># 354392 605943    CA     55 2006 2006-01-01 2006-01-01  FLOOD          0        0     115          9</span>
+<span class="co">#        CROPDMG CROPDMGEXP</span>
+<span class="co"># 354392    32.5          6</span>
+<span class="co">#                                                                                                                                                                                                                                                                                                                                                                                               REMARKS</span>
+<span class="co"># 354392 Major flooding continued into the early hours of January 1st, before the Napa River finally fell below flood stage and the water receeded. Flooding was severe in Downtown Napa from the Napa Creek and the City and Parks Department was hit with $6 million in damage alone. The City of Napa had 600 homes with moderate damage, 150 damaged businesses with costs of at least $70 million.</span>
+<span class="co">#        PropDamage CropDamage</span>
+<span class="co"># 354392   1.15e+11   32500000</span>
+data$REMARKS[data$REFNUM ==<span class="st"> </span>recent$REFNUM[<span class="kw">which.max</span>(tmp.PropDamage)]]
+<span class="co"># [1] &quot;Major flooding continued into the early hours of January 1st, before the Napa River finally fell below flood stage and the water receeded. Flooding was severe in Downtown Napa from the Napa Creek and the City and Parks Department was hit with $6 million in damage alone. The City of Napa had 600 homes with moderate damage, 150 damaged businesses with costs of at least $70 million.&quot;</span></code></pre>
+<p>Now, the single event which resulted in highest property damage is storm surge caused by Hurricane Katrina in Lousiana, resulting in over 31 Billion.</p>
+</div>
+<div id="evtype-regularization" class="section level2">
+<h2><em>EVTYPE</em> regularization</h2>
+<p>This is the source of the <code>evt_regularization.R</code> script:</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">cat</span>(<span class="st">&quot;# Entering &#39;evtype_regularization&#39; script</span><span class="ch">\n</span><span class="st">&quot;</span>)
+TESTvec &lt;-<span class="st"> </span>good$EVTYPE
+
+TESTvec &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;^SNOW$&quot;</span>, <span class="st">&quot;HEAVY SNOW&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)
+TESTvec &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;^WIND$&quot;</span>, <span class="st">&quot;HIGH WIND&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)
+TESTvec &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;^WINDS$&quot;</span>, <span class="st">&quot;HIGH WIND&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)
+TESTvec &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;^ICE$&quot;</span>, <span class="st">&quot;ICE STORM&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)
+TESTvec &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;^UNSEASONABLY WARM$&quot;</span>, <span class="st">&quot;HEAT&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)
+TESTvec &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;^TORNDAO$&quot;</span>, <span class="st">&quot;TORNADO&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)
+TESTvec &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;^WAYTERSPOUT$&quot;</span>, <span class="st">&quot;WATERSPOUT&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)
+TESTvec &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;^EXTREME HEAT$&quot;</span>, <span class="st">&quot;EXCESSIVE HEAT&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)
+TESTvec &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;^LIGHT FREEZING RAIN$&quot;</span>, <span class="st">&quot;SLEET&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)
+TESTvec &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;^UNSEASONABLY DRY$&quot;</span>, <span class="st">&quot;DROUGHT&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)
+TESTvec &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;^TSTM HEAVY RAIN$&quot;</span>, <span class="st">&quot;HEAVY RAIN&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)
+TESTvec &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;^SMALL HAIL$&quot;</span>, <span class="st">&quot;HAIL&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)
+TESTvec &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;^$EXCESSIVE SNOW&quot;</span>, <span class="st">&quot;HEAVY SNOW&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)
+
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^ASTRONOMICAL&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;ASTRONOMICAL LOW TIDE&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^AVALA&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;AVALANCHE&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^BEACH&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;COASTAL FLOOD&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^BITTER&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;EXTREME COLD/WIND CHILL&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^BLIZZARD&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;BLIZZARD&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^BRUSH FIRE&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;WILDFIRE&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^COASTAL&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;COASTAL FLOOD&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^DROUGHT&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;DROUGHT&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^DUST D&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;DUST DEVIL&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^EXCESSIVE H&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;EXCESSIVE HEAT&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^EXTREME [CW]&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;EXTREME COLD/WIND CHILL&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^FLASH&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;FLASH FLOOD&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^FLO.*FLA&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;FLASH FLOOD&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^HYP&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;EXTREME COLD/WIND CHILL&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^LIGHT[A-Z]&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;LIGHTNING&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^LANDSL&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;DEBRIS FLOW&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^HAIL&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;HAIL&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^HEAT WAVE&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;EXCESSIVE HEAT&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^HEAVY PR&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;HEAVY RAIN&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^HEAVY RAIN&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;HEAVY RAIN&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^HEAVY SNOW&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;HEAVY SNOW&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^HEAVY SURF&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;HIGH SURF&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^HIGH S[UW]&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;HIGH SURF&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^MARINE T&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;MARINE THUNDERSTORM WIND&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^MINOR FL&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;FLOOD&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^MIXED PR&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;SLEET&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^MUD&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;DEBRIS FLOW&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^RECORD C&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;EXTREME COLD/WIND CHILL&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^RECORD H&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;EXCESSIVE HEAT&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^RECORD WA&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;EXCESSIVE HEAT&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^RIP&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;RIP CURRENT&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^R.*FLOOD&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;FLOOD&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^SEVERE TH&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;THUNDERSTORM WIND&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^SLEET&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;SLEET&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^SMALL STR&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;FLOOD&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^STRONG W&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;STRONG WIND&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^TIDAL FL&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;COASTAL FLOOD&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^TORRENTIAL&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;HEAVY RAIN&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^TROPICAL STORM&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;TROPICAL STORM&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^TSTM W&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;THUNDERSTORM WIND&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^URBAN&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;FLOOD&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^UNSEASO.* CO&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;COLD/WIND CHILL&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^WINTER ST&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;WINTER STORM&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^WINTER W&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;WINTER WEATHER&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^WATER&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;WATERSPOUT&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^WILD&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;WILDFIRE&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^WIND CHILL&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;COLD/WIND CHILL&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^VOLCANIC&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;VOLCANIC ASH&quot;</span>
+
+
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;[VF]OG&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;FOG GENERAL&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;TYPHOON&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;HURRICANE&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;SMOKE&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;DENSE SMOKE&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;FIRES&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;WILDFIRE&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;SQUALL&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;HEAVY SNOW&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;EROSION&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;COASTAL FLOOD&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^SNOW.*ICE&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;ICE STORM&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^SNOW.*SLEET&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;SLEET&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^SNOW.*RAIN&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;SLEET&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;LAKE.*SNOW&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;LAKE-EFFECT SNOW&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;LAKE.*FLOOD&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;LAKESHORE FLOOD&quot;</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;HURRICANE-GENERATED SWELLS&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;STORM SURGE&quot;</span>
+
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^HURRICANE&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;HURRICANE&quot;</span>                 <span class="co"># run after |HURRICANE-GENERATED SWELLS</span>
+
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^ICE[ /S][A-EO-T]&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;ICE STORM&quot;</span>          <span class="co"># run after |[VF]OG</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^FREEZING [DR]&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;SLEET&quot;</span>                 <span class="co"># run after |[VF]OG</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^WINT.* MIX&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;SLEET&quot;</span>                    <span class="co"># run after |^WINTER W</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;SURGE&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;STORM SURGE&quot;</span>                    <span class="co"># run after |^COASTAL</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;FUNNEL&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;FUNNEL CLOUD&quot;</span>                  <span class="co"># run after |^WATER</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;TORNADO&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;TORNADO&quot;</span>                      <span class="co"># run after |^WATER</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;DUST&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;DUST STORM&quot;</span>                      <span class="co"># run after |^DUST D</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^HIGH WIN&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;HIGH WIND&quot;</span>                  <span class="co"># run after |DUST</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^FLOOD&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;FLOOD&quot;</span>                         <span class="co"># run after |^FLO.*FLA</span>
+
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^COLD&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;COLD/WIND CHILL&quot;</span>                <span class="co"># run after |FUNNEL  , |TORNADO</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^THUNDERSTORM&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;THUNDERSTORM WIND&quot;</span>      <span class="co"># run after |FUNNEL</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^THU.*TOR.*WI&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;THUNDERSTORM WIND&quot;</span>      <span class="co"># run after |FUNNEL</span>
+
+<span class="kw">cat</span>(<span class="st">&quot;# Leaving &#39;evtype_regularization&#39; script</span><span class="ch">\n</span><span class="st">&quot;</span>)</code></pre>
+</div>
+<div id="r-session-info" class="section level2">
+<h2>R Session Info</h2>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">sessionInfo</span>()
+<span class="co"># R version 3.1.3 (2015-03-09)</span>
+<span class="co"># Platform: x86_64-pc-linux-gnu (64-bit)</span>
+<span class="co"># Running under: Ubuntu 14.04.2 LTS</span>
+<span class="co"># </span>
+<span class="co"># locale:</span>
+<span class="co">#  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8       </span>
+<span class="co">#  [4] LC_COLLATE=C               LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   </span>
+<span class="co">#  [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                  LC_ADDRESS=C              </span>
+<span class="co"># [10] LC_TELEPHONE=C             LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       </span>
+<span class="co"># </span>
+<span class="co"># attached base packages:</span>
+<span class="co"># [1] grid      stats     graphics  grDevices utils     datasets  methods   base     </span>
+<span class="co"># </span>
+<span class="co"># other attached packages:</span>
+<span class="co"># [1] ggplot2_1.0.1  reshape2_1.4.1 plyr_1.8.3     knitr_1.10.5  </span>
+<span class="co"># </span>
+<span class="co"># loaded via a namespace (and not attached):</span>
+<span class="co">#  [1] MASS_7.3-41      Rcpp_0.11.6      codetools_0.2-11 colorspace_1.2-6 digest_0.6.8    </span>
+<span class="co">#  [6] evaluate_0.7     formatR_1.2      gtable_0.1.2     htmltools_0.2.6  labeling_0.3    </span>
+<span class="co"># [11] magrittr_1.5     munsell_0.4.2    proto_0.3-10     rmarkdown_0.7    scales_0.2.4    </span>
+<span class="co"># [16] stringi_0.5-5    stringr_1.0.0    tools_3.1.3      yaml_2.1.13</span></code></pre>
+<hr />
+</div>
+</div>
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+$(document).ready(function () {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+});
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

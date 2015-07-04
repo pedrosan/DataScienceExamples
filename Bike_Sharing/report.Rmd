@@ -1,5 +1,5 @@
 ---
-title: "Bike Sharing Data"
+title: "Bike Sharing Data Challenge"
 subtitle: 
 author  : Giovanni Fossati
 job     : null
@@ -9,7 +9,7 @@ output  :
     css: css/gf_small_touches.css
     theme: cerulean
     highlight: tango
-    keep_md: yes
+    keep_md: no
     mathjax: default
     toc: no
 ---
