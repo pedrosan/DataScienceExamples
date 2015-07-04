@@ -16,4 +16,8 @@ A __report__ is available for some of them, hosted under pedrosan.github.io usin
   * [REPORT](http://pedrosan.github.io/DataScienceExamples/Impact_of_Major_Storm_Events/)
   * ([repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Impact_of_Major_Storm_Events))
 
+* Bike Sharing Data Challenge:
+  * [REPORT](http://pedrosan.github.io/DataScienceExamples/Bike_Sharing/)
+  * ([repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Bike_Sharing))
+
 

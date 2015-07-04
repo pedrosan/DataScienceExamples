@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="author" content="Giovanni Fossati" />
+
+
+<title>Baby Names Data Coding Challenge</title>
+
+<script src="main_files/jquery-1.11.0/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="main_files/bootstrap-3.3.1/css/cerulean.min.css" rel="stylesheet" />
+<script src="main_files/bootstrap-3.3.1/js/bootstrap.min.js"></script>
+<script src="main_files/bootstrap-3.3.1/shim/html5shiv.min.js"></script>
+<script src="main_files/bootstrap-3.3.1/shim/respond.min.js"></script>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; background-color: #f8f8f8; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+pre, code { background-color: #f8f8f8; }
+code > span.kw { color: #204a87; font-weight: bold; }
+code > span.dt { color: #204a87; }
+code > span.dv { color: #0000cf; }
+code > span.bn { color: #0000cf; }
+code > span.fl { color: #0000cf; }
+code > span.ch { color: #4e9a06; }
+code > span.st { color: #4e9a06; }
+code > span.co { color: #8f5902; font-style: italic; }
+code > span.ot { color: #8f5902; }
+code > span.al { color: #ef2929; }
+code > span.fu { color: #000000; }
+code > span.er { font-weight: bold; }
+</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<link rel="stylesheet" href="css/baby_names.css" type="text/css" />
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img { 
+  max-width:100%; 
+  height: auto; 
+}
+</style>
+<div class="container-fluid main-container">
+
+
+<div id="header">
+<h1 class="title">Baby Names Data Coding Challenge</h1>
+<h4 class="author"><em>Giovanni Fossati</em></h4>
+</div>
+
+
+<hr />
+<div id="report-outline" class="section level3">
+<h3>Report Outline</h3>
+<ul>
+<li><a href="#data_loading">DATA LOADING AND SET UP</a></li>
+<li><a href="#questions">QUESTIONS</a>
+<ul>
+<li><a href="#question1">Question 1</a></li>
+<li><a href="#question2">Question 2</a></li>
+<li><a href="#question3">Question 3</a></li>
+<li><a href="#question4">Question 4</a></li>
+<li><a href="#question5">Question 5</a></li>
+</ul></li>
+<li><a href="#OTHER_BITS">OTHER BITS OF ANALYSIS</a>
+<ul>
+<li><a href="#basictrends">Some Basic Trends by Year and Gender</a></li>
+<li><a href="#counts">Count Distributions by State, Time, and Gender</a></li>
+</ul></li>
+</ul>
+</div>
+<div id="note-on-the-report-reproducible-format" class="section level3">
+<h3>Note on the Report <em>Reproducible</em> Format</h3>
+<p>This report is generated from a <em>Rmarkdown</em> document which includes all code to perform data processing, modeling, plotting, etc. (except for functions defined in external scripts, included in the archive). However, for readability only a few bits of code are <em>echoed</em> explicitly in the compiled document. The full straight reproducibility is only limited by the fact that in the interest of simplicity and for computational convenience some parts of the processing have been flagged as <em>inactive</em> (<code>eval = FALSE</code>), and in its current form some data are instead loaded from previously saved work, namely the model fitting. That said, the document includes the code to perform the entire analysis, and a few changes would allow to do so by compiling it.</p>
+<hr class="thin_separator">
+<p><a name="data_loading"></a></p>
+</div>
+<div id="data-loading-and-setup" class="section level1">
+<h1>DATA LOADING AND SETUP</h1>
+<pre class="sourceCode r"><code class="sourceCode r">states_codes &lt;-<span class="st"> </span><span class="kw">list.files</span>(<span class="st">&quot;./data/&quot;</span>, <span class="dt">pattern =</span> <span class="st">&quot;*.TXT&quot;</span>) %&gt;%<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">.TXT&quot;</span>, <span class="st">&quot;&quot;</span>, ., <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+data_dir &lt;-<span class="st"> &quot;data&quot;</span>
+
+df &lt;-<span class="st"> </span><span class="kw">do.call</span>(bind_rows, <span class="kw">lapply</span>( <span class="kw">list.files</span>(data_dir, <span class="dt">pattern =</span> <span class="st">&quot;[A-Z][A-Z].TXT.gz&quot;</span>, <span class="dt">full.names =</span> <span class="ot">TRUE</span>), 
+                function(x) { <span class="kw">read.csv</span>(x, <span class="dt">header =</span> <span class="ot">FALSE</span>, <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>) }) )
+<span class="kw">colnames</span>(df) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;state&quot;</span>, <span class="st">&quot;gender&quot;</span>, <span class="st">&quot;year&quot;</span>, <span class="st">&quot;name&quot;</span>, <span class="st">&quot;count&quot;</span>)</code></pre>
+<hr class="separator">
+<p><a name="questions"></a></p>
+</div>
+<div id="questions" class="section level1">
+<h1>QUESTIONS</h1>
+<hr class="thin_separator">
+<p><a name="question1"></a></p>
+<div id="question-1" class="section level2">
+<h2>Question #1</h2>
+<div id="a-please-describe-the-format-of-the-data-files." class="section level3">
+<h3>[A] Please describe the format of the data files.</h3>
+<p>For illustration, we show here the <em>head</em> of one of the state files (Alaska), showing the structure of the data as distributed.</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">file.head</span>(<span class="st">&quot;data/AK.TXT.gz&quot;</span>, <span class="dt">n =</span> <span class="dv">10</span>)
+<span class="co"># AK,F,1910,Mary,14</span>
+<span class="co"># AK,F,1910,Annie,12</span>
+<span class="co"># AK,F,1910,Anna,10</span>
+<span class="co"># AK,F,1910,Margaret,8</span>
+<span class="co"># AK,F,1910,Helen,7</span>
+<span class="co"># AK,F,1910,Elsie,6</span>
+<span class="co"># AK,F,1910,Lucy,6</span>
+<span class="co"># AK,F,1910,Dorothy,5</span>
+<span class="co"># AK,F,1911,Mary,12</span>
+<span class="co"># AK,F,1911,Margaret,7</span></code></pre>
+<p>The data for each state are stored in <em>tall format</em> in a comma separated list. Each row has five values:</p>
+<ul>
+<li><strong>State</strong>: the 2-letter code of the state.</li>
+<li><strong>Gender</strong>: one letter, <em>M|F</em>.</li>
+<li><strong>Year</strong>: the year of birth for this record, in 4-digit format.</li>
+<li><strong>Name</strong>: the name.</li>
+<li><strong>Count</strong>: an integer for the number of times this name occurred in that state in that year.</li>
+</ul>
+<p>A few additional notes:</p>
+<ul>
+<li><p>Entries are grouped (sorted) by gender, then year, and finally in decreasing order of counts. If there are multiple names with the same number of occurrences, they are then sorted alphabetically.</p></li>
+<li><p>It is <strong>important to note</strong> that for each <em>state+year subset</em> only names with at least five occurrences are reported in this public data set (out of privacy concerns).</p></li>
+<li><p>The total number of distinct names in the data set is <strong>29828</strong>, and of these <strong>2852</strong> have been used for both females and males.</p></li>
+</ul>
+<p>This is an example of the entries in the data frame where I loaded and combined all the data, a sample of random rows:</p>
+<pre class="sourceCode r"><code class="sourceCode r">df[<span class="kw">sample</span>(<span class="dv">1</span>:<span class="kw">nrow</span>(df), <span class="dv">12</span>), ]
+<span class="co"># Source: local data frame [12 x 5]</span>
+<span class="co"># </span>
+<span class="co">#    state gender year       name count</span>
+<span class="co"># 1     NC      F 1979    Georgia     9</span>
+<span class="co"># 2     IL      M 1996    Zackery    16</span>
+<span class="co"># 3     SC      F 2007      Emily   256</span>
+<span class="co"># 4     IA      F 1944      Pearl     7</span>
+<span class="co"># 5     MN      M 1999  Nathanial     6</span>
+<span class="co"># 6     DC      F 1922 Marguerite    21</span>
+<span class="co"># 7     GA      M 1951      Cleve     7</span>
+<span class="co"># 8     NY      F 2013       Izel     5</span>
+<span class="co"># 9     MI      M 2001    Kendall    19</span>
+<span class="co"># 10    MO      M 1948       Doug    12</span>
+<span class="co"># 11    RI      F 1945   Meredith    18</span>
+<span class="co"># 12    CA      F 1953      Dolly    20</span></code></pre>
+</div>
+<div id="b-can-you-identify-any-limitations-or-distortions-of-the-data" class="section level3">
+<h3>[B] Can you identify any limitations or distortions of the data?</h3>
+<p>I did not get a chance to explore the data in much detail (and not for lack of interest) and at this stage my main concern, perhaps the only one for now, is about the effect of the cutoff imposed on the release of names with fewer than 5 occurrences in a state.</p>
+<p>First off, given the wide range of state populations (about a factor of 50), this threshold at a fixed value effectively introduces a distortion in the data in the sense that <span class="math">\(n\ge5\)</span> truncates the distribution of names at different levels depending on a state population (taken as a proxy for number of births). On the other hand, we are dealing with an inherently discrete quantity and below 5 there are always only four other “levels” 1, 2, 3, 4, no matter how large is a state population. So, it is not clear to me how much is the impact of the cutoff in practice. One pertinent question is how much data would be there, and a good starting point is looking at how the available data are distributed.</p>
+<p>As with many things in nature, the distribution of the number of names vs. their frequency follows fairly closely a power law distribution. Here are a couple of examples, for two states, with data added over a 5-year period. Please note that this is a <em>log-log</em> plot, the best way to look at data following a power law distribution, which comes out just like a straight line. Pink symbols show the distribution of female names, blue symbols that for male names. Red and blue dashed lines are the best fit with a linear regression model to the log-log data (points covered by a grey square were exclude from the fit.)</p>
+<p>Data were binned, with bin width <span class="math">\(0.25 \log_{10}(5)\)</span>, and the plots show the counts in each bin, not a density (<em>i.e.</em> count divided by bin width).</p>
+<p><img src="figures/plot_power_law_distribution_example_x4-1.png" title="" alt="" width="700" style="display: block; margin: auto;" /></p>
+<p>Data are sometimes noisy and bumpy, but overall, for all states and time intervals (provided that these latter were long enough to build up a decent statistic in states with low counts), these distributions are well modeled with steep declining power laws, possibly with an exponential cutoff at high counts. Assess that vs. simply a drop in statistics would require more careful analysis.</p>
+<p>The slope of the power law is around <span class="math">\(-1\)</span> (it would <span class="math">\(-2\)</span> for density), and if extrapolated back below the cutoff at 5 counts it would translate into a large number of names with low-count, as much as 10 times more than the names accounted for.</p>
+<p>One way of checking at a large scale level if this could indeed be the case, could be do compare the total counts of birth accounted for by these data with more comprehensive census of birth by state and year. Unfortunately I did not get a chance to pursue this avenue.</p>
+<p>Frankly I was surprised to see that the certainly expected power law continued apparently undeterred until the lowest count limit. My naive expectation was that before that point it would begin to taper off and eventually drop, though perhaps below the 5-count limit. I can’t help but wonder how realistic/reasonable it is to imagine that there could be several thousands of “hidden” names caught by the <span class="math">\(n\ge5\)</span> filter.<br />How many babies are given names that is unique to them (in a state and year)?!</p>
+<hr class="thin_separator">
+<p><a name="question1"></a></p>
+</div>
+</div>
+<div id="question-2" class="section level2">
+<h2>Question #2</h2>
+<div id="what-is-the-most-popular-name-of-all-time-of-either-gender." class="section level3">
+<h3>What is the most popular name of all time? (Of either gender.)</h3>
+<ul>
+<li><strong>Ignoring gender</strong>, the most popular given-name in this data set is <strong>James</strong>.<br /></li>
+<li>For <strong>female</strong> name it is <strong>Mary</strong>.</li>
+<li>For <strong>male</strong> names <strong>James</strong>.</li>
+</ul>
+<p>For a little more information, here is the Table of Top 10 rankings, left to right, irrespective of gender, female-given names, male-given names.</p>
+<pre><code># Source: local data frame [10 x 6]
+# 
+#    AnyGender   N_any    Female N_female    Male  N_male
+# 1      James 4942431      Mary  3728041   James 4924235
+# 2       John 4834422  Patricia  1567405    John 4818746
+# 3     Robert 4718787 Elizabeth  1490772  Robert 4703680
+# 4    Michael 4297230  Jennifer  1460272 Michael 4280040
+# 5    William 3822209     Linda  1445838 William 3811998
+# 6       Mary 3737679   Barbara  1422631   David 3541625
+# 7      David 3549801  Margaret  1120006 Richard 2526927
+# 8    Richard 2531924     Susan  1107916  Joseph 2467298
+# 9     Joseph 2472917   Dorothy  1051262 Charles 2237170
+# 10   Charles 2244693   Jessica  1036257  Thomas 2209169</code></pre>
+<hr class="thin_separator">
+<p><a name="question3"></a></p>
+</div>
+</div>
+<div id="question-3" class="section level2">
+<h2>Question #3</h2>
+<div id="a-what-is-the-most-gender-ambiguous-name-in-2013" class="section level3">
+<h3>[A] What is the most gender ambiguous name in 2013?</h3>
+<p>First, how many names were used for both female and male babies in 2013?<br /><strong>494</strong>, a relatively small fraction of the set of <strong>2852</strong> names that “historically” have been used for both females and males.</p>
+<p>With the data ready, we can answer the question in a few different ways.</p>
+<div id="approach-1" class="section level4">
+<h4><em>Approach 1</em></h4>
+<p>One option would be to select names for which the counts for female and male are identical, <span class="math">\(\Delta=0\)</span>, and among these pick the name with the highest count. This approach penalizes popular names given the increasingly smaller likelihood that the number of occurrences in females and males match.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">Name</th>
+<th align="right">N_female</th>
+<th align="right">N_male</th>
+<th align="right">N_tot</th>
+<th align="right">diff</th>
+<th align="right">diff_norm</th>
+<th align="right">ratio</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">1</td>
+<td align="left">Nikita</td>
+<td align="right">47</td>
+<td align="right">47</td>
+<td align="right">94</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="left">2</td>
+<td align="left">Aris</td>
+<td align="right">15</td>
+<td align="right">15</td>
+<td align="right">30</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="left">3</td>
+<td align="left">Cree</td>
+<td align="right">11</td>
+<td align="right">11</td>
+<td align="right">22</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="left">4</td>
+<td align="left">Tru</td>
+<td align="right">11</td>
+<td align="right">11</td>
+<td align="right">22</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="left">5</td>
+<td align="left">Devine</td>
+<td align="right">10</td>
+<td align="right">10</td>
+<td align="right">20</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">1</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="approach-2" class="section level4">
+<h4><em>Approach 2</em></h4>
+<p>To mitigate this effect, on account of the fact that we would like to pick a name that is in some way popular, we could normalize the difference in male-female counts by the total counts (equivalent to using the <span class="math">\(\min(F/M, M/F)\)</span>). Names with a <span class="math">\(\Delta=0\)</span> would still come up at the top, hence we exclude them in this case, pending a check of whether or not they would have ranked higher than the top name resulting from this second method.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">Name</th>
+<th align="right">N_female</th>
+<th align="right">N_male</th>
+<th align="right">N_tot</th>
+<th align="right">diff</th>
+<th align="right">diff_norm</th>
+<th align="right">ratio</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">1</td>
+<td align="left">Jael</td>
+<td align="right">123</td>
+<td align="right">130</td>
+<td align="right">253</td>
+<td align="right">7</td>
+<td align="right">0.0277</td>
+<td align="right">0.9462</td>
+</tr>
+<tr class="even">
+<td align="left">2</td>
+<td align="left">Milan</td>
+<td align="right">422</td>
+<td align="right">450</td>
+<td align="right">872</td>
+<td align="right">28</td>
+<td align="right">0.0321</td>
+<td align="right">0.9378</td>
+</tr>
+<tr class="odd">
+<td align="left">3</td>
+<td align="left">Aven</td>
+<td align="right">81</td>
+<td align="right">87</td>
+<td align="right">168</td>
+<td align="right">6</td>
+<td align="right">0.0357</td>
+<td align="right">0.9310</td>
+</tr>
+<tr class="even">
+<td align="left">4</td>
+<td align="left">Reilly</td>
+<td align="right">59</td>
+<td align="right">54</td>
+<td align="right">113</td>
+<td align="right">5</td>
+<td align="right">0.0442</td>
+<td align="right">0.9153</td>
+</tr>
+<tr class="odd">
+<td align="left">5</td>
+<td align="left">Lennon</td>
+<td align="right">224</td>
+<td align="right">249</td>
+<td align="right">473</td>
+<td align="right">25</td>
+<td align="right">0.0529</td>
+<td align="right">0.8996</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="approach-3" class="section level4">
+<h4><strong>Approach 3</strong></h4>
+<p>To open up more the “name space” towards generally more common, hence more interesting, names we need allow for a range in the normalized difference or equivalently the count ratio.<br />If we include names with <span class="math">\(min(F/M, M/F) &gt; 0.8\)</span>, we get this new list:</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">Name</th>
+<th align="right">N_female</th>
+<th align="right">N_male</th>
+<th align="right">N_tot</th>
+<th align="right">diff</th>
+<th align="right">diff_norm</th>
+<th align="right">ratio</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">1</td>
+<td align="left">Charlie</td>
+<td align="right">1297</td>
+<td align="right">1531</td>
+<td align="right">2828</td>
+<td align="right">234</td>
+<td align="right">0.0827</td>
+<td align="right">0.8472</td>
+</tr>
+<tr class="even">
+<td align="left">2</td>
+<td align="left">Dakota</td>
+<td align="right">1049</td>
+<td align="right">865</td>
+<td align="right">1914</td>
+<td align="right">184</td>
+<td align="right">0.0961</td>
+<td align="right">0.8246</td>
+</tr>
+<tr class="odd">
+<td align="left">3</td>
+<td align="left">Justice</td>
+<td align="right">669</td>
+<td align="right">543</td>
+<td align="right">1212</td>
+<td align="right">126</td>
+<td align="right">0.1040</td>
+<td align="right">0.8117</td>
+</tr>
+<tr class="even">
+<td align="left">4</td>
+<td align="left">Milan</td>
+<td align="right">422</td>
+<td align="right">450</td>
+<td align="right">872</td>
+<td align="right">28</td>
+<td align="right">0.0321</td>
+<td align="right">0.9378</td>
+</tr>
+<tr class="odd">
+<td align="left">5</td>
+<td align="left">Lennon</td>
+<td align="right">224</td>
+<td align="right">249</td>
+<td align="right">473</td>
+<td align="right">25</td>
+<td align="right">0.0529</td>
+<td align="right">0.8996</td>
+</tr>
+</tbody>
+</table>
+<p>This plot summarizes the analysis.</p>
+<ul>
+<li>The green dashed diagonal lines mark the region allowed by <span class="math">\(min(F/M, M/F) &gt; 0.8\)</span>.</li>
+<li>The green diamonds mark the top-5 most ambiguous names according to <em>Approach 3</em>, also labeled with the corresponding names.</li>
+<li>The blue diamonds mark the top-5 names with a count difference strictly equal to zero (<em>approach 1</em>). <img src="figures/q3-most_ambiguous_2013-method3-plot-1.png" title="" alt="" width="600" style="display: block; margin: auto;" /></li>
+</ul>
+</div>
+</div>
+<div id="b-in-1945" class="section level3">
+<h3>[B] In 1945?</h3>
+<p>We skip the two less smart approaches and show directly the results from <em>Approach 3</em>, with table and figure.<br />The total number of bisex names for 1945 is <strong>237</strong>.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">Name</th>
+<th align="right">N_female</th>
+<th align="right">N_male</th>
+<th align="right">N_tot</th>
+<th align="right">diff</th>
+<th align="right">diff_norm</th>
+<th align="right">ratio</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">1</td>
+<td align="left">Leslie</td>
+<td align="right">1678</td>
+<td align="right">1977</td>
+<td align="right">3655</td>
+<td align="right">299</td>
+<td align="right">0.0818</td>
+<td align="right">0.8488</td>
+</tr>
+<tr class="even">
+<td align="left">2</td>
+<td align="left">Jackie</td>
+<td align="right">1245</td>
+<td align="right">1473</td>
+<td align="right">2718</td>
+<td align="right">228</td>
+<td align="right">0.0839</td>
+<td align="right">0.8452</td>
+</tr>
+<tr class="odd">
+<td align="left">3</td>
+<td align="left">Jessie</td>
+<td align="right">1072</td>
+<td align="right">910</td>
+<td align="right">1982</td>
+<td align="right">162</td>
+<td align="right">0.0817</td>
+<td align="right">0.8489</td>
+</tr>
+<tr class="even">
+<td align="left">4</td>
+<td align="left">Frankie</td>
+<td align="right">482</td>
+<td align="right">549</td>
+<td align="right">1031</td>
+<td align="right">67</td>
+<td align="right">0.0650</td>
+<td align="right">0.8780</td>
+</tr>
+<tr class="odd">
+<td align="left">5</td>
+<td align="left">Lavern</td>
+<td align="right">70</td>
+<td align="right">74</td>
+<td align="right">144</td>
+<td align="right">4</td>
+<td align="right">0.0278</td>
+<td align="right">0.9459</td>
+</tr>
+</tbody>
+</table>
+<p><img src="figures/q3-most_ambiguous_1945-method3-plot-1.png" title="" alt="" width="600" style="display: block; margin: auto;" /></p>
+<hr class="thin_separator">
+<p><a name="question4"></a></p>
+</div>
+</div>
+<div id="question-4" class="section level2">
+<h2>Question #4</h2>
+<p>For this question we aggregate all the data nationally, summing all occurrences of each name over all states. However, we want to keep track separately of the female and male counts for bisex names, and for simplicity we append a <code>_F</code> or <code>_M</code> to the name itself for the instances where it is used for female or male.</p>
+<p>After aggregation, the 1980 and 2013 data sets comprise <strong>6185</strong> and <strong>10004</strong> names, respectively, of which <strong>3372</strong> are in common.</p>
+<div id="a-of-the-names-represented-in-the-data-find-the-name-that-has-had-the-largest-percentage-increase-in-popularity-since-1980." class="section level3">
+<h3>[A] Of the names represented in the data, find the name that has had the largest <strong>percentage increase</strong> in popularity since 1980.</h3>
+<p>Taking the straightforward approach of defining percentage increase as the ratio between the difference 2013 and 1980 counts over the 1980 counts, <em>i.e.</em> <span class="math">\((n_{2013} - n_{1980})/n_{1980}\)</span>, these are the names whose adoption increased the most between those two reference years:</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">name</th>
+<th align="left">gender</th>
+<th align="right">n1980</th>
+<th align="right">n2013</th>
+<th align="right">change_pct</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">1</td>
+<td align="left">Avery</td>
+<td align="left">F</td>
+<td align="right">5</td>
+<td align="right">9121</td>
+<td align="right">182320</td>
+</tr>
+<tr class="even">
+<td align="left">2</td>
+<td align="left">Colton</td>
+<td align="left">M</td>
+<td align="right">5</td>
+<td align="right">6439</td>
+<td align="right">128680</td>
+</tr>
+<tr class="odd">
+<td align="left">3</td>
+<td align="left">Aria</td>
+<td align="left">F</td>
+<td align="right">5</td>
+<td align="right">5085</td>
+<td align="right">101600</td>
+</tr>
+<tr class="even">
+<td align="left">4</td>
+<td align="left">Isabella</td>
+<td align="left">F</td>
+<td align="right">23</td>
+<td align="right">17490</td>
+<td align="right">75943</td>
+</tr>
+<tr class="odd">
+<td align="left">5</td>
+<td align="left">Mila</td>
+<td align="left">F</td>
+<td align="right">5</td>
+<td align="right">3661</td>
+<td align="right">73120</td>
+</tr>
+</tbody>
+</table>
+<p>The majority of them barely made into the 1980 dataset because they total count is 5, meaning that they entered this data set only in one state for that year (there are 238 names with a count of only 5 in 1980 for the <em>1980-2013 common data set</em>, 206 in 2013).</p>
+</div>
+<div id="b-largest-decrease" class="section level3">
+<h3>[B] Largest <strong>decrease</strong>?</h3>
+<p>For the largest decrease we do the same calculation and obtain the 5 <em>worst performers</em> shown in the following table. To allow a more direct comparison with the changes reported for the increases, we added to this table a column with the percentage change computed with 2013 as baseline (“rev_pct”).</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">name</th>
+<th align="left">gender</th>
+<th align="right">n1980</th>
+<th align="right">n2013</th>
+<th align="right">change_pct</th>
+<th align="right">rev_pct</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">1</td>
+<td align="left">Misty</td>
+<td align="left">F</td>
+<td align="right">5534</td>
+<td align="right">12</td>
+<td align="right">-99.78</td>
+<td align="right">46017</td>
+</tr>
+<tr class="even">
+<td align="left">2</td>
+<td align="left">Jill</td>
+<td align="left">F</td>
+<td align="right">4553</td>
+<td align="right">13</td>
+<td align="right">-99.71</td>
+<td align="right">34923</td>
+</tr>
+<tr class="odd">
+<td align="left">3</td>
+<td align="left">Rhonda</td>
+<td align="left">F</td>
+<td align="right">1515</td>
+<td align="right">5</td>
+<td align="right">-99.67</td>
+<td align="right">30200</td>
+</tr>
+<tr class="even">
+<td align="left">4</td>
+<td align="left">Shawna</td>
+<td align="left">F</td>
+<td align="right">1420</td>
+<td align="right">5</td>
+<td align="right">-99.65</td>
+<td align="right">28300</td>
+</tr>
+<tr class="odd">
+<td align="left">5</td>
+<td align="left">Tracey</td>
+<td align="left">F</td>
+<td align="right">1237</td>
+<td align="right">5</td>
+<td align="right">-99.60</td>
+<td align="right">24640</td>
+</tr>
+</tbody>
+</table>
+<p>Again, not surprisingly, several of the <em>most forgotten names</em> show up right at the minimum possible number of occurrences to enter the data set.</p>
+<p><strong>NOTE on gender and dramatic changes</strong>: it is interesting, though at this level little more than anedoctal, that the majority of the names that exhibit the most dramatic changes are female names: they comprise <strong>60%</strong> of the 20 largest (measurable) increases and <strong>95%</strong> of the 20 largest (measurable) decrease (<strong>60%</strong> and <strong>84%</strong> of the top 50 increase/decreases).</p>
+<hr class="thin_separator">
+<p><a name="question5"></a></p>
+</div>
+</div>
+<div id="question-5" class="section level2">
+<h2>Question #5</h2>
+<div id="can-you-identify-names-that-may-have-had-an-even-larger-increase-or-decrease-in-popularity" class="section level3">
+<h3>Can you identify names that may have had an even larger increase or decrease in popularity?</h3>
+<p>There may be names that enjoyed (suffered) an even larger increase (decrease) in popularity in the 2-point comparison between 1980 and 2013 and not appear in the preceding analyses because they were below threshold for inclusion in the data set in either 1980 or 2013.</p>
+<ul>
+<li><p>Names present in 2013 but not in 1980 could have in principle jumped up more than the 182320% of Avery. The largest increase one of these names could have experienced is if they started with a count of 1 in 1980.<br />Of course, in principle some of the names recorded only in 2013 could truly not have “existed” in 1980, thus earning an “infinite” increase. However, we can quite handle properly the possibility that a 2013 name was not actually given to anybody in 1980 because we are blind to what “happened” below the 5-count threshold. Therefore we restrict our estimate to the scenario whereby we assign to every name a count equal to 1 for the epochs for which it is not present.</p></li>
+<li><p>Viceversa, names present in 1980 but not in 2013, could have dropped more than 46016.7% of Misty and gone under threshold.</p></li>
+</ul>
+<p>Assigning, as noted, a <em>count = 1</em> for 1980 to names existing in 2013 and not in 1980, we compute their hypothetical percentage increase from 1 to their actual 2013 count.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">name</th>
+<th align="left">gender</th>
+<th align="right">n2013</th>
+<th align="right">change_if_1</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">1</td>
+<td align="left">Jayden</td>
+<td align="left">M</td>
+<td align="right">14656</td>
+<td align="right">1465500</td>
+</tr>
+<tr class="even">
+<td align="left">2</td>
+<td align="left">Aiden</td>
+<td align="left">M</td>
+<td align="right">13527</td>
+<td align="right">1352600</td>
+</tr>
+<tr class="odd">
+<td align="left">3</td>
+<td align="left">Madison</td>
+<td align="left">F</td>
+<td align="right">10529</td>
+<td align="right">1052800</td>
+</tr>
+<tr class="even">
+<td align="left">4</td>
+<td align="left">Harper</td>
+<td align="left">F</td>
+<td align="right">8222</td>
+<td align="right">822100</td>
+</tr>
+<tr class="odd">
+<td align="left">5</td>
+<td align="left">Addison</td>
+<td align="left">F</td>
+<td align="right">7677</td>
+<td align="right">767600</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">name</th>
+<th align="left">gender</th>
+<th align="right">n1980</th>
+<th align="right">rev_change_if_1</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">1</td>
+<td align="left">Tonya</td>
+<td align="left">F</td>
+<td align="right">3073</td>
+<td align="right">307200</td>
+</tr>
+<tr class="even">
+<td align="left">2</td>
+<td align="left">Beth</td>
+<td align="left">F</td>
+<td align="right">2843</td>
+<td align="right">284200</td>
+</tr>
+<tr class="odd">
+<td align="left">3</td>
+<td align="left">Kristi</td>
+<td align="left">F</td>
+<td align="right">2521</td>
+<td align="right">252000</td>
+</tr>
+<tr class="even">
+<td align="left">4</td>
+<td align="left">Latoya</td>
+<td align="left">F</td>
+<td align="right">2479</td>
+<td align="right">247800</td>
+</tr>
+<tr class="odd">
+<td align="left">5</td>
+<td align="left">Kelli</td>
+<td align="left">F</td>
+<td align="right">2477</td>
+<td align="right">247600</td>
+</tr>
+</tbody>
+</table>
+<p><strong>NOTE:</strong> if we wanted to <em>split hairs</em> and be excruciatingly obsessive in estimating the largest potential increase, we could add to the total count for a name a “free <span class="math">\(+4\)</span> contribution” for any state for which it does not appear in the data. That would be the maximum extra number of occurrences not accounted for. Viceversa for pushing the estimate for largest decrease we could add <span class="math">\(4\)</span> free counts for each state where a name does not appear in 1980.<br />With a little <em>R</em> magic it would not be difficult but it is beyond the scope of this report. Moreover, considering that in the most extreme scenario of a name appearing for only one state, this would add <span class="math">\(200\)</span> counts, it looks like it would not change substantially the rankings presented above.</p>
+<hr class="thin_separator">
+<p><a name="OTHER_BITs"></a></p>
+</div>
+</div>
+</div>
+<div id="other-bits-of-analysis" class="section level1">
+<h1>OTHER BITS OF ANALYSIS</h1>
+<p>This dataset is extremely interesting and could the source of endless stimulating exploration, but I will have to leave that for another time. In the remainder of this report I will present some basic plots I have made as I was playing with the data.</p>
+<p>First a few terse thoughts about ideas that crossed my mind while working with these data, not much more than bullet points at this stage, and not a particularly deeply thought-through order:</p>
+<ul>
+<li>Understanding the effect of the <span class="math">\(n \ge 5\)</span> cutoff.
+<ul>
+<li>Get comprehensive aggregate birth data by state.</li>
+</ul></li>
+<li>Clustering of States (also over time Time)
+<ul>
+<li>Each state represented as a vector of names (kind of like a <em>Document Term Matrix</em>).</li>
+<li>Cluster them in space and time.</li>
+<li>Are there pattern developing over time, <em>e.g.</em> correlations between states with a time delay (waves?).</li>
+</ul></li>
+<li>Anything related to immigration, “injection” of new names, perhaps spreading?</li>
+<li>There is certainly an ethnicity factor in naming traditions, and so I would expect some effect to transpire from the data.</li>
+<li>I would guess that socio-economic factors might have some relationship with given names.
+<ul>
+<li>Census data could be combined with this data set.</li>
+</ul></li>
+<li>Number of new names year (decade) after year (decade)</li>
+<li>Find names that:
+<ul>
+<li>disappeared.</li>
+<li>popped up of nowhere.</li>
+<li>peaked.</li>
+</ul></li>
+<li><p>Sociological/cultural influences on popular names?</p></li>
+<li>A lot of analysis would lend itself to interesting visualization, over time and space (maps).
+<ul>
+<li>A <em>ShinyApp</em>?</li>
+</ul></li>
+<li>About name count distributions (see plots below for some hints of the background of these points).
+<ul>
+<li>Interpretation of the systematic changes of slope, mostly for female names, getting steeper over time.</li>
+<li>Interpretation of the difference between the distributions of female and male names. The distribution of female names declines more rapidly and it seems to have an actual “roll over” at high counts, sort of like an exponential cutoff.</li>
+<li>Is there really a bump in many cases (state/year) between the power law part and the steep drop, something like a “knee”? Flipping through sequences of distributions it would seem to be a real feature, and only present in the male names (see for instance in the plots included later, the blue points, for CO, SC, TN, maybe TX too).</li>
+</ul></li>
+</ul>
+<hr class="thin_separator">
+<p><a name="basictrends"></a></p>
+<div id="some-basic-trends-by-year-and-gender" class="section level2">
+<h2>SOME BASIC TRENDS BY YEAR AND GENDER</h2>
+<div id="number-of-distinct-names-vs.time" class="section level3">
+<h3>Number of Distinct Names vs. Time</h3>
+<p>Right after WW2, or so it seems, female names’ variety started to grow while the used pool of male names remained fairly stable until the end of the 1960’s.<br />After that point male names have expanded but it does not look like the can catch up. Please note that the Y-axis scale is logarithmic, hence constant spacing means constant ratio (instead of constant difference).</p>
+<p><img src="figures/other-plot_number_of_distinct_names-1.png" title="" alt="" width="700" style="display: block; margin: auto;" /></p>
+</div>
+<div id="total-counts-vs.time" class="section level3">
+<h3>Total Counts vs. Time</h3>
+<p>Total number of births as counted from this dataset. These would be the figures to compare with accurate data about birthrates, to investigate the effect of the low-count threshold for inclusion in the data.</p>
+<p>The fact that the total counts for female and male births are systematically offset from each other by an amount that would seem hard to explain with natural causes, may be related to the presence of the threshold. The count distributions for female names are steeper than those for males, quite systematically independently of the state and by a larger degree in more recent decades. Steeper power law distributions, if they continue to lower counts below the threshold would resuls in a larger loss of data for female names and male names. This in turn would bias the cumulative counts by gender.</p>
+<p><img src="figures/other-plot_total_counts-1.png" title="" alt="" width="700" style="display: block; margin: auto;" /></p>
+</div>
+<div id="names-coverage" class="section level3">
+<h3>Names <em>Coverage</em></h3>
+<p>How far do popular names stretch?<br />How many distinct names are necessary to cover a given fraction of the new babies?</p>
+<p>The curves in the following figure shows the fraction of the distinct names needed to cumulatively cover 90, 95, 99% of the new babies, as a function of time. The lines were largely flat or even decreasing until the 1950’s, when the highest percentile line started a long term upward trend. All percentiles unambiguously started an increasing trend at the beginning of the 1990’s.</p>
+<p>At first glance I don’t see a reason why this trend could caused by population growth given that these lines represent the fraction of names given in a year, a relative measure. If population growth leads to the more names, as perhaps suggested by one of the previous figures, this by itself as a mass effect would not automatically cause a shift in the percentile lines.</p>
+<p>My impression is that the trends reflect an increasing spreading of the tails of the distribution, with their cores able to account a decreasing portion of the population.</p>
+<p>The spreading could be due to <em>increased creativity</em>, less</p>
+<p><img src="figures/other-plot_names_coverage_v2-1.png" title="" alt="" width="700" style="display: block; margin: auto;" /></p>
+<hr class="thin_separator">
+<p><a name="counts"></a></p>
+</div>
+</div>
+<div id="count-distributions-by-state-time-and-gender" class="section level2">
+<h2>COUNT DISTRIBUTIONS BY STATE, TIME, AND GENDER</h2>
+<p>I already shared some thoughts about the count distributions, and here I would like to focus on the results of fitting them with power laws, allowing for the effect of gender.</p>
+<div id="examples" class="section level3">
+<h3>Examples</h3>
+<p>First a few more examples of the count distributions. They are all for the period 2009-2013, for eight states in different regions and of different size. In all of them the female name counts distributions are steeper than the male’s. Because broadly speaking their total integral should be approximately similar, their different slopes mean that they will cross-over, and so there are many more names with high-count among male names, and many more names with low-count among female names.</p>
+<p>We noted above that the steeper slope of the female names distribution combined with the low-count threshold may have something to do with the offset between total number of female and male births counted from these data.</p>
+<p>In a few of these plots there is a hint of a possible “knee” in the distribution of male names, between the power law part (left / lower counts side).</p>
+<p><img src="figures/other-plot_power_law_distribution_examples-1.png" title="" alt="" width="700" style="display: block; margin: auto;" /></p>
+</div>
+<div id="summary-plots-of-power-law-fits" class="section level3">
+<h3>Summary Plots of <em>Power Law</em> Fits</h3>
+<p>We split the data by state, decade and gender, binned them up and fit a linear regression model (<code>lm()</code>) to each name count distribution. Please note that the “decades” are actually partially overlapping, in the sense that we used a 10-year wide sliding window, moving it in steps of 5 years. So, consecutive data/models are not fully independent as they overlap for half of the time intervals.</p>
+<p>The next three plots show the values of the slope of the female names distributions, the slope of the male names distributions and they difference. Points for each state are connected over time.<br />The thick long-dashed grey line connects the mean values at each time value.</p>
+<p>The main observations from these figures are that:</p>
+<ul>
+<li>The power law slope for the distributions of female names has been steadily decreasing since the 1960’s, shifting from about <span class="math">\(-0.75\)</span> to <span class="math">\(-1.1\)</span>.</li>
+<li>The slope of the male names has remained pretty stable at around <span class="math">\(-0.75\)</span></li>
+<li>Looking at the means, we can appreciate that the slope for female names has been steeper than that of male names since the 1960’s.</li>
+<li>This is illustrate more directly in the third figure, plotting the difference of the two slopes. It has been increasing for almost a century.</li>
+</ul>
+<p><img src="figures/other-plot-power_law_fits_slope_F-1.png" title="" alt="" width="700" style="display: block; margin: auto;" /></p>
+<p><img src="figures/other-plot-power_law_fits_slope_M-1.png" title="" alt="" width="700" style="display: block; margin: auto;" /></p>
+<p><img src="figures/other-plot-power_law_fits_slope_delta-1.png" title="" alt="" width="700" style="display: block; margin: auto;" /></p>
+<hr class="thin_separator">
+<p><a name="SessionInfo"></a></p>
+</div>
+</div>
+<div id="r-session-info" class="section level2">
+<h2>R Session Info</h2>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">sessionInfo</span>()
+<span class="co"># R version 3.1.3 (2015-03-09)</span>
+<span class="co"># Platform: x86_64-pc-linux-gnu (64-bit)</span>
+<span class="co"># Running under: Ubuntu 14.04.2 LTS</span>
+<span class="co"># </span>
+<span class="co"># locale:</span>
+<span class="co">#  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8       </span>
+<span class="co">#  [4] LC_COLLATE=C               LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   </span>
+<span class="co">#  [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                  LC_ADDRESS=C              </span>
+<span class="co"># [10] LC_TELEPHONE=C             LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       </span>
+<span class="co"># </span>
+<span class="co"># attached base packages:</span>
+<span class="co"># [1] stats     graphics  grDevices utils     datasets  methods   base     </span>
+<span class="co"># </span>
+<span class="co"># other attached packages:</span>
+<span class="co"># [1] ggplot2_1.0.1 stringr_1.0.0 magrittr_1.5  tidyr_0.2.0   dplyr_0.4.2   knitr_1.10.5 </span>
+<span class="co"># </span>
+<span class="co"># loaded via a namespace (and not attached):</span>
+<span class="co">#  [1] DBI_0.3.1        MASS_7.3-41      R6_2.0.1         Rcpp_0.11.6      assertthat_0.1  </span>
+<span class="co">#  [6] codetools_0.2-11 colorspace_1.2-6 digest_0.6.8     evaluate_0.7     formatR_1.2     </span>
+<span class="co"># [11] grid_3.1.3       gtable_0.1.2     highr_0.5        htmltools_0.2.6  labeling_0.3    </span>
+<span class="co"># [16] lazyeval_0.1.10  munsell_0.4.2    parallel_3.1.3   plyr_1.8.3       proto_0.3-10    </span>
+<span class="co"># [21] reshape2_1.4.1   rmarkdown_0.7    scales_0.2.4     stringi_0.5-5    tools_3.1.3     </span>
+<span class="co"># [26] yaml_2.1.13</span></code></pre>
+<hr class="separator">
+</div>
+</div>
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+$(document).ready(function () {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+});
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

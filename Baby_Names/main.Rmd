@@ -1,17 +1,17 @@
 ---
-title: "Coding Challenge : Part 2 > Baby Names"
-author: "Giovanni Fossati"
-output:
+title: "Baby Names Data Coding Challenge"
+subtitle: 
+author  : Giovanni Fossati
+job     : null
+output  : 
   html_document:
+    self_contained: false
     css: css/baby_names.css
-    highlight: tango
-    keep_md: yes
-    mathjax: default
-    self_contained: yes
     theme: cerulean
+    highlight: tango
+    keep_md: no
+    mathjax: default
     toc: no
-subtitle: null
-job: null
 ---
 
 ```{r setup, cache = FALSE, echo = FALSE, message = FALSE, warning = FALSE, tidy = FALSE}
@@ -28,14 +28,13 @@ opts_chunk$set(message = FALSE,
                comment = '#',
                fig.align = 'center', 
                dpi = 100, 
-               fig.path = 'figures/Part1/')
+               fig.path = 'figures/')
 #
 library("dplyr")
 library("tidyr")
 library("magrittr")
 library("stringr")
 library("ggplot2")
-# library("gridExtra")
 ```
 
 ```{r load_packages, cache = FALSE, echo = FALSE, message = FALSE, warning = FALSE, tidy = FALSE}
