@@ -41,7 +41,11 @@ library("ggplot2")
 source("./scripts/my_functions_baby_names.R")
 ```
 
----
+
+## PREAMBLE
+
+The source files are posted on [GitHub](https://github.com/pedrosan/DataScienceExamples/tree/master/Baby_Names/)
+
 
 ### Outline
 
