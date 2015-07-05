@@ -5,7 +5,7 @@ author  : Giovanni Fossati
 job     : null
 output  : 
   html_document:
-    self_contained: no
+    self_contained: false
     css: css/gf_small_touches.css
     theme: cerulean
     highlight: tango
@@ -28,7 +28,7 @@ opts_chunk$set(message = FALSE,
                comment = '#',
                fig.align = 'center', 
                dpi = 100, 
-               fig.path = 'figures/Part1/')
+               fig.path = 'figures/')
 library("dplyr")
 library("tidyr")
 library("magrittr")
@@ -46,7 +46,6 @@ source("./scripts/my_functions_plot.R")
 source("./scripts/my_functions_modeling.R")
 ```
 
----
 
 # SUMMARY
 
@@ -88,8 +87,9 @@ namely the model fitting.
 That said, the document includes the code to perform the entire analysis, and a few changes would
 allow to do so by compiling it.
 
+The source files are posted on [GitHub](https://github.com/pedrosan/DataScienceExamples/tree/master/Baby_Names/)
 
-### Report Outline
+### Outline
 
 * [DATA LOADING AND SET UP](#data_loading)
 * [EXPLORATORY ANALYSIS](#EDA)
@@ -118,8 +118,8 @@ allow to do so by compiling it.
 # DATA LOADING AND SET UP
 
 ```{r loading_data, cache = TRUE}
-train <- read.delim(file = "data/codetest_train.txt.gz", stringsAsFactors = FALSE)
-test  <- read.delim(file = "data/codetest_test.txt.gz", stringsAsFactors = FALSE)
+train <- read.delim(file = "data/training.txt.gz", stringsAsFactors = FALSE)
+test  <- read.delim(file = "data/testing.txt.gz", stringsAsFactors = FALSE)
 ```
 
 Beside the `target` variable that is _`r class(train[, 1])`_, 
@@ -1248,7 +1248,7 @@ As noted, our final prediction for the _Testing_ data set is the _grand mean_ of
 of the four models "crossed" with the four imputed _Testing_ data.
 
 ```{r write_prediction}
-write.csv(summaryNall$target, file = "codetest_prediction.csv", row.names = FALSE, quote = FALSE)
+write.csv(summaryNall$target, file = "data/prediction.csv", row.names = FALSE, quote = FALSE)
 ```
 
 

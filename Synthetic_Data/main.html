@@ -79,7 +79,6 @@ img {
 </div>
 
 
-<hr />
 <div id="summary" class="section level1">
 <h1>SUMMARY</h1>
 <p>I report on the analysis and modeling of the provided dataset. Before focusing on model building, we had to tackle the issue of missing data, which, while not being in aggregate a large fraction of the data set, are distributed in such a way that ignoring incomplete observations was not an option.</p>
@@ -90,9 +89,10 @@ img {
 <div id="note-on-the-report-reproducible-format" class="section level3">
 <h3>Note on the Report <em>Reproducible</em> Format</h3>
 <p>This report is generated from a <em>Rmarkdown</em> document which includes all code to perform data processing, modeling, plotting, etc. (except for functions defined in external scripts, included in the archive). However, for readability only a few bits of code are <em>echoed</em> explicitly in the compiled document. The full straight reproducibility is only limited by the fact that in the interest of simplicity and for computational convenience some parts of the processing have been flagged as <em>inactive</em> (<code>eval = FALSE</code>), and in its current form some data are instead loaded from previously saved work, namely the model fitting. That said, the document includes the code to perform the entire analysis, and a few changes would allow to do so by compiling it.</p>
+<p>The source files are posted on <a href="https://github.com/pedrosan/DataScienceExamples/tree/master/Baby_Names/">GitHub</a></p>
 </div>
-<div id="report-outline" class="section level3">
-<h3>Report Outline</h3>
+<div id="outline" class="section level3">
+<h3>Outline</h3>
 <ul>
 <li><a href="#data_loading">DATA LOADING AND SET UP</a></li>
 <li><a href="#EDA">EXPLORATORY ANALYSIS</a>
@@ -124,8 +124,8 @@ img {
 </div>
 <div id="data-loading-and-set-up" class="section level1">
 <h1>DATA LOADING AND SET UP</h1>
-<pre class="sourceCode r"><code class="sourceCode r">train &lt;-<span class="st"> </span><span class="kw">read.delim</span>(<span class="dt">file =</span> <span class="st">&quot;data/codetest_train.txt.gz&quot;</span>, <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
-test  &lt;-<span class="st"> </span><span class="kw">read.delim</span>(<span class="dt">file =</span> <span class="st">&quot;data/codetest_test.txt.gz&quot;</span>, <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r">train &lt;-<span class="st"> </span><span class="kw">read.delim</span>(<span class="dt">file =</span> <span class="st">&quot;data/training.txt.gz&quot;</span>, <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
+test  &lt;-<span class="st"> </span><span class="kw">read.delim</span>(<span class="dt">file =</span> <span class="st">&quot;data/testing.txt.gz&quot;</span>, <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)</code></pre>
 <p>Beside the <code>target</code> variable that is <em>numeric</em>, the data sets comprise <strong>254</strong> variables, with the following breakdown by type:</p>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="kw">table</span>(<span class="kw">sapply</span>(train[, -<span class="dv">1</span>], class))
 <span class="co"># </span>
@@ -230,7 +230,7 @@ for( s in factor_cols_names) { test[test[, s] ==<span class="st"> &quot;&quot;</
 <div id="visual-comparison-of-na-statistics" class="section level3">
 <h3>Visual Comparison of <code>NA</code> Statistics</h3>
 <p>These plots show that on aggregate the <em>Training</em> and <em>Testing</em> sets are affected by <code>NA</code> in similar ways.<br />This does not imply that the detailed distribution of <code>NA</code> in rows and columns may not be biased by some trend that would not be revealed by this plots.</p>
-<p><img src="figures/Part1/plot_NA_stats-1-1.png" title="" alt="" width="600" style="display: block; margin: auto;" /></p>
+<p><img src="figures/plot_NA_stats-1-1.png" title="" alt="" width="600" style="display: block; margin: auto;" /></p>
 <hr class="thin_separator">
 <p><a name="summary_numeric"></a></p>
 </div>
@@ -265,76 +265,76 @@ train.stats_by_column$sd &lt;-<span class="st"> </span><span class="kw">sapply</
 </thead>
 <tbody>
 <tr class="odd">
-<td align="left">f_33</td>
-<td align="right">-3.911</td>
-<td align="right">-0.683</td>
-<td align="right">-0.005</td>
-<td align="right">-0.008</td>
-<td align="right">0.680</td>
-<td align="right">4.350</td>
-<td align="right">107</td>
-<td align="right">1.363</td>
-<td align="right">1.012</td>
+<td align="left">f_100</td>
+<td align="right">-3.820</td>
+<td align="right">-0.653</td>
+<td align="right">0.038</td>
+<td align="right">0.022</td>
+<td align="right">0.705</td>
+<td align="right">3.148</td>
+<td align="right">113</td>
+<td align="right">1.358</td>
+<td align="right">1.004</td>
 </tr>
 <tr class="even">
-<td align="left">f_63</td>
-<td align="right">-3.635</td>
-<td align="right">-0.664</td>
-<td align="right">-0.003</td>
-<td align="right">0.001</td>
-<td align="right">0.698</td>
-<td align="right">3.217</td>
-<td align="right">88</td>
-<td align="right">1.361</td>
+<td align="left">f_139</td>
+<td align="right">-3.690</td>
+<td align="right">-0.662</td>
+<td align="right">0.009</td>
+<td align="right">0.012</td>
+<td align="right">0.712</td>
+<td align="right">3.832</td>
+<td align="right">93</td>
+<td align="right">1.374</td>
+<td align="right">0.994</td>
+</tr>
+<tr class="odd">
+<td align="left">f_175</td>
+<td align="right">-3.496</td>
+<td align="right">-0.645</td>
+<td align="right">0.012</td>
+<td align="right">0.010</td>
+<td align="right">0.678</td>
+<td align="right">3.798</td>
+<td align="right">102</td>
+<td align="right">1.323</td>
 <td align="right">0.999</td>
 </tr>
-<tr class="odd">
-<td align="left">f_66</td>
-<td align="right">-3.512</td>
-<td align="right">-0.705</td>
-<td align="right">-0.015</td>
-<td align="right">-0.019</td>
-<td align="right">0.659</td>
-<td align="right">3.956</td>
-<td align="right">105</td>
-<td align="right">1.364</td>
-<td align="right">1.003</td>
-</tr>
 <tr class="even">
-<td align="left">f_90</td>
-<td align="right">-3.727</td>
-<td align="right">-0.692</td>
-<td align="right">-0.022</td>
+<td align="left">f_189</td>
+<td align="right">-3.348</td>
+<td align="right">-0.672</td>
+<td align="right">0.032</td>
+<td align="right">0.017</td>
+<td align="right">0.708</td>
+<td align="right">3.435</td>
+<td align="right">86</td>
+<td align="right">1.380</td>
+<td align="right">1.007</td>
+</tr>
+<tr class="odd">
+<td align="left">f_229</td>
+<td align="right">-3.593</td>
+<td align="right">-0.684</td>
 <td align="right">-0.013</td>
-<td align="right">0.675</td>
-<td align="right">3.622</td>
-<td align="right">85</td>
-<td align="right">1.367</td>
-<td align="right">0.997</td>
-</tr>
-<tr class="odd">
-<td align="left">f_174</td>
-<td align="right">-3.758</td>
-<td align="right">-0.680</td>
-<td align="right">-0.003</td>
-<td align="right">-0.010</td>
-<td align="right">0.664</td>
-<td align="right">3.815</td>
-<td align="right">97</td>
-<td align="right">1.344</td>
-<td align="right">1.002</td>
+<td align="right">-0.015</td>
+<td align="right">0.652</td>
+<td align="right">4.471</td>
+<td align="right">83</td>
+<td align="right">1.335</td>
+<td align="right">1.006</td>
 </tr>
 <tr class="even">
-<td align="left">f_244</td>
-<td align="right">-3.585</td>
-<td align="right">-0.666</td>
-<td align="right">0.026</td>
-<td align="right">0.014</td>
+<td align="left">f_252</td>
+<td align="right">-3.950</td>
+<td align="right">-0.695</td>
+<td align="right">0.002</td>
+<td align="right">-0.001</td>
 <td align="right">0.672</td>
-<td align="right">3.365</td>
-<td align="right">90</td>
-<td align="right">1.338</td>
-<td align="right">1.001</td>
+<td align="right">3.724</td>
+<td align="right">96</td>
+<td align="right">1.368</td>
+<td align="right">1.003</td>
 </tr>
 </tbody>
 </table>
@@ -349,10 +349,10 @@ all.stats_by_column$set &lt;-<span class="st"> </span><span class="kw">c</span>(
 <div id="distributions-of-summary-statistics-of-predictors" class="section level3">
 <h3>Distributions of Summary Statistics of Predictors</h3>
 <p>First we inspect visually the distribution of the summary statistics for the 250 numeric variables.<br />The following figures show the density curves for median, 0.25 quantile, 0.75 quantile and interquartile range, overlaying the curves for the <em>Training</em> (orange/yellow) and the <em>Testing</em> (blue) data sets.</p>
-<p><img src="figures/Part1/plot_predictors_distributions_3x2-train_and_test-1.png" title="" alt="" width="900" style="display: block; margin: auto;" /></p>
+<p><img src="figures/plot_predictors_distributions_3x2-train_and_test-1.png" title="" alt="" width="900" style="display: block; margin: auto;" /></p>
 <p>The two sets of plots reveal an issue that has the potential of affecting negatively the predictive power of a model built (trained) on the <em>Training</em> set when applied to this <em>Testing</em> set: <strong>the distribution of some of these summary statistics differ between <em>Training</em> and <em>Testing</em> data sets</strong>, namely they are systematically broader in the <em>Testing</em> set than they are in the <em>Training</em> set.</p>
 <p>The fact that the distributions of <em>medians</em> and <em>quantiles</em> are different raises some concern for the modeling To review this matter further we can look at scatter plots of the summary statistics, shown below.</p>
-<p><img src="figures/Part1/plot_predictors_summary_stats_train_vs_test_v2-1.png" title="" alt="" width="700" style="display: block; margin: auto;" /></p>
+<p><img src="figures/plot_predictors_summary_stats_train_vs_test_v2-1.png" title="" alt="" width="700" style="display: block; margin: auto;" /></p>
 <p>The scatter plots illustrate clearly the different extension of the scatter in the <em>Training</em> and <em>Testing</em> sets.</p>
 <p>As a side note, there are a handful of outliers, particularly noticeable in quantile plots.<br />Before modeling it is hard to tell if these will turn out to be important variables, but they certainly stand out in these plots. We can pick them out by filter the data frame on the <code>q075</code> value:</p>
 <table>
@@ -447,7 +447,7 @@ all.stats_by_column$set &lt;-<span class="st"> </span><span class="kw">c</span>(
 <h2>Summary of Non-Numeric Variables</h2>
 <p>Four of the predictors are factors, and we can compare them between <em>Training</em> and <em>Testing</em> set by looking at the distribution of the data over their levels. We first computed the fraction of data in each level of a factor, in the two sets separately, and then took the ratio (<em>Training</em>/<em>Testing</em>). The following barplots show these ratios for the four factor variables. Horizontal lines mark the 0.9, 1.0, and 1.1 points.</p>
 <p>In all variables there are variations up to 10% (larger for <code>f_121</code>), which raise another red flag for modeling. For instance, if a model considered important levels <em>A</em> and <em>C</em> of <code>f_121</code>, the fact that <em>A</em> is 10% less populated in the <em>Training</em> set, and <em>C</em> 15% more, will affect negatively the quality of the predictions on the <em>Testing</em> set.</p>
-<p><img src="figures/Part1/plot_distributions_of_factors_train_vs_test-1.png" title="" alt="" width="600" style="display: block; margin: auto;" /></p>
+<p><img src="figures/plot_distributions_of_factors_train_vs_test-1.png" title="" alt="" width="600" style="display: block; margin: auto;" /></p>
 <hr class="thin_separator">
 <p><a name="target_variable"></a></p>
 </div>
@@ -456,7 +456,7 @@ all.stats_by_column$set &lt;-<span class="st"> </span><span class="kw">c</span>(
 <div id="distribution-of-the-values-of-target." class="section level3">
 <h3>Distribution of the Values of <code>target</code>.</h3>
 <p>(Please note that in order to increase the visibility of the low-count parts the vertical scale is logarithmic (<span class="math">\(log10()\)</span>).)</p>
-<p><img src="figures/Part1/plot_target_distribution_v2-1.png" title="" alt="" width="500" style="display: block; margin: auto;" /></p>
+<p><img src="figures/plot_target_distribution_v2-1.png" title="" alt="" width="500" style="display: block; margin: auto;" /></p>
 </div>
 <div id="correlations-bw-target-and-predictors-and-between-predictors" class="section level3">
 <h3>Correlations b/w <code>target</code> and Predictors (and between Predictors)</h3>
@@ -465,7 +465,7 @@ all.stats_by_column$set &lt;-<span class="st"> </span><span class="kw">c</span>(
 corr2_pcomp &lt;-<span class="st"> </span><span class="kw">cor</span>(train[, <span class="kw">c</span>(<span class="dv">1</span>, idx_numeric)], <span class="dt">use =</span> <span class="st">&quot;pairwise.complete.obs&quot;</span>)
 corr1_pcomp_test &lt;-<span class="st"> </span><span class="kw">cor</span>(test[, idx_numeric<span class="dv">-1</span>], <span class="dt">use =</span> <span class="st">&quot;pairwise.complete.obs&quot;</span>)</code></pre>
 <p>We summarize the unwiedly correlation matrices in following histograms plots: left to right predictor-<code>target</code> correlation in the <em>Training</em> set, predictor-predictor correlation in the <em>Training</em> set, predictor-predictor correlation in the <em>Testing</em> set. To highlight the low-frequency cases, the vertical scale is truncated.</p>
-<p><img src="figures/Part1/plot_correlation_stats-1.png" title="" alt="" width="800" style="display: block; margin: auto;" /></p>
+<p><img src="figures/plot_correlation_stats-1.png" title="" alt="" width="800" style="display: block; margin: auto;" /></p>
 <p>There is very little correlation between variables in the <em>Training</em> data set, with a pile up in a narrow peak around 0 and only a handful of variables with stronger correlation, <span class="math">\(\sim 0.7\)</span>. In this case the <em>Testing</em> set exhibits very similar properties.</p>
 <ul>
 <li>Five pairs of predictors stand out at relatively high correlation strength, <span class="math">\(\sim 0.7\)</span>, involving the same 10 variables in the <em>Training</em> and <em>Testing</em> data sets:
@@ -483,12 +483,12 @@ corr1_pcomp_test &lt;-<span class="st"> </span><span class="kw">cor</span>(test[
 <div id="scatterplots-of-target-vs.predictors" class="section level3">
 <h3>Scatterplots of <code>target</code> vs. Predictors</h3>
 <p>We visually inspected the scatterplots between <code>target</code> and all variables and they all look like smooth clouds with a central density peak, with in a few cases some elongation or substructures (<em>e.g.</em> the top right panel below). For illustrative purposes we would like to show a few examples of scatterplots for the <code>target</code> variable and predictors, for four different levels of correlation (see plot titles).</p>
-<p><img src="figures/Part1/scatterplot_target_vs_predictors_v2-1.png" title="" alt="" width="800" style="display: block; margin: auto;" /></p>
+<p><img src="figures/scatterplot_target_vs_predictors_v2-1.png" title="" alt="" width="800" style="display: block; margin: auto;" /></p>
 </div>
 <div id="distribution-of-target-values-by-factor-levels" class="section level3">
 <h3>Distribution of <code>target</code> Values by Factor Levels</h3>
 <p>The last check concerns possible relationships between the <code>target</code> variable and levels of the four factor variables. Boxplots are well suited for this purpose and we show the four of them below.</p>
-<p><img src="figures/Part1/figure-boxplot_outcome_vs_factors-1.png" title="" alt="" width="800" style="display: block; margin: auto;" /></p>
+<p><img src="figures/figure-boxplot_outcome_vs_factors-1.png" title="" alt="" width="800" style="display: block; margin: auto;" /></p>
 <p>A quick look at the boxplots suggest that:</p>
 <ul>
 <li><code>f_121</code> and <code>f_215</code> may not be important variables <em>per se</em> (but they could still have an effect through interaction with other variables).</li>
@@ -661,7 +661,7 @@ for( k in <span class="dv">1</span>:<span class="kw">length</span>(seeds.train_s
 <div id="diagnostics-plots" class="section level3">
 <h3>Diagnostics Plots</h3>
 <p>The following plots show the relationship between predicted and observed values of <code>target</code> as scatter and residuals plots, as well as the difference between the distribution of observed and predicted values.<br />About these latter it is particularly clear from its <em>wavy</em> shape that both in-sample and out-of-sample the model predicts a much narrower distribution of values than the observed ones.</p>
-<p><img src="figures/Part1/LM-diagnostic_plots-1.png" title="" alt="" width="900" style="display: block; margin: auto;" /></p>
+<p><img src="figures/LM-diagnostic_plots-1.png" title="" alt="" width="900" style="display: block; margin: auto;" /></p>
 <hr class="thin_separator">
 <p><a name="MARS"></a></p>
 </div>
@@ -787,7 +787,7 @@ for( k in <span class="dv">1</span>:<span class="kw">length</span>(seeds.train_m
 <div id="diagnostics-plots-1" class="section level3">
 <h3>Diagnostics Plots</h3>
 <p>For direct comparison with the <em>linear regression</em> results we plot here the scatter and residuals plots, and the difference between observed and predicted distributions of <code>target</code> (for one of the <em>MARS</em> models).<br />There still remains a systematic slant to the residuals, but it is acceptable, and the difference between the distributions is more even than before.</p>
-<p><img src="figures/Part1/MARS-diagnostic_plots-N4-1.png" title="" alt="" width="900" style="display: block; margin: auto;" /></p>
+<p><img src="figures/MARS-diagnostic_plots-N4-1.png" title="" alt="" width="900" style="display: block; margin: auto;" /></p>
 <hr class="thin_separator">
 <p><a name="Prediction"></a></p>
 </div>
@@ -799,14 +799,14 @@ for( k in <span class="dv">1</span>:<span class="kw">length</span>(seeds.train_m
 <h3>Quick <em>Health</em> Checks of Predictions</h3>
 <p>To assess the effect of imputation, we compared the variability of its predictions on the four imputed <em>Testing</em> data sets, computing mean and standard deviation.</p>
 <p>For each observation we have then four <em>mean</em> and <em>sd</em>, one for each model over the four imputed <em>Testing</em> sets. We can look at the amount of variation from model to model, for instance by inspecting the <em>max-min</em> range of predicted values for each observation, or the <em>“MSE”</em> by observation. We look at them in the next two plots.</p>
-<p><img src="figures/Part1/MARS-plots-predicted_variables_minmax_and_MSE-1.png" title="" alt="" width="1000" style="display: block; margin: auto;" /></p>
+<p><img src="figures/MARS-plots-predicted_variables_minmax_and_MSE-1.png" title="" alt="" width="1000" style="display: block; margin: auto;" /></p>
 <p>In both quantities there are only a few cases at large deviations; for instance, as a reference, there are 65 with <span class="math">\(MSE &gt; 0.01\)</span> (marked by the red dashed line).</p>
 <p>Overall the predictions seem to be quite robust, from the point of view of the potential variations caused by imputation and variable selection.</p>
 </div>
 <div id="prediction" class="section level3">
 <h3>Prediction</h3>
 <p>As noted, our final prediction for the <em>Testing</em> data set is the <em>grand mean</em> of the predictions of the four models “crossed” with the four imputed <em>Testing</em> data.</p>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">write.csv</span>(summaryNall$target, <span class="dt">file =</span> <span class="st">&quot;codetest_prediction.csv&quot;</span>, <span class="dt">row.names =</span> <span class="ot">FALSE</span>, <span class="dt">quote =</span> <span class="ot">FALSE</span>)</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">write.csv</span>(summaryNall$target, <span class="dt">file =</span> <span class="st">&quot;data/prediction.csv&quot;</span>, <span class="dt">row.names =</span> <span class="ot">FALSE</span>, <span class="dt">quote =</span> <span class="ot">FALSE</span>)</code></pre>
 <hr class="separator">
 <p><a name="FINAL_THOUGHTS"></a></p>
 </div>
@@ -820,7 +820,7 @@ for( k in <span class="dv">1</span>:<span class="kw">length</span>(seeds.train_m
 <p>The quick checks that we did on the variations on the predictions on the <em>Testing</em> data set seem to suggest that the models are quite “stable”, in the sense that only a few observations exhibit significant variance in the predictions. However, this is more of a measure of the effect of imputation and of the small differences between models (important variables, coefficients), and while it is comforting to see that we get consistent results, this may not translate in good performance on the actual <code>target</code> values of the <em>Testing</em> data set.</p>
 <p>One reason of concern is that the statistical properties of the data seem to be slightly different between the <em>Training</em> and the <em>Testing</em> data set, in particular the apparent broader range of values spanned by <em>quantiles</em> (and in turn <em>IQR</em>).</p>
 <p>On the other hand, considering that the model is using only about a dozen variables, it is possible that its performance may not be so seriously affected by this apparent difference. To get a glimpse on this, we repeat below some of the plots of the <a href="#summary_numeric">earlier summary section</a>, marking with blue circles the <em>important variables</em>. Qualitative speaking one could argue that the blue symbols are less spread than the full set of variables. However, with respect to generalization of the model the truly ideal finding would be that the important variables were clusted closely around the diagonal, <em>i.e.</em> with identical characteristics in the <em>Training</em> and <em>Testing</em> data sets, at least as far as these summaries can go.</p>
-<p><img src="figures/Part1/plot-predictors_summary_stats_train_vs_test_with_imp_vars-1.png" title="" alt="" width="900" style="display: block; margin: auto;" /></p>
+<p><img src="figures/plot-predictors_summary_stats_train_vs_test_with_imp_vars-1.png" title="" alt="" width="900" style="display: block; margin: auto;" /></p>
 <hr class="separator">
 <p><a name="APPENDIX"></a></p>
 </div>
