@@ -43,7 +43,7 @@ source("./scripts/my_functions_baby_names.R")
 
 ---
 
-### Report Outline
+### Outline
 
 * [DATA LOADING AND SET UP](#data_loading)
 * [QUESTIONS](#questions)
