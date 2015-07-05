@@ -62,7 +62,7 @@ course of the _Coursera/JHSPH Data Science Specialization_.
 The source files are posted on [GitHub](https://github.com/pedrosan/DataScienceExamples/tree/master/Human_Activity_2)
 
 
-## INTRODUCTION
+# INTRODUCTION
 
 The rapid diffusion of sensors able to record physical parameters associated with motion (_e.g._ accelerometers),
 in dedicated devices and more importantly in general consumer electronics available/used by a broader population
@@ -79,7 +79,7 @@ at the PUC of Rio de Janeiro.
 
 <a name="SUMMARY"></a>
 
-## SUMMARY OF RESULTS
+# SUMMARY OF RESULTS
 
 We tested three types of ML algorithms, all _tree-based_ methods: _CART_ trees, _boosted_ trees, and _random forest_.
 
@@ -112,10 +112,34 @@ between categories of exercise quality, that can be related to the slight differ
 of the body and weight dumbbell, and that are apparently very well picked out by the algorithm.
 
 
-<hr class="thin_separator">
-<a name="THE_DATA_SET"></a>
+## Outline
 
-## THE DATA SET
+* [THE DATA SET](#THE_DATA_SET")
+    * [The Sensor Data](#sensor_data)
+* [DATA PREPARATION](#DATA_PREPARATION")
+    * [Cleaning/Tidying](#cleaning)
+        * Non-sensor variables
+        * Individual measurements _vs_ _summaries_ : the `new_window` variable
+* [EXPLORATORY ANALYSIS](#EXPLORATORY_ANALYSIS)
+    * Features plotted vs. sequence index, and color coded by `user_name` and `classe`
+    * Feature vs. Feature plots with separate panels by `classe`
+    * [About Feature Selection](#feature_selection)
+        * Zero/low Variance Predictors
+        * _Collinearity_ Between Predictors
+* [DATA SPLITTING: "NEW" _TRAINING_ AND _TESTING_ SUBSETS](#DATA_SPLITTING")
+    * Feature selection on _training_ / _testing_ subsets
+* [MODELING](#MODELING")
+    * [General Summary](#model-summary)
+    * [_Random Forest_ case 1 : 4-fold _CV_](#model-rf1)
+    * [_Random Forest_ case 2 : bootstrap, 25 reps](#model-rf1)
+    * [_Random Forest_ case 3 : LGOCV, 25 repeats, 75%/25% splits](#model-rf1)
+* [APPENDIX](#APPENDIX")
+
+
+<hr class="thin_separator">
+<a name="THE_DATA"></a>
+
+# THE DATA
 
 The data for the project were made available from the Coursera ML course webpage.
 Two separate sets were posted:
@@ -123,9 +147,26 @@ Two separate sets were posted:
 * [a _training_ dataset](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv).  This set comprises a little over 16,000 entries for 160 variables.
 * [a _testing_ dataset](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv), to be used as a final project benchmark, comprising 20 "anonymized" entries.
 
+
+Data files were downloaded and read-in from local copies:
+
+```{r load_training_dataset}
+full <- read.csv("./data/pml-training.csv.gz", na.strings=c("#DIV/0!","","NA"), stringsAsFactors=FALSE)
+full <- add_new_variables(full)
+alt.full <- tidy_df(full)
+```
+
+```{r load_TEST_dataset}
+TEST <- read.csv("./data/pml-testing.csv.gz", na.strings=c("#DIV/0!","","NA"), stringsAsFactors=FALSE)
+alt.TEST <- tidy_df(TEST)
+```
+
+
+<a name="structure"></a>
+
 ### Structure
 
-The dataset comprises 160 variables:
+The dataset comprises __`r ncol(full)` variables__:
 
 * 152 actual _predictors_, _i.e._ the sensor data.
 * 1 is the quality _class_ of the exercise (`classe`, taking values _A_, _B_, _C_, _D_, _E_).
@@ -134,10 +175,13 @@ The dataset comprises 160 variables:
 	* 3 time stamp related variables: `raw_timestamp_part_1`, `raw_timestamp_part_2`, `cvtd_timestamp`.
 	* 2 _exercise window_ markers/counters: `new_window`, `num_window`.
 
-### The sensor data
 
-As described in the paper by Velloso et al. [REF], four _inertial measurement units_ (IMU) where setup, placed  
-on _belt_, _arm_, _forearm_, _dumbbell_.
+<a name="sensor_data"></a>
+
+## The Sensor Data
+
+As described in the paper by [Velloso et al.](http://groupware.les.inf.puc-rio.br/work.jsf?p1=11201), 
+four _inertial measurement units_ (IMU) where setup, placed  on _belt_, _arm_, _forearm_, _dumbbell_.
 Each sensor measured 3-axes acceleration, gyroscope and magnetometer data at high cadence (45 Hz).
 These data were processed to yield 13 timed variables for each sensor: 
 
@@ -170,24 +214,13 @@ which has value `no` for entries corresponding to timed data, and `yes` for thei
 <hr class="thin_separator">
 <a name="DATA_PREPARATION"></a>
 
-## DATA PREPARATION
+# DATA PREPARATION
 
-### Loading
+<a name="cleaning"></a>
 
-```{r load_training_dataset}
-full <- read.csv("./data/pml-training.csv.gz", na.strings=c("#DIV/0!","","NA"), stringsAsFactors=FALSE)
-full <- add_new_variables(full)
-alt.full <- tidy_df(full)
-```
+## Cleaning/Tidying
 
-```{r load_TEST_dataset}
-TEST <- read.csv("./data/pml-testing.csv.gz", na.strings=c("#DIV/0!","","NA"), stringsAsFactors=FALSE)
-alt.TEST <- tidy_df(TEST)
-```
-
-### Cleaning/Tidying
-
-#### Non-sensor variables
+### Non-sensor variables
 
 Some variables should be discarded because associated with very specific aspects of the 
 experiment that should be irrelevant from the point of view of its goal, such as _window_ flags 
@@ -201,7 +234,7 @@ in a completely spurious and meaningless way, because for instance the algorithm
 
 
 
-#### Individual measurements _vs_ _summaries_ : the `new_window` variable
+### Individual measurements _vs_ _summaries_ : the `new_window` variable
 
 To the best of my understanding, the dataset combines two different kinds of _observations_:
 
@@ -223,7 +256,6 @@ alt.user <- alt.full$user_name
 We also filtered out variables with `NA`, which basically means filtering against the _summary_ variables.
 
 ```{r data_stats}
-# columns without ANY NA
 alt.tt <- colSums(is.na(alt.full.good)) == 0
 
 alt.full.select <- alt.full.good[, alt.tt]
@@ -234,9 +266,13 @@ alt.TEST.select <- alt.TEST.good[, alt.tt]
 # rm(alt.tt, alt.full.noNA, alt.TEST.noNA)
 ```
 
-### Some exploratory plots
 
-#### Features plotted vs. sequence index, and color coded by `user_name` and `classe`
+<hr class="thin_separator">
+<a name="EXPLORATORY_ANALYSIS"></a>
+
+# EXPLORATORY ANALYSIS
+
+## Features plotted vs. sequence index, and color coded by `user_name` and `classe`
 
 These kind of plots shows that some of the features seem to correlated very strongly with the
 _user_, even more than with their `classe`, somewhat oddly.
@@ -281,7 +317,7 @@ p2 <- p2 + ylab(colnames(df)[ii])
 grid.arrange(p1, p2, nrow=2)
 ```
 
-#### Feature vs. Feature plots with separate panels by `classe`
+## Feature vs. Feature Plots with Separate Panels by `classe`
 
 This second set of example plots shows that there are indeed some reasonably recognizable patterns allowing to
 distinguish between different `classe` categories.
@@ -304,12 +340,11 @@ p + facet_grid(classe ~ .)
 ```
 
 
-<hr class="thin_separator">
-<a name="FEATURE_SELECTION"></a>
+<a name="feature_selection"></a>
 
-## ABOUT FEATURE SELECTION
+## About Feature Selection
 
-### Zero/low variance predictors
+### Zero/low Variance Predictors
 
 We checked the dataset for _un-informative_ predictors, namely variables taking (nearly) unique values or having 
 very little variance in their values.    
@@ -341,7 +376,7 @@ The actual predictors filtering was done applying this method just on the _train
 <hr class="thin_separator">
 <a name="DATA_SPLITTING"></a>
 
-## DATA SPLITTING: "NEW" _TRAINING_ AND _TESTING_ SUBSETS
+# DATA SPLITTING: "NEW" _TRAINING_ AND _TESTING_ SUBSETS
 
 For validation purposes we split the full dataset in two subsets:
 
@@ -398,11 +433,14 @@ alt.testing.cut75 <- alt.testing[, -(i.fC.75.alt+1)]
 ```
 
 
-
 <hr class="thin_separator">
 <a name="MODELING"></a>
 
-## MODELING
+# MODELING
+
+<a name="model-summary"></a>
+
+## General Summary
 
 We tested three types of ML algorithms, all within the framework provided by `caret`, and all
 generally speaking _tree-based_ models.
@@ -445,7 +483,10 @@ mod.rf1d <- readRDS("./data/mod.rf1d.RDS")
 load("./data/SAVE.old_format_data_files.RData")
 ```
 
-### _Random Forest_ case 1 : 4-fold _CV_
+<hr class="thin_separator">
+<a name="model-rf1"></a>
+
+## _Random Forest_ case 1 : 4-fold _CV_
 
 With `mtry = 2, 6, 10, 18, 26, 34`.
 
@@ -465,7 +506,7 @@ mod.alt.rf1c <- train(x = alt.training.cut75[, -1],
                       proximity = TRUE)
 ```
 
-#### Fit Summary
+### Fit Summary
 
 ```{r rf1c_post-summary}
 mod.alt.rf1c
@@ -475,7 +516,7 @@ mod.alt.rf1c$finalModel
 mod.alt.rf1c$results
 ```
 
-#### Predictions on _testing_ subset
+### Predictions on _testing_ subset
 
 ```{r rf1c_post-predictions-out_of_sample}
 pred.rf1c.test75 <- predict(mod.alt.rf1c, alt.testing.cut75, type="raw")
@@ -483,7 +524,7 @@ pred.rf1c.test75 <- predict(mod.alt.rf1c, alt.testing.cut75, type="raw")
 confusionMatrix(alt.testing.cut75$classe, pred.rf1c.test75)
 ```
 
-#### Predictions on _TEST_ subset (the 20 benchmark values for the Project)
+### Predictions on _TEST_ subset (the 20 benchmark values for the Project)
 
 ```{r rf1c_post-predictions-TEST_data}
 pred.rf1c.TEST <- predict(mod.alt.rf1c, alt.TEST.select, type="raw")
@@ -492,7 +533,7 @@ pred.rf1c.TEST <- predict(mod.alt.rf1c, alt.TEST.select, type="raw")
 pred.rf1c.TEST == answers
 ```
 
-#### Variable Importance 
+### Variable Importance 
 
 ```{r rf1c_post-var_imp}
 varImp(mod.alt.rf1c, useModel=TRUE, scale=FALSE)
@@ -504,7 +545,9 @@ dotPlot(varImp(mod.alt.rf1c, useModel=TRUE, scale=FALSE), top=ncol(mod.alt.rf1c$
 ```
 
 
-### _Random Forest_ case 2 : bootstrap, 25 reps
+<a name="model-rf2"></a>
+
+## _Random Forest_ case 2 : bootstrap, 25 reps
 
 With `mtry = 2, 6, 10, 18, 26, 34`
 
@@ -518,7 +561,7 @@ mod.rf1b <- train(x = training.cut75[, -1],
                       tuneGrid = data.frame(mtry = mtry.values))
 ```
 
-#### Fit Summary
+### Fit Summary
 
 ```{r rf1b_post-summary}
 mod.rf1b
@@ -528,7 +571,7 @@ mod.rf1b$finalModel
 mod.rf1b$results
 ```
 
-#### Predictions on _testing_ subset
+### Predictions on _testing_ subset
 
 ```{r rf1b_post-predictions-out_of_sample}
 pred.rf1b.test75 <- predict(mod.rf1b, testing.cut75, type="raw")
@@ -536,7 +579,7 @@ pred.rf1b.test75 <- predict(mod.rf1b, testing.cut75, type="raw")
 confusionMatrix(testing.cut75$classe, pred.rf1b.test75)
 ```
 
-#### Predictions on _TEST_ subset (the 20 benchmark values for the Project)
+### Predictions on _TEST_ subset (the 20 benchmark values for the Project)
 
 ```{r rf1b_post-predictions-TEST_data}
 pred.rf1b.TEST <- predict(mod.rf1b, TEST.select, type="raw")
@@ -545,7 +588,7 @@ pred.rf1b.TEST <- predict(mod.rf1b, TEST.select, type="raw")
 pred.rf1b.TEST == answers
 ```
 
-#### Variable Importance 
+### Variable Importance 
 
 ```{r rf1b_post-var_imp}
 varImp(mod.rf1b, useModel=TRUE, scale=FALSE)
@@ -557,7 +600,9 @@ dotPlot(varImp(mod.rf1b, useModel=TRUE, scale=FALSE), top=ncol(mod.rf1b$training
 ```
 
 
-### _Random Forest_ case 3 : LGOCV, 25 repeats, 75%/25% splits
+<a name="model-rf3"></a>
+
+## _Random Forest_ case 3 : LGOCV, 25 repeats, 75%/25% splits
 
 With `mtry = 2, 4, 6, 8, 10`.
 
@@ -577,7 +622,7 @@ mod.alt.rf1e <- train(x = alt.training.cut75[, -1],
                   proximity = TRUE)
 ```
 
-#### Fit Summary
+### Fit Summary
 
 ```{r rf1e_post-summary}
 mod.alt.rf1e
@@ -587,7 +632,7 @@ mod.alt.rf1e$finalModel
 mod.alt.rf1e$results
 ```
 
-#### Predictions on _testing_ subset
+### Predictions on _testing_ subset
 
 ```{r rf1e_post-predictions-out_of_sample}
 pred.rf1e.test75 <- predict(mod.alt.rf1e, alt.testing.cut75, type="raw")
@@ -595,7 +640,7 @@ pred.rf1e.test75 <- predict(mod.alt.rf1e, alt.testing.cut75, type="raw")
 confusionMatrix(alt.testing.cut75$classe, pred.rf1e.test75)
 ```
 
-#### Predictions on _TEST_ subset (the 20 benchmark values for the Project)
+### Predictions on _TEST_ subset (the 20 benchmark values for the Project)
 
 ```{r rf1e_post-predictions-TEST_data}
 pred.rf1e.TEST <- predict(mod.alt.rf1e, alt.TEST.select, type="raw")
@@ -604,7 +649,7 @@ pred.rf1e.TEST <- predict(mod.alt.rf1e, alt.TEST.select, type="raw")
 pred.rf1e.TEST == answers
 ```
 
-#### Variable Importance 
+### Variable Importance 
 
 ```{r rf1e_post-plots, fig.width=7, fig.height=7}
 # plot(varImp(mod.alt.rf1e, useModel=TRUE, scale=FALSE), top=ncol(mod.alt.rf1e$trainingData)-1)
