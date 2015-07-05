@@ -29,3 +29,17 @@ A __report__ is available for some of them, hosted under pedrosan.github.io usin
   * [REPORT](http://pedrosan.github.io/DataScienceExamples/Impact_of_Major_Storm_Events/)
   * [repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Impact_of_Major_Storm_Events)
 
+
+### Note on the Reports' _Reproducible_ Format
+
+The reports are generated from _Rmarkdown_ documents that include all code to perform
+data processing, modeling, plotting, etc. (except for functions defined in external scripts, 
+included in the repositories).
+
+* For readability not all chunks of code are _echoed_ explicitly in the compiled documents.
+* In some cases the _full straight reproducibility_ is limited by the fact that in the interest of simplicity
+and for computational convenience some parts of the processing have been flagged as _inactive_ 
+(`eval = FALSE`), and in some data are instead loaded from previously saved work (_e.g._ the model fitting). 
+The document however include the code to perform the entire analysis.
+
+
