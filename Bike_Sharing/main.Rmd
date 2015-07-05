@@ -18,7 +18,6 @@ output  :
 require(knitr)
 options(width = 100, 
         scipen = 5)
-# options(width = 100, digits = 7)
 opts_chunk$set(message = FALSE, 
                error = FALSE, 
                warning = FALSE, 
@@ -30,9 +29,6 @@ opts_chunk$set(message = FALSE,
                fig.align = 'center', 
                dpi = 100, 
                fig.path = 'figures/')
-# opts_chunk$set(dev="png", 
-#                dev.args=list(type="cairo"),
-#                dpi=96)
 ```
 
 ## PREAMBLE
@@ -50,7 +46,7 @@ library("ggplot2")
 library("gridExtra")
 ```
 
-## LOADING AND PREPROCESSING THE DATA
+# LOADING AND PREPROCESSING THE DATA
 
 The dataset is read-in into a data frame `data` and a few basic operations
 are perfomed: 
@@ -111,6 +107,8 @@ sum(! (stations2 %in% stations1) )  # all true
  
 <hr class="thin_separator">
 <a name="question_A"></a>
+
+# Questions
 
 ## [A] Average trip duration (in seconds)
 
