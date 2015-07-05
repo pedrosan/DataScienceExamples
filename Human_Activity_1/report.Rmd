@@ -30,8 +30,7 @@ opts_chunk$set(message = FALSE,
                dpi = 100, 
                fig.path = 'figures/',
                dev="png", 
-               dev.args=list(type="cairo"),
-               dpi=96)
+               dev.args=list(type="cairo"))
 ```
 
 ## PREAMBLE
@@ -41,8 +40,7 @@ course of the _Coursera/JHSPH Data Science Specialization_.
 
 The source files are posted on [GitHub](https://github.com/pedrosan/DataScienceExamples/Human_Activity_1/).   
 
-
-## PRELIMINARIES
+### PRELIMINARIES
 
 Libraries needed for data processing and plotting:
 
@@ -56,7 +54,7 @@ library("xtable")
 <hr class="thin_separator">
 <a name="INTRODUCTION"></a>
 
-## INTRODUCTION
+# INTRODUCTION
 
 It is now possible to collect a large amount of data about personal movement using activity monitoring devices such as a
 [Fitbit](http://www.fitbit.com), [Nike Fuelband](http://www.nike.com/us/en_us/c/nikeplus-fuelband), or
@@ -73,11 +71,31 @@ This device collects data at 5 minute intervals through out the day.
 The data consists of two months of data from an anonymous individual collected during the months
 of October and November, 2012 and include the number of steps taken in 5 minute intervals each day.
 
+## Outline
+
+* [DATA LOADING AND PREPROCESSING](#THE_DATA)
+    * [New Variables](#DATA-new_variables)
+    * [Checks on `NA` and valid `steps` entries](#DATA-checks)
+* [QUESTIONS](#QUESTIONS)
+    * [MEAN TOTAL NUMBER OF STEPS TAKEN PER DAY](#MEAN_STEPS_PER_DAY)
+    * [THE AVERAGE DAILY ACTIVITY PATTERN](#AVERAGE_DAILY_PATTERN)
+        * Time-series plot of average activity
+        * Maximum average number of steps 
+    * [IMPUTING MISSING VALUES](#IMPUTING)
+        * Some thoughts about missing data
+        * What do the `NA` in this dataset _look like_?
+        * An _imputing_ strategy
+        * Average activity pattern by day of the week
+    * [DIFFERENCES IN ACTIVITY PATTERNS BETWEEN WEEKDAYS AND WEEKENDS](#DIFFERENCES)
+        * Average activity by day type (weekday vs. weekend)
+* [APPENDIX](#APPENDIX)
+    * [R Session Info](#SessionInfo)
+
 
 <hr class="thin_separator">
 <a name="THE_DATA"></a>
 
-## LOADING AND PREPROCESSING THE DATA
+# LOADING AND PREPROCESSING THE DATA
 
 The data were downloaded from the course web site:
 
@@ -93,6 +111,8 @@ The dataset comprises __`r nrow(main)`__ observations of the following variables
 * __date__: The date on which the measurement was taken in YYYY-MM-DD format
 * __interval__: Identifier for the 5-minute interval in which measurement was taken
 
+
+<a name="DATA-new_variables"></a>
 
 ### New Variables
 
@@ -121,6 +141,8 @@ The resulting data frame has the following structure:
 ```{r}
 str(main)
 ```
+
+<a name="DATA-checks"></a>
 
 ### Checks on `NA` and valid `steps` entries
 
@@ -178,10 +200,15 @@ ggplot(byChunk, aes(x=Ndata)) + theme_bw() + theme(legend.position="none") +
 ```
 
 
+<hr class="separator">
+<a name="QUESTIONS"></a>
+
+# QUESTIONS
+
 <hr class="thin_separator">
 <a name="MEAN_STEPS_PER_DAY"></a>
 
-## WHAT IS MEAN TOTAL NUMBER OF STEPS TAKEN PER DAY?
+## MEAN TOTAL NUMBER OF STEPS TAKEN PER DAY
 
 ```{r echo=FALSE, results='hide'}
 median <- sprintf("%d",summary(daily.stats$nSteps)["Median"])
@@ -208,7 +235,7 @@ hist(daily.stats$nSteps, breaks=seq(0,30000,by=2500), col="orange",
 <hr class="thin_separator">
 <a name="AVRG_DAILY_PATTERN"></a>
 
-## WHAT IS THE AVERAGE DAILY ACTIVITY PATTERN?
+## THE AVERAGE DAILY ACTIVITY PATTERN
 
 For convenience in further processing and to work with `ggplot` we reshape the data frame 
 to long format by melting it.   
@@ -274,7 +301,7 @@ ts.ByHour[which.max(x=ts.ByHour$Avrg),c("hour","Avrg")]
 
 ## IMPUTING MISSING VALUES
 
-#### Some thoughts about missing data
+### Some thoughts about missing data
 
 Two important points to address when deciding how to handle missing data are to understand why 
 they are missing, what is the goal of the analysis, and what would be the impact of the missing data
@@ -301,7 +328,7 @@ One of the few exceptions to this "rule" is the application of time-series analy
 do not work with gapped data.
 
 
-#### What do the `NA` in this dataset _look like_?
+### What do the `NA` in this dataset _look like_?
 
 First questions are how many there are and how they are distributed.
 ```{r}
@@ -343,7 +370,7 @@ axis( 1, at=1:7, labels=c("m","tu","w","th","f","s","su"), las= 1, padj=-1, tcl=
 axis( 2, at=1:9, labels=paste("wk",9:1,sep=" "), las=1, tcl=0, hadj=0.7 )
 ```
 
-#### An _imputing_ strategy
+### An _imputing_ strategy
 
 Because the missing data
 * are concentrated in a few days, 
@@ -368,7 +395,7 @@ week (at most 9).
 Because it would seem _lazy_ to adopt the first approach, let's take a slightly closer look at the 
 properties of the _activity_ to formulate a plausible plan to implement the second strategy.
 
-##### Average activity pattern by day of the week
+### Average activity pattern by day of the week
 
 The first thing we can do is to look at the _activity_ data split up by day of the week, 
 making time-series plot averaged by day. 
@@ -491,7 +518,7 @@ quantiles shifted slightly towards the mean.
 <hr class="thin_separator">
 <a name="DIFFERENCES"></a>
 
-## ARE THERE DIFFERENCES IN ACTIVITY PATTERNS BETWEEN WEEKDAYS AND WEEKENDS?
+## DIFFERENCES IN ACTIVITY PATTERNS BETWEEN WEEKDAYS AND WEEKENDS
 
 ### Average activity by day type (weekday vs. weekend)
 
@@ -522,6 +549,9 @@ gm.ByFlag.ByHour + theme_bw() + theme(legend.position="none") +
 <a name="APPENDIX"></a>
 
 # APPENDIX
+
+<a name="SessionInfo"></a>
+
 ## R Session Info
 
 ```{r R_session_info}

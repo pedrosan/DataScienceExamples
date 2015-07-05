@@ -21,9 +21,9 @@ h2 { font-size:1.8em; color: #2C2072; margin-top: 28px !important; }
 h3 { font-size:1.4em; color: #AF0810; margin-top: 20px !important; }
 h4 { font-size:1.2em; color: #1C6C17; margin-top: 18px !important; }
 
-h1.title    { font-size: 2.8em; font-weight: bold; color: #990000; margin-bottom: 4px !important; } 
+h1.title    { font-size: 2.4em; font-weight: bold; color: #990000; margin-bottom: 4px !important; } 
 h1.subtitle { font-size: 1.6em; color: #882222; margin-top: 4px !important} 
-h4.author   { font-size: 1.2em; font-style: oblique; color: #333333; margin-top: 8px !important} 
+h4.author   { font-size: 1.2em; font-style: oblique; color: #333333; margin-top: 4px !important} 
 
 hr { 
     /* width: 80%;  */
