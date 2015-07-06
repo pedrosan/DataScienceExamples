@@ -6,7 +6,7 @@ job      : null
 output   : 
   html_document:
     self_contained: false
-    css: css/gf_small_touches.css
+    css: css/gf_new.css
     theme: cerulean
     highlight: tango
     keep_md: no
@@ -30,16 +30,18 @@ opts_chunk$set(message = FALSE,
                dpi = 100, 
                fig.path = 'figures/',
                dev="png", 
-               dev.args=list(type="cairo"),
-               dpi=96)
+               dev.args=list(type="cairo"))
 ```
 
 ```{r loadLibs, echo = FALSE, cache = FALSE}
 library("plyr")
+library("dplyr")
+# library("magrittr")
 library("reshape2")
 library("ggplot2")
 library("grid")
 ```
+
 
 ## PREAMBLE
 
@@ -49,7 +51,7 @@ course of the _Coursera/JHSPH Data Science Specialization_.
 The source files are posted on [GitHub](https://github.com/pedrosan/DataScienceExamples/tree/master/Impact_of_Major_Storm_Events).    
 
 
-## Synopsis
+# Synopsis
 
 This project involves exploring the U.S. National Oceanic and Atmospheric
 Administration’s (NOAA) storm database. 
@@ -68,13 +70,13 @@ _fatalities_, _injuries_, _property damage_, _crop damage_.
 Looking separately at each harm/damage category separately based on our analysis we can say that 
 the most severe impact comes from the following types of events:
 
-* __agricultural damage__: _hurricanes_ and _drought_, both in terms of total economic cost and fraction
+* __Agricultural Damage__: _hurricanes_ and _drought_, both in terms of total economic cost and fraction
 of events that cause significant damage.  
 It is worth noting that in addition to events directly classified as _hurricane_, among the
 most impactful event types there are others that are/can be related to _hurricanes_ themselves or 
 other kind of tropical storm activity (e.g. _tropical storms_, _storm surge_).
 
-* __property damage__: in absolute terms _hurricanes_ and _floods_ dominate the economic impact (and here again
+* __Property Damage__: in absolute terms _hurricanes_ and _floods_ dominate the economic impact (and here again
 one may want to look at a broader "tropical event" category).
 When we consider the likelihood that a storm causes "recordable" damages, _wind_ and _snow_ emerge
 at the top.  While their cumulative cost may not be as substantial as that of major events like hurricanes, 
@@ -82,7 +84,7 @@ the damage caused by _wind_ and _snow_ can have a serious impact on the life and
 of a wider range of families and communities across the country and it warrants attention and 
 adequate preparation.
 
-* __human fatalities/injuries__: _tornadoes_, _floods_ (including _flash floods_) and _excessive heat_
+* __Human Fatalities/Injuries__: _tornadoes_, _floods_ (including _flash floods_) and _excessive heat_
 emerge as the most serious threats to human health in absolute terms.
 It is interesting however, to note that in terms of fraction of events with fatalities/injuries,
 _rip currents_ and _avalanches_ take the top spots (with "likelihood" >= 50% of fatalities and about 25% of injuries 
@@ -100,10 +102,34 @@ further investigation, such as
 * Variation over time, perhaps reflecting changes in behavior, preparation and policies.
 
 
-<hr class="thin_separator">
-<a name="DATA_PROCESSING"></a>
+## Outline
 
-## Data Processing
+* [THE DATA](#THE_DATA")
+    * The Data and the Aim of Our Analysis
+    * Loading the Dataset
+* [DATA PROCESSING](#DATA_PROCESSING")
+    * [Cleaning](#cleaning)
+        * _REMARKS_ and _EVTYPE_: tidying up spaces and letters' case
+        * Setting "missing" coordinates to `NA`
+        * Fixing times
+    * [Subsetting full data-frame to _good_ data-frame](#full_to_good_df)
+    * [The _EVTYPE_ problem!](#EVTYPE_problem)
+        * `EVTYPE` _Regularization_
+    * [The _PROPDMGEXP_ and _CROPDMGEXP_ problem](#PROPDMGEXP_CROPDMGEXP_problems)
+    * [The choice of limiting the analysis to recent years (>=1996)](#period_limit)
+* [RESULTS](#RESULTS)
+    * [Population Health: Injuries and Fatalities](#population_health)
+    * [Economic Impact: Property, Agricultural and Total Damages](#a name="economic_impact)
+* [APPENDIX](#APPENDIX")
+    * [The _"anomalous"_ 2005 Napa Valley Flood](#napa_flood_anomaly)
+    * [_EVTYPE_ regularization](#EVTYPE_regularization)
+    * [R Session Info](#SessionInfo)
+
+
+<hr class="thin_separator">
+<a name="THE_DATA"></a>
+
+# THE DATA
 
 The data structure and definition documentation is at the following URLs of the 
 NOAA National Climatic Data Center (NCDC): 
@@ -115,7 +141,7 @@ NOAA National Climatic Data Center (NCDC):
 The raw data comprise 37 variables with 902,297 observation from years 1950-2011.
 
 
-### The data and the aim of our analysis
+## The Data and the Aim of Our Analysis
 
 The objective of this research is to address two main questions:
 
@@ -131,10 +157,10 @@ The main variables in the NOAA/NCDC Storm Event databases that we will consider 
 
 * For human and economic damages associated with each storm event: 
 
-    + __FATALITIES__: number of fatalities.
-    + __INJURIES__: number of injuries.
-    + __PROPDMG__: property damage assessment.
-    + __CROPDMG__: agricultural damage assessment.
+    * __FATALITIES__: number of fatalities.
+    * __INJURIES__: number of injuries.
+    * __PROPDMG__: property damage assessment.
+    * __CROPDMG__: agricultural damage assessment.
     
 The values reported for these two latter have to be converted in actual US dollar amounts by 
 multiplying them by a scaling factor coded in two other variables (`PROPDMGEXP`, `CROPDMGEXP`) as 
@@ -142,44 +168,45 @@ the power of 10 of the multiplier. These two auxiliary variables seem to suffer 
 data-entry issues, which we will address below. 
 
 
-### Loading the dataset
+## Loading the Dataset
 
 The data set comes as a compressed _csv_ file, which can be read directly with `read.csv()`.
 After reviewing the data we set our preferred values for the classes of the variables loaded 
 in the data-frame and we set them on loading via the `colClasses` option, using a character
 vector read from an auxiliary file.
 
-NOTE: given the substantial size of the data set we set the options `cache=TRUE` to reduce the 
+NOTE: given the substantial size of the data set we set the options `cache = TRUE` to reduce the 
 `knitr` processing time to a manageable length.
 
-```{r set-classes}
-# col.cl <- read.csv("data/readin_classes.csv", stringsAsFactors=FALSE, strip.white=TRUE)
-# col.cl$newclass2
-```
-
-```{r load-data, cache=TRUE}
+```{r data-set_classes}
 col.cl <- read.csv("data/readin_classes.csv", stringsAsFactors=FALSE, strip.white=TRUE)
 col.cl$newclass2
+```
 
-system.time( data <- read.csv("data/StormData.csv.bz2", colClasses= col.cl$newclass2, nrows=1300000, strip.white=TRUE) )
-# data2 <- readRDS("data/df_good_saved.rds")
+```{r data-load, cache = TRUE}
+data <- read.csv("data/StormData.csv.bz2", colClasses= col.cl$newclass2, nrows=1300000, strip.white=TRUE) 
 ```
 
 This is the structure of the data-frame as loaded.
-```{r}
+```{r data-structure}
 str(data)
 ```
 
 
-### Cleaning, reformatting, and new variables
+<hr class="thin_separator">
+<a name="DATA_PROCESSING"></a>
+
+# DATA PROCESSING 
 
 Due to the nature of the development of this dataset several variables suffer from inconsistent
 formatting and in order to make our analysis as robust as possible we cleaned and reformatted
 some of the potentially useful variables, as well as created ones for further convenience.
 
-#### _REMARKS_ and _EVTYPE_: tidying up spaces and letters' case
+## Cleaning
 
-```{r clean-1, cache=TRUE}
+### _REMARKS_ and _EVTYPE_: tidying up spaces and letters' case
+
+```{r clean-1, cache = TRUE}
 data$REMARKS <- gsub("^ *", "", data$REMARKS, perl=TRUE)
 data$REMARKS <- gsub(" *$", "", data$REMARKS, perl=TRUE)
 data$REMARKS <- gsub("[ ]{2,}", " ", data$REMARKS, perl=TRUE)
@@ -194,38 +221,39 @@ data$PROPDMGEXP <- toupper(data$PROPDMGEXP)
 data$CROPDMGEXP <- toupper(data$CROPDMGEXP)
 ```
 
-#### Setting "missing" coordinates to _NA_
+### Setting "missing" coordinates to _NA_
 
-```{r clean-coords, cache = FALSE}
+```{r clean-coords, cache = TRUE}
 data$LATITUDE[data$LATITUDE <= 0]  <- NA
 data$LONGITUDE[data$LONGITUDE <= 0]  <- NA
 ```
 
-#### Times
+### Fixing times
 
 First a small fix motivated by the discovery of `O` instead of a `0` in the `BGN_TIME` variable:
 
-```{r clean-time, cache=TRUE}
+```{r clean-time, cache = TRUE}
 data$BGN_TIME <- gsub("([0-9])O(.*)([^M])$","\\10\\2\\3", data$BGN_TIME, perl=TRUE)
 ```
 
 It is better to work with properly constructed time variables, hence we convert `BGN_DATE` and 
 `END_DATE` into `POSIXlt` class variables. 
 
-```{r transform-dates, cache = FALSE}
+```{r transform-dates, cache = TRUE}
 # making BGN and END dates dates
 data$BGN_DATE.new <- strptime(as.character(data$BGN_DATE), "%m/%d/%Y %H:%M:%S")
 data$END_DATE.new <- strptime(as.character(data$END_DATE), "%m/%d/%Y %H:%M:%S")
 ```
 
-Finally, we define a _factor_ variable `YEAR`.
-```{r define-year-factor, cache = FALSE}
-# create a 4-digit year factor variable
-# data$YEAR <- as.factor(substr(as.character(data$BGN_DATE.new),0,4))
+Finally, we define a new variable `YEAR`.
+```{r define-year, cache = TRUE}
+# create a 4-digit year variable
 data$YEAR <- substr(as.character(data$BGN_DATE.new),0,4)
 ```
 
-### Subsetting full data-frame to _good_ data-frame
+<a name="full_to_good_df"></a>
+
+## Subsetting full data-frame to _good_ data-frame
 
 For ease of processing it is practical to work with a reduced set of variables.  
 Our choice was the following:
@@ -235,9 +263,9 @@ colnames(data)[sel.columns.n]
 ```
 
 After creating the new data-frame, we rename the newly created time variables to take
-the original names, and sort the data-frame by `BGN_DATE`.
+the original names, and sort the data-frame chronologically by `BGN_DATE`.
 
-```{r create-good-df, cache = FALSE}
+```{r create-good-df, cache = TRUE}
 good <- data[, sel.columns.n]
 
 colnames(good)[5] <- "BGN_DATE"
@@ -247,12 +275,10 @@ colnames(good)[6] <- "END_DATE"
 good <- good[order(good$BGN_DATE), ]
 ```
 
-```{r}
-str(good)
-```
 
+<a name="EVTYPE_problem"></a>
 
-#### The _EVTYPE_ problem!
+## The _EVTYPE_ problem!
 
 We perform some more cleaning steps on this leaner data-frame to _regularize_ the `EVTYPE` variable.   
 Because of historical reasons, namely the heterogenous sources of the data compiled into the Storm 
@@ -264,7 +290,7 @@ While in theory since 1996 NOAA has codified a set of 48 type of events
 classification of storm events, a quick review of the different `EVTYPE` values 
 for each year shows that their number remained higher until much more recently.
 
-```{r census-of-evtype, cache=TRUE}
+```{r census-of-evtype, cache = TRUE}
 EVTYPE.by.year <- tapply(good$EVTYPE, good$YEAR, function(x) table(x), simplify=TRUE)
 sapply(EVTYPE.by.year, function(x) length(names(x)))
 ```
@@ -276,16 +302,19 @@ It is less clear why after the Directive of 1996 the data have not become
 
 A quick census of the most frequent `EVTYPE` can be extracted with `table()`
 
-```{r evtype-census, cache=TRUE}
+```{r evtype-census, cache = TRUE}
 evt.census <- as.data.frame(table(data$EVTYPE))
 head(evt.census[order(evt.census$Freq, decreasing=TRUE),],10)
 
 nrow(evt.census)
 ```
-The full database comprises `r nrow(evt.census)` unique `EVTYPE` values!   
+The full database comprises __`r nrow(evt.census)` unique `EVTYPE` values__!   
 It is immediately obvious the problem with inconsistent naming, as in the top-10 there
 are three entries for the same storm event type, _Thunderstorm Wind_: `TSTM WIND`, 
 `THUNDERSTORM WIND`, `THUNDERSTORM WINDS` .
+
+
+### `EVTYPE` _Regularization_
 
 After an extensive analysis of the `EVTYPE`, we put together a lengthy set of substitutions
 via `gsub()` and `grepl()` to consolidate as many related types as possible.
@@ -295,7 +324,7 @@ The script creates a new character vector added to the `good` data-frame as `EVT
 
 * show percentage "recovered", number of `EVTYPE` per year, etc... 
 
-```{r evtype-regularization}
+```{r evtype-regularization, cache = TRUE}
 # Calling 'grepl.R' script to clean the EVTYPE entries
 source("./scripts/evtype_regularization.R")
 
@@ -303,13 +332,12 @@ source("./scripts/evtype_regularization.R")
 good$EVTYPE <- TESTvec
 ```
 
-```{r}
-str(good)
+After _regularization_ the number of unique `EVTYPE` values is now __`r dim( table(good$EVTYPE) )`__.
 
-dim( table(good$EVTYPE) )
-```
 
-#### The _PROPDMGEXP_ and _CROPDMGEXP_ problem
+<a name="PROPDMGEXP_CROPDMGEXP_problems"></a>
+
+## The _PROPDMGEXP_ and _CROPDMGEXP_ problem
 
 The variables `PROPDMGEXP` and `CROPDMGEXP` are supposed to encode exponents for _power of 10 units_ 
 for multiplying factors for their respective economic damage variables.    
@@ -329,11 +357,13 @@ CROPDMGEXP.by.year[which.max(sapply(CROPDMGEXP.by.year, function(x) length(names
 ```
 
 We corrected their values according to the following interpretation:
-+ The exponents are considered for the base of 10 as the base.
-+ Missing values (NA) or empty strings are considered as $10^0=1$.
-+ `H`, `K`, `M`, `B` are interpreted as: _hecto_ (=2), _kilo_ (=3), _mega_ (=6), _billion_ (=9).
-+ Numeric exponents are interpreted as its corresponding power of 10 as the base.
-+ The rest of effectively undefined exponents are also interpreted to be spurious and set to 0.
+
+* The exponents are considered for the base of 10 as the base.
+* Missing values (NA) or empty strings are considered as $10^0=1$.
+* `H`, `K`, `M`, `B` are interpreted as: _hecto_ (=2), _kilo_ (=3), _mega_ (=6), _billion_ (=9).
+* Numeric exponents are interpreted as its corresponding power of 10 as the base.
+* The rest of effectively undefined exponents are also interpreted to be spurious and set to 0.
+
 After these conversions the `PROPDMGEXP` and `CROPDMGEXP` variable are changed to _numeric_ class.
 
 ```{r reset-exp}
@@ -355,33 +385,37 @@ good$PROPDMGEXP <- as.numeric(good$PROPDMGEXP)
 good$CROPDMGEXP <- as.numeric(good$CROPDMGEXP)
 ```
 
-```{r}
+The `good` data frame structure at this point is the following:
+
+```{r data-good_structure}
 str(good)
 ```
 
 
-<hr class="thin_separator">
-<a name="PERIOD_LIMIT"></a>
 
+<hr class="thin_separator">
+<a name="period_limit"></a>
 
 ## The choice of limiting the analysis to recent years (>=1996)
 
-After reviewing and cleaning the data, we choose to limit our analysis to the data since 1996-01-01.
-There are two main motivations for this choice:
-+ As noted above, before 1996 the NCDC database only tracked three event types _"Tornado"_",
-_"Thunderstorm Wind"_" and _"Hail"_.  While it would certainly be interesting to perform an 
-analysis of the longer time baseline for these three categories, here we are mostly interested
-in assessing the impact of storm events from a broader, more inclusive perspective.
-+ Imposing this cut yields a significantly _cleaner_ data set, for instance with respect to the 
-`DMGEXP` and `EVTYPE` variables (but also the various date/time variables.)
+After reviewing and cleaning the data, we choose to limit our analysis to the data since 1996-01-01. 
 
-```{r subset-recent, cache=TRUE}
+There are two main motivations for this choice:
+
+* As noted above, before 1996 the NCDC database only tracked three event types _"Tornado"_",
+  _"Thunderstorm Wind"_" and _"Hail"_.  While it would certainly be interesting to perform an 
+  analysis of the longer time baseline for these three categories, here we are mostly interested
+  in assessing the impact of storm events from a broader, more inclusive perspective.
+* Imposing this cut yields a significantly _cleaner_ data set, for instance with respect to the 
+  `DMGEXP` and `EVTYPE` variables (but also the various date/time variables.)
+
+```{r subset-recent, cache = TRUE}
 # subsetting 'good' to 'recent' taking only events since 1996
 recent <- subset(good, BGN_DATE > as.POSIXlt("1996-01-01"))
 row.names(recent) <- NULL
 ```
 
-```{r}
+```{r data-recent_structure}
 str(recent)
 ```
 
@@ -391,13 +425,15 @@ Final step of the data processing is the computation of actual straight US Dolla
 for damages combining the `DMG` and `DMGEXP` variables. 
 
 **NOTE**: before we compute them, we make an _ad hoc_ fix to the value of `PROPDMGEXP` for
-one specific entry, a flood in Napa in 2005.  More details about this can be found in the Appendix.
+one specific entry, a flood in Napa in 2005. 
+More details about this can be found in this [section](#napa_flood_anomaly) of the [Appendix](#APPENDIX).
 
-```{r save-napa-data, cache=TRUE, echo=FALSE}
+```{r save-napa-data, cache = TRUE, echo = FALSE}
 tmp.PropDamage <- recent$PROPDMG * 10^recent$PROPDMGEXP
 ```
-```{r compute-damages, cache=TRUE}
-recent$PROPDMGEXP[which.max(recent$PropDamage)] <- 6
+
+```{r compute-damages, cache = TRUE}
+recent$PROPDMGEXP[recent$REFNUM == 605943] <- 6
 recent$PropDamage <- recent$PROPDMG * 10^recent$PROPDMGEXP
 recent$CropDamage <- recent$CROPDMG * 10^recent$CROPDMGEXP
 str(recent)
@@ -407,13 +443,13 @@ str(recent)
 <hr class="thin_separator">
 <a name="RESULTS"></a>
 
-## Results
+# RESULTS
 
 We aim to answer two questions concerning the impact of different type of events across
 the United States:
 
-1. which types of events are most harmful with respect to population health?
-2. which types of events have the greatest economic consequences?
+1. __Which types of events are most harmful with respect to population health?__
+2. __which types of events have the greatest economic consequences?__
 
 
 ### Further data manipulation 
@@ -430,7 +466,7 @@ In each of them, we aggregate data by `EVTYPE` and compute:
 
 We keep only `EVTYPE` with at least 100 occurrences.
 
-```{r create-lean-df}
+```{r create_lean_df-human, cache = TRUE}
 lean <- recent[c(1,2,4,7,8,9,14:16)]
 human <- ddply(lean, .(EVTYPE), summarize, 
                N.tot = length(FATALITIES), 
@@ -445,22 +481,22 @@ human <- ddply(lean, .(EVTYPE), summarize,
                flag =  (sum(FATALITIES) + sum(INJURIES))>0 ) 
 human <- subset(human, N.tot >100)
 
+str(human)
+```
+
+```{r create_lean_df-economic, cache = TRUE}
 economic <- ddply(lean, .(EVTYPE), summarize, 
                   N.tot = length(PropDamage), 
                   N.with.PrDmg = length(PropDamage[PropDamage>0]),
                   pct.with.PrDmg = length(PropDamage[PropDamage>0])/length(PropDamage)*100., 
-                  PrDmg.tot = sum(PropDamage), 
-                  PrDmg.avrg = sum(PropDamage)/length(PropDamage[PropDamage>0]),
+                  PrDmg.tot = sum(PropDamage)/1.0e6, 
+                  PrDmg.avrg = sum(PropDamage)/length(PropDamage[PropDamage>0])/1.0e6,
                   N.with.CrDmg = length(CropDamage[CropDamage>0]),
                   pct.with.CrDmg = length(CropDamage[CropDamage>0])/length(PropDamage)*100., 
-                  CrDmg.tot = sum(CropDamage), 
-                  CrDmg.avrg = sum(CropDamage)/length(CropDamage[CropDamage>0]),
+                  CrDmg.tot = sum(CropDamage)/1.0e6, 
+                  CrDmg.avrg = sum(CropDamage)/length(CropDamage[CropDamage>0])/1.0e6,
                   flag =  (sum(PropDamage) + sum(CropDamage))>0 ) 
 economic <- subset(economic, N.tot >100)
-```
-
-```{r}
-str(human)
 
 str(economic)
 ```
@@ -470,46 +506,58 @@ In the next two sections we review the evidence emerging from the data collected
 organized as described so far.
 
 
-### Population Health: injuries and fatalities
+<a name="population_health"></a>
 
-#### Fatalities 
+## Population Health: Injuries and Fatalities
 
-The first table shows the top ten event types by total cumulative number of fatalities.
+### Fatalities 
 
-```{r table-fatalities-1}
-print(human[order(human$F.tot, decreasing=TRUE),][1:10,c(1,5,2,3,4)], quote=FALSE, row.names=FALSE)
+#### Top ten event types by _total cumulative number of fatalities_.
+
+```{r table-fatalities-1, echo = FALSE}
+fatalities.top10a <- arrange(human, desc(F.tot)) %>% head( . , 10) %>% select( . , c(1,5,2,3,4))
+colnames(fatalities.top10a) <- c("Event_Type", "N_Fata", "N_events", "with_Fata", "with_Fata(%)")
+kable( fatalities.top10a, quote = FALSE, row.names = TRUE, digits = 2 )
 ```
 
-This instead ranks event types by the fraction (%) of events that caused fatalities.
-```{r table-fatalities-2}
-print(human[order(human$pct.with.F, decreasing=TRUE),][1:10,c(1,4,2,3,5)], quote=FALSE, row.names=FALSE)
+#### Top 10 event types by the _fraction (%) of events of that type that caused fatalities_
+
+```{r table-fatalities-2, echo = FALSE}
+fatalities.top10b <- arrange(human, desc(pct.with.F)) %>% head( . , 10) %>% select( . , c(1,4,2,3,5))
+colnames(fatalities.top10b) <- c("Event_Type", "with_Fata(%)", "N_events", "with_Fata", "N_Fata")
+kable( fatalities.top10b, quote = FALSE, row.names = TRUE, digits = 2 )
 ```
 
-#### Injuries
+### Injuries
 
-Injuries data can be looked at in the same two ways, ranked by total number of injuries and 
-fraction that caused injuries.
+#### Top ten event types by _total cumulative number of injuries_
 
-```{r table-injuries-1}
-print(human[order(human$I.tot, decreasing=TRUE),][1:10,c(1,9,2,7,8)], quote=FALSE, row.names=FALSE)
+```{r table-injuries-1, echo = FALSE}
+injuries.top10a <- arrange(human, desc(I.tot)) %>% head( . , 10) %>% select( . , c(1,9,2,7,8))
+colnames(injuries.top10a) <- c("Event_Type", "N_Inj", "N_events", "with_Inj", "with_Inj(%)")
+kable( injuries.top10a, quote = FALSE, row.names = TRUE, digits = 2 )
 ```
 
-```{r table-injuries-2}
-print(human[order(human$pct.with.I, decreasing=TRUE),][1:10,c(1,8,2,7,9)], quote=FALSE, row.names=FALSE)
+#### Top 10 event types by the _fraction (%) of events of that type that caused injuries_
+
+```{r table-injuries-2, echo = FALSE}
+injuries.top10b <- arrange(human, desc(pct.with.I)) %>% head( . , 10) %>% select( . , c(1,8,2,7,9))
+colnames(injuries.top10b) <- c("Event_Type", "with_Inj(%)", "N_events", "with_Inj", "N_Inj")
+kable( injuries.top10b, quote = FALSE, row.names = TRUE, digits = 2 )
 ```
 
-```{r prepare-plot-hum}
+```{r prepare-plot-hum, echo = FALSE}
 hum20ft <- human[order(human$F.tot, decreasing=TRUE),][1:20,]
 hum20fp <- human[order(human$pct.with.F, decreasing=TRUE),][1:20,]
 hum20it <- human[order(human$I.tot, decreasing=TRUE),][1:20,]
 hum20ip <- human[order(human$pct.with.I, decreasing=TRUE),][1:20,]
 ```
 
-```{r plot-hum, fig.width=8.0, fig.height=10}
+```{r plot-hum, fig.width = 8.0, fig.height = 10, echo = FALSE}
 ph.ft <- ggplot(data=hum20ft, aes(x=EVTYPE)) + theme_bw()
 ph.fp <- ggplot(data=hum20fp, aes(x=EVTYPE)) + theme_bw()
 
-hplot.f1 <- ph.ft + geom_bar(stat="identity", aes(y=F.tot), fill="red2") + 
+hplot.f1 <- ph.ft + geom_bar(stat="identity", aes(y=F.tot), fill="orange2") + 
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) + theme(legend.position="none") + 
     xlab("Event Type") + ylab("Fatalities Count") + 
     ggtitle("Events Causing Fatalities")
@@ -523,32 +571,52 @@ grid.draw(rbind(ggplotGrob(hplot.f1), ggplotGrob(hplot.f2),  size="last"))
 ```
 
 
-<hr class="thin_separator">
+<a name="economic_impact"></a>
 
-### Economic impact: property, agricultural and total damages
+## Economic Impact: Property, Agricultural and Total Damages
 
 As in the previous section, we report events ranked by total damage and by fraction of events 
 causing a recorded amount of damages.
 
-#### Property
+### Property
 
-```{r table-prop1}
-print(economic[order(economic$pct.with.PrDmg, decreasing=TRUE),][1:10,c(1,4,2,3,5)], quote=FALSE, row.names=FALSE)
-```
-```{r table-prop2}
-print(economic[order(economic$PrDmg.tot, decreasing=TRUE),][1:10,c(1,5,2,3,4)], quote=FALSE, row.names=FALSE)
-```
+#### Top ten event types by _total cumulative property damages_ (in Millions of USD)
 
-#### Agricultural
-
-```{r table-crop1}
-print(economic[order(economic$CrDmg.tot, decreasing=TRUE),][1:10,c(1,9,2,7,8)], quote=FALSE, row.names=FALSE)
-```
-```{r table-crop2}
-print(economic[order(economic$pct.with.CrDmg, decreasing=TRUE),][1:10,c(1,8,2,7,9)], quote=FALSE, row.names=FALSE)
+```{r table-prop2, echo = FALSE}
+property.top10a <- arrange(economic, desc(PrDmg.tot)) %>% head( . , 10) %>% select( . , c(1,5,2,3,4))
+colnames(property.top10a) <- c("Event_Type", "Tot_PropDmg", "N_events", "with_PropDmg", "with_PropDmg(%)")
+kable( property.top10a, quote=FALSE, row.names = TRUE, digits = 2 )
 ```
 
-```{r prepare-plot-econ}
+#### Top 10 event types by the _fraction (%) of events of that type that caused property damages_
+
+```{r table-prop1, echo = FALSE}
+property.top10b <- arrange(economic, desc(pct.with.PrDmg)) %>% head( . , 10) %>% select( . , c(1,4,2,3,5))
+colnames(property.top10b) <- c("Event_Type", "with_PropDmg(%)", "N_events", "with_PropDmg", "Tot_PropDmg")
+kable( property.top10b, quote=FALSE, row.names = TRUE, digits = 2 )
+```
+
+### Agricultural
+
+#### Top ten event types by _total cumulative crop damages_ (in Millions of USD)
+
+```{r table-crop1, echo = FALSE}
+# print(economic[order(economic$CrDmg.tot, decreasing=TRUE),][1:10,c(1,9,2,7,8)], quote=FALSE, row.names=FALSE)
+crop.top10a <- arrange(economic, desc(CrDmg.tot)) %>% head( . , 10) %>% select( . , c(1,9,2,7,8))
+colnames(crop.top10a) <- c("Event_Type", "Tot_CropDmg", "N_events", "with_CropDmg", "with_CropDmg(%)")
+kable( crop.top10a, quote=FALSE, row.names = TRUE, digits = 2 )
+```
+
+#### Top 10 event types by the _fraction (%) of events of that type that caused crop damages_
+
+```{r table-crop2, echo = FALSE}
+# print(economic[order(economic$pct.with.CrDmg, decreasing=TRUE),][1:10,c(1,8,2,7,9)], quote=FALSE, row.names=FALSE)
+crop.top10b <- arrange(economic, desc(pct.with.CrDmg)) %>% head( . , 10) %>% select( . , c(1,8,2,7,9))
+colnames(crop.top10b) <- c("Event_Type", "with_CropDmg(%)", "N_events", "with_CropDmg", "Tot_CropDmg")
+kable( crop.top10b, quote=FALSE, row.names = TRUE, digits = 2 )
+```
+
+```{r prepare-plot-econ, echo = FALSE}
 eco20plot <- economic[order(economic$PrDmg.tot, decreasing=TRUE),][1:20,]
 order.pdt <- order(eco20plot$PrDmg.tot, decreasing=TRUE)
 order.pdp <- order(eco20plot$pct.with.PrDmg, decreasing=TRUE)
@@ -565,18 +633,16 @@ eco20plot$CrDmg.pct.rank <- factor(eco20plot$CrDmg.pct.rank, levels=1:20, ordere
 ```
 
 
-<hr class="thin_separator">
-
-```{r plot-econ, fig.width=8.0, fig.height=10}
+```{r plot-econ, fig.width = 8.0, fig.height = 10, echo = FALSE}
 p <- ggplot(data=eco20plot, aes(x=EVTYPE)) + theme_bw()
 
-ecoplot.p1 <- p + geom_bar(stat="identity", aes(y=PrDmg.tot/1.0e6, fill=PrDmg.tot.rank)) + 
+ecoplot.p1 <- p + geom_bar(stat="identity", aes(y=PrDmg.tot), fill="skyblue") + 
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) + theme(legend.position="none") + 
     scale_y_log10() + coord_cartesian(ylim=c(1e1, 3e5)) +
     xlab("") + ylab("Damages (Million of Dollars)") +
     ggtitle("Total Property Damages by Event Type") 
 
-ecoplot.p2 <- p + geom_bar(stat="identity", aes(y=pct.with.PrDmg, fill=PrDmg.pct.rank)) + 
+ecoplot.p2 <- p + geom_bar(stat="identity", aes(y=pct.with.PrDmg), fill="navyblue") + 
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) + theme(legend.position="none") + 
     xlab("Event Type") + ylab("Percentage") + ylim(c(-5,105)) +
     ggtitle("Fraction of Events Causing Damages")
@@ -596,26 +662,35 @@ properties and to crops.
 
 # APPENDIX
 
+<a name="napa_flood_anomaly"></a>
+
 ## The _"anomalous"_ 2005 Napa Valley Flood
 
 Going by the "raw" data, the event that caused the highest property damage, was a flood 
 event in Napa, California, at the end of 2005, reported at over 100 Billion USD. 
 However, the `REMARKS` entry in the database itsels raises doubts about this figure, and a 
-USGS report assessing the impact of the late 2005 storms confirms that.  
-Our best guess is that the value of the `EXP` parameter for this event should been `M` instead of `M` 
+USGS report assessing the impact of the late 2005 storms confirms that.   
+Our best guess is that the value of the `EXP` parameter for this event should been `M` instead of `B` 
 as this would bring the damages amount in line with the narrative remarks and USGS report.
 We therefore adjusted accordingly the `PROPDMGEXP` for this specific event.
 
 Here is the original data:
 
-```{r explain-napa, cache=TRUE}
-recent[which.max(tmp.PropDamage),]
-data$REMARKS[data$REFNUM == recent$REFNUM[which.max(tmp.PropDamage)]]
+```{r explain-napa_1, cache = TRUE}
+recent$REMARKS[which.max(tmp.PropDamage)]
 ```
 
 Now, the single event which resulted in highest property damage is storm surge
 caused by Hurricane Katrina in Lousiana, resulting in over 31 Billion.
 
+```{r explain-napa_2, cache = TRUE}
+recent$REMARKS[which.max(recent$PropDamage)]
+
+recent$PropDamage[which.max(recent$PropDamage)]
+```
+
+
+<a name="EVTYPE_regularization"></a>
 
 ## _EVTYPE_ regularization
 
@@ -627,6 +702,8 @@ read_chunk("./scripts/evtype_regularization.R")
 ```{r eval = FALSE, cache = FALSE}
 <<regularization>>
 ```
+
+<a name="SessionInfo"></a>
 
 ## R Session Info
 
