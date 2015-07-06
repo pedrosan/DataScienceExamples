@@ -20,6 +20,19 @@
 <script src="main_files/bootstrap-3.3.1/shim/html5shiv.min.js"></script>
 <script src="main_files/bootstrap-3.3.1/shim/respond.min.js"></script>
 
+<script>
+doclick=function(e){
+    code = e.parentNode.nextSibling.nextSibling.nextSibling.nextSibling
+    if(code.style.display=="block"){
+        code.style.display='none';
+        e.textContent="Show Code"
+    }else{
+        code.style.display="block";
+        e.textContent="Hide Code"
+    }
+}
+</script>
+
 
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css">
@@ -124,12 +137,11 @@ img {
 <li>the data frame is sorted by <code>bike</code> and <code>time</code>.</li>
 <li>row names are removed.</li>
 </ul>
-<pre class="sourceCode r"><code class="sourceCode r">Classes &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;character&quot;</span>, <span class="st">&quot;character&quot;</span>, <span class="st">&quot;character&quot;</span>, <span class="st">&quot;character&quot;</span>, <span class="st">&quot;character&quot;</span>)
-data &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class="st">&quot;data/bike_sharing_data.csv.gz&quot;</span>, <span class="dt">colClasses =</span> Classes, <span class="dt">nrows =</span> <span class="dv">1804000</span>, <span class="dt">strip.white =</span> <span class="ot">TRUE</span>)
-<span class="kw">colnames</span>(data) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;bike&quot;</span>, <span class="st">&quot;station2&quot;</span>, <span class="st">&quot;station1&quot;</span>, <span class="st">&quot;time1&quot;</span>, <span class="st">&quot;time2&quot;</span>)
-
-<span class="co"># re-ordering columns</span>
-data &lt;-<span class="st"> </span>data[, <span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">3</span>,<span class="dv">2</span>,<span class="dv">4</span>,<span class="dv">5</span>)]</code></pre>
+<p>```{r load_data, cache = TRUE) Classes &lt;- c(“character”, “character”, “character”, “character”, “character”) data &lt;- read.csv(“data/bike_sharing_data.csv.gz”, colClasses = Classes, nrows = 1804000, strip.white = TRUE) colnames(data) &lt;- c(“bike”, “station2”, “station1”, “time1”, “time2”)</p>
+</div>
+<div id="re-ordering-columns" class="section level1">
+<h1>re-ordering columns</h1>
+<p>data &lt;- data[, c(1,3,2,4,5)] ```</p>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="co"># converting strings into times</span>
 data$time1 &lt;-<span class="st"> </span><span class="kw">ymd_hms</span>(data$time1, <span class="dt">tz =</span> <span class="st">&quot;US/Eastern&quot;</span>)
 data$time2 &lt;-<span class="st"> </span><span class="kw">ymd_hms</span>(data$time2, <span class="dt">tz =</span> <span class="st">&quot;US/Eastern&quot;</span>)
@@ -308,7 +320,8 @@ both$flag_day &lt;-<span class="st"> </span><span class="kw">as.factor</span>(bo
 <pre class="sourceCode r"><code class="sourceCode r">p1 &lt;-<span class="st"> </span><span class="kw">ggplot</span>(<span class="dt">data =</span> both, <span class="kw">aes</span>(<span class="dt">x =</span> t1hc, <span class="dt">fill =</span> type)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span><span class="kw">xlab</span>(<span class="st">&quot;hour of the day&quot;</span>)
 
 <span class="co"># density plot</span>
-p1 +<span class="st"> </span><span class="kw">geom_density</span>(<span class="dt">alpha =</span> <span class="fl">0.5</span>) +<span class="st"> </span><span class="kw">facet_wrap</span>(~<span class="st"> </span>ID, <span class="dt">ncol =</span> <span class="dv">1</span>) +<span class="st"> </span><span class="kw">scale_fill_manual</span>(<span class="dt">values =</span> <span class="kw">c</span>(<span class="st">&quot;navyblue&quot;</span>, <span class="st">&quot;gold&quot;</span>))</code></pre>
+p1 +<span class="st"> </span><span class="kw">geom_density</span>(<span class="dt">alpha =</span> <span class="fl">0.5</span>) +<span class="st"> </span><span class="kw">facet_wrap</span>(~<span class="st"> </span>ID, <span class="dt">ncol =</span> <span class="dv">1</span>) +<span class="st"> </span>
+<span class="st">        </span><span class="kw">scale_fill_manual</span>(<span class="dt">values =</span> <span class="kw">c</span>(<span class="st">&quot;navyblue&quot;</span>, <span class="st">&quot;gold&quot;</span>))</code></pre>
 <p><img src="figures/patterns-plots-by_hour-1.png" title="" alt="" width="700" style="display: block; margin: auto;" /></p>
 </div>
 <div id="plots-by-day-of-the-week" class="section level3">

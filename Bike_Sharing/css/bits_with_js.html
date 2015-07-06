@@ -1,0 +1,14 @@
+
+<script>
+doclick=function(e){
+    code = e.parentNode.nextSibling.nextSibling.nextSibling.nextSibling
+    if(code.style.display=="block"){
+        code.style.display='none';
+        e.textContent="Show Code"
+    }else{
+        code.style.display="block";
+        e.textContent="Hide Code"
+    }
+}
+</script>
+
