@@ -49,7 +49,7 @@ code > span.er { font-weight: bold; }
 </style>
 
 
-<link rel="stylesheet" href="css/gf_small_touches.css" type="text/css" />
+<link rel="stylesheet" href="css/gf_new.css" type="text/css" />
 
 </head>
 
@@ -91,6 +91,29 @@ img {
 <span class="kw">library</span>(<span class="st">&quot;ggplot2&quot;</span>)
 <span class="kw">library</span>(<span class="st">&quot;gridExtra&quot;</span>)</code></pre>
 </div>
+<div id="outline" class="section level2">
+<h2>Outline</h2>
+<ul>
+<li><a href="#THE_DATA">LOADING AND PREPROCESSING THE DATA</a>
+<ul>
+<li>Checks on <code>NA</code> and stats on some variables</li>
+</ul></li>
+<li><a href="#QUESTIONS">QUESTIONS</a>
+<ul>
+<li><a href="#question_A">Average trip duration (in seconds)</a></li>
+<li><a href="#question_B">Estimate the minimum fraction of the original dataset that must be missing</a></li>
+<li><a href="#question_C">Based on the available data, what is the average amount of time a bike spends at a station in seconds?</a></li>
+<li><a href="#question_D">Describe and explain the major qualitative usage pattern for station ‘fe2a5f’ and how it differs from station ‘fec8ff’</a></li>
+<li><a href="#question_E">Estimate the number of bikes at stations ‘8f0f64’ and ‘4a4b61’ for each hour on the hour of 2013/10/30</a></li>
+</ul></li>
+<li><a href="#APPENDIX&quot;">APPENDIX</a>
+<ul>
+<li><a href="#SessionInfo">R Session Info</a></li>
+</ul></li>
+</ul>
+<hr class="thin_separator">
+<p><a name="THE_DATA"></a></p>
+</div>
 <div id="loading-and-preprocessing-the-data" class="section level1">
 <h1>LOADING AND PREPROCESSING THE DATA</h1>
 <p>The dataset is read-in into a data frame <code>data</code> and a few basic operations are perfomed:</p>
@@ -106,16 +129,14 @@ data &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class=
 <span class="kw">colnames</span>(data) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;bike&quot;</span>, <span class="st">&quot;station2&quot;</span>, <span class="st">&quot;station1&quot;</span>, <span class="st">&quot;time1&quot;</span>, <span class="st">&quot;time2&quot;</span>)
 
 <span class="co"># re-ordering columns</span>
-data &lt;-<span class="st"> </span>data[, <span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">3</span>,<span class="dv">2</span>,<span class="dv">4</span>,<span class="dv">5</span>)]
-
-<span class="co"># converting strings into times</span>
+data &lt;-<span class="st"> </span>data[, <span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">3</span>,<span class="dv">2</span>,<span class="dv">4</span>,<span class="dv">5</span>)]</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># converting strings into times</span>
 data$time1 &lt;-<span class="st"> </span><span class="kw">ymd_hms</span>(data$time1, <span class="dt">tz =</span> <span class="st">&quot;US/Eastern&quot;</span>)
 data$time2 &lt;-<span class="st"> </span><span class="kw">ymd_hms</span>(data$time2, <span class="dt">tz =</span> <span class="st">&quot;US/Eastern&quot;</span>)
 
 <span class="co"># adding trip duration in seconds</span>
-data$dt &lt;-<span class="st"> </span><span class="kw">difftime</span>(data$time2, data$time1, <span class="dt">units =</span> <span class="st">&quot;secs&quot;</span>)
-
-<span class="co"># Sorting the data frame by bike and time1</span>
+data$dt &lt;-<span class="st"> </span><span class="kw">difftime</span>(data$time2, data$time1, <span class="dt">units =</span> <span class="st">&quot;secs&quot;</span>)</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Sorting the data frame by bike and time1</span>
 i.sort &lt;-<span class="st"> </span><span class="kw">order</span>(data$bike, data$time1)
 data &lt;-<span class="st"> </span>data[i.sort, ]
 
@@ -154,24 +175,25 @@ stations2 &lt;-<span class="st"> </span><span class="kw">unique</span>(data$stat
 <span class="co"># [1] 1</span>
 <span class="kw">sum</span>(!<span class="st"> </span>(stations2 %in%<span class="st"> </span>stations1) )  <span class="co"># all true</span>
 <span class="co"># [1] 0</span></code></pre>
-<hr class="thin_separator">
-<p><a name="question_A"></a></p>
+<hr class="separator">
+<p><a name="QUESTIONS"></a></p>
 </div>
 </div>
 <div id="questions" class="section level1">
-<h1>Questions</h1>
-<div id="a-average-trip-duration-in-seconds" class="section level2">
-<h2>[A] Average trip duration (in seconds)</h2>
+<h1>QUESTIONS</h1>
+<p><a name="question_A"></a></p>
+<div id="average-trip-duration-in-seconds" class="section level2">
+<h2>Average trip duration (in seconds)</h2>
 <p>Average trip duration computed straight from the <code>dt</code> variable.</p>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="kw">summary</span>(<span class="kw">as.numeric</span>(data$dt))
 <span class="co">#    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span>
 <span class="co">#    60.0   412.0   664.0   886.6  1099.0 24830.0</span></code></pre>
-<p>The range of trip durations is quite wide, with <strong>mean =886.6</strong>, but the <strong>median = 664</strong> may be a better metric.</p>
+<p>The range of trip durations is quite wide, with <strong>mean = 886.6</strong>, but the <strong>median = 664</strong> may be a better metric.</p>
 <hr class="thin_separator">
 <p><a name="question_B"></a></p>
 </div>
-<div id="b-estimate-the-minimum-fraction-of-the-original-dataset-that-must-be-missing" class="section level2">
-<h2>[B] Estimate the minimum fraction of the original dataset that must be missing</h2>
+<div id="estimate-the-minimum-fraction-of-the-original-dataset-that-must-be-missing" class="section level2">
+<h2>Estimate the minimum fraction of the original dataset that must be missing</h2>
 <p>One way of addressing this question is to analyze the trips of each individual bike looking for mis-matches between arrival / departure stations.</p>
 <p>This approach assumes that bikes’ trips are <em>continuous</em>, which may be a strong assumption considering the possibility that bikes are actually being “manually” relocated for instance to keep their distribution optimal.</p>
 <p>Nevertheless, here we look at individual bike trips searching for non-matching consecutive stations.</p>
@@ -192,8 +214,8 @@ min.missing.fraction &lt;-<span class="st"> </span>N.mismatches /<span class="st
 <hr class="thin_separator">
 <p><a name="question_C"></a></p>
 </div>
-<div id="c-based-on-the-available-data-what-is-the-average-amount-of-time-a-bike-spends-at-a-station-in-seconds" class="section level2">
-<h2>[C] Based on the available data, what is the average amount of time a bike spends at a station in seconds?</h2>
+<div id="based-on-the-available-data-what-is-the-average-amount-of-time-a-bike-spends-at-a-station-in-seconds" class="section level2">
+<h2>Based on the available data, what is the average amount of time a bike spends at a station in seconds?</h2>
 <p>Why are there negative “parking” duration for otherwise fine-looking trips?!?!?!</p>
 <p>We need to select the entries where a bike arrived and left for the next trip from the same station. Since the data frame is already ordered by bike ID and time (<code>time1</code>), we can compare the values of <code>station1</code> and <code>station2</code> offset by one row at once on the full data frame.</p>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="co"># on the full dataset</span>
@@ -206,7 +228,7 @@ main$flag.station &lt;-<span class="st"> </span><span class="kw">c</span>(main$s
 good.tdiff &lt;-<span class="st"> </span>main$tdiff[main$flag.combined &amp;<span class="st"> </span><span class="kw">as.numeric</span>(main$tdiff) &gt;<span class="st"> </span><span class="dv">0</span>]
 <span class="kw">length</span>(good.tdiff)
 <span class="co"># [1] 1580813</span></code></pre>
-<p>There are 43 valid (same bike, same station) parking intervals with NEGATIVE DURATION (!?).<br />We can safely ignore them for now considering that they are a tiny fraction of the accepted <em>stays</em>, i.e. 1580813.</p>
+<p>There are <strong>43</strong> valid (same bike, same station) parking intervals with NEGATIVE DURATION (!?).<br />We can safely ignore them for now considering that they are a tiny fraction of the accepted <em>stays</em>, i.e. 1580813.</p>
 <p>The statistics of the duration of <em>stays</em> are therefore:</p>
 <pre class="sourceCode r"><code class="sourceCode r">ss &lt;-<span class="st"> </span><span class="kw">summary</span>(<span class="kw">as.numeric</span>(good.tdiff))
 ss
@@ -214,15 +236,11 @@ ss
 <span class="co">#       1     433    1721   10090    7115 4088000</span></code></pre>
 <p>As it was the case for trip durations, the range of <em>stays</em> durations is quite wide, in fact even wider and it makes sense considering that there is really no limit in principle to for how a bike may remain unused.</p>
 <p>At any rate, the <strong>mean time spent by a bike at a station is 10090</strong>, while its <strong>median</strong> is <strong>1721</strong>.</p>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># quick check of +/- 1 row around each of the odd ones</span>
-neg.rows &lt;-<span class="st"> </span>(<span class="dv">1</span>:<span class="kw">nrow</span>(main))[main$flag.combined &amp;<span class="st"> </span><span class="kw">as.numeric</span>(main$tdiff) &lt;<span class="st"> </span><span class="dv">0</span>]
-rows2check &lt;-<span class="st"> </span><span class="kw">sort</span>(<span class="kw">c</span>(neg.rows, (neg.rows<span class="dv">-1</span>), (neg.rows<span class="dv">+1</span>)))
-main[rows2check, ]</code></pre>
 <hr class="thin_separator">
 <p><a name="question_D"></a></p>
 </div>
-<div id="d-describe-and-explain-the-major-qualitative-usage-pattern-for-station-fe2a5f-and-how-it-differs-from-station-fec8ff" class="section level2">
-<h2>[D] Describe and explain the major qualitative usage pattern for station ‘fe2a5f’ and how it differs from station ‘fec8ff’</h2>
+<div id="describe-and-explain-the-major-qualitative-usage-pattern-for-station-fe2a5f-and-how-it-differs-from-station-fec8ff" class="section level2">
+<h2>Describe and explain the major qualitative usage pattern for station ‘fe2a5f’ and how it differs from station ‘fec8ff’</h2>
 <div id="data-preparation" class="section level3">
 <h3>Data preparation</h3>
 <p>Let’s first extract the relevant data, adding columns with the <em>time-during-the-day</em> and <em>day-of-the-week</em> for each entry involving the two stations under examination.<br />We also add flags for whether a given activity was in/out, or during the week (M-F) or week end.</p>
@@ -245,9 +263,8 @@ st1$type &lt;-<span class="st"> </span><span class="ot">NA</span>
 st1$type[st1$flag_in] &lt;-<span class="st"> &#39;in&#39;</span>
 st1$type[st1$flag_out] &lt;-<span class="st"> &#39;out&#39;</span>
 
-st1$ID &lt;-<span class="st"> </span>sid1
-
-<span class="co"># subset on station 2</span>
+st1$ID &lt;-<span class="st"> </span>sid1</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># subset on station 2</span>
 st2 &lt;-<span class="st"> </span><span class="kw">subset</span>(data, station1 ==<span class="st"> </span>sid2 |<span class="st"> </span>station2 ==<span class="st"> </span>sid2)
 st2$t1hc &lt;-<span class="st"> </span>(<span class="kw">hour</span>(st2$time1)*<span class="dv">60</span> +<span class="st"> </span><span class="kw">minute</span>(st2$time1))/<span class="fl">60.0</span>
 st2$t2hc &lt;-<span class="st"> </span>(<span class="kw">hour</span>(st2$time2)*<span class="dv">60</span> +<span class="st"> </span><span class="kw">minute</span>(st2$time2))/<span class="fl">60.0</span>
@@ -262,9 +279,8 @@ st2$type &lt;-<span class="st"> </span><span class="ot">NA</span>
 st2$type[st2$flag_in] &lt;-<span class="st"> &#39;in&#39;</span>
 st2$type[st2$flag_out] &lt;-<span class="st"> &#39;out&#39;</span>
 
-st2$ID &lt;-<span class="st"> </span>sid2
-
-<span class="co"># add a &#39;factor&#39; column that would be handy for analysis</span>
+st2$ID &lt;-<span class="st"> </span>sid2</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># add a &#39;factor&#39; column that would be handy for analysis</span>
 st1$ID &lt;-<span class="st"> </span>sid1
 st2$ID &lt;-<span class="st"> </span>sid2
 
@@ -290,24 +306,31 @@ both$flag_day &lt;-<span class="st"> </span><span class="kw">as.factor</span>(bo
 </ul></li>
 </ul>
 <pre class="sourceCode r"><code class="sourceCode r">p1 &lt;-<span class="st"> </span><span class="kw">ggplot</span>(<span class="dt">data =</span> both, <span class="kw">aes</span>(<span class="dt">x =</span> t1hc, <span class="dt">fill =</span> type)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span><span class="kw">xlab</span>(<span class="st">&quot;hour of the day&quot;</span>)
+
 <span class="co"># density plot</span>
-p1 +<span class="st"> </span><span class="kw">geom_density</span>(<span class="dt">alpha =</span> <span class="fl">0.3</span>) +<span class="st"> </span><span class="kw">facet_wrap</span>(~<span class="st"> </span>ID, <span class="dt">ncol =</span> <span class="dv">1</span>) +<span class="st"> </span><span class="kw">scale_fill_brewer</span>(<span class="dt">palette =</span> <span class="st">&quot;Set1&quot;</span>)</code></pre>
+p1 +<span class="st"> </span><span class="kw">geom_density</span>(<span class="dt">alpha =</span> <span class="fl">0.5</span>) +<span class="st"> </span><span class="kw">facet_wrap</span>(~<span class="st"> </span>ID, <span class="dt">ncol =</span> <span class="dv">1</span>) +<span class="st"> </span><span class="kw">scale_fill_manual</span>(<span class="dt">values =</span> <span class="kw">c</span>(<span class="st">&quot;navyblue&quot;</span>, <span class="st">&quot;gold&quot;</span>))</code></pre>
 <p><img src="figures/patterns-plots-by_hour-1.png" title="" alt="" width="700" style="display: block; margin: auto;" /></p>
 </div>
 <div id="plots-by-day-of-the-week" class="section level3">
 <h3>Plots : by day of the week</h3>
 <p>The by-hour usage patterns seem to suggest that a more leisure-related kind of activity characterizes station <code>fe2acf</code>, while the usage of bikes in/out of station <code>fec8ff</code> is fairly closely associated to office hours and the idea that it is driven by people using the bikes to “commute” to work.</p>
 <p>The usage by day of the week adds weight to this idea by showing a “significant” drop in traffic for station <code>fec8ff</code> during the weekend.<br />There is instead a hint of increase of activity for station <code>fe2a5f</code> during the weekend, that lends further support to the idea that its location may be more residential.</p>
-<pre class="sourceCode r"><code class="sourceCode r">p2 &lt;-<span class="st"> </span><span class="kw">ggplot</span>(<span class="dt">data =</span> both, <span class="kw">aes</span>(<span class="dt">x =</span> <span class="kw">as.factor</span>(wday1), <span class="dt">fill =</span> ID)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span><span class="kw">xlab</span>(<span class="st">&quot;day of the week&quot;</span>) +<span class="st"> </span><span class="kw">theme</span>(<span class="dt">legend.position=</span><span class="st">&quot;none&quot;</span>) 
+<pre class="sourceCode r"><code class="sourceCode r">p2 &lt;-<span class="st"> </span><span class="kw">ggplot</span>(<span class="dt">data =</span> both, <span class="kw">aes</span>(<span class="dt">x =</span> <span class="kw">as.factor</span>(wday1), <span class="dt">fill =</span> ID)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span>
+<span class="st">        </span><span class="kw">theme</span>(<span class="dt">legend.position=</span><span class="st">&quot;none&quot;</span>) +
+<span class="st">        </span><span class="kw">xlab</span>(<span class="st">&quot;day of the week&quot;</span>) 
+
 <span class="co"># histogram w/ free Y-scale</span>
-p2 +<span class="st">  </span><span class="kw">geom_bar</span>(<span class="dt">stat =</span> <span class="st">&quot;bin&quot;</span>, <span class="dt">alpha =</span> <span class="fl">0.75</span>, <span class="dt">width =</span> <span class="fl">0.8</span>) +<span class="st"> </span><span class="kw">facet_wrap</span>(~<span class="st"> </span>ID, <span class="dt">ncol =</span> <span class="dv">1</span>, <span class="dt">scale =</span> <span class="st">&quot;free_y&quot;</span>) +<span class="st"> </span><span class="kw">scale_fill_brewer</span>(<span class="dt">palette =</span> <span class="st">&quot;Set2&quot;</span>)</code></pre>
+p2 +<span class="st">  </span><span class="kw">geom_bar</span>(<span class="dt">stat =</span> <span class="st">&quot;bin&quot;</span>, <span class="dt">alpha =</span> <span class="fl">0.75</span>, <span class="dt">width =</span> <span class="fl">0.8</span>) +<span class="st"> </span>
+<span class="st">        </span><span class="co"># scale_fill_brewer(palette = &quot;Set2&quot;) + </span>
+<span class="st">        </span><span class="kw">scale_fill_manual</span>(<span class="dt">values =</span> <span class="kw">c</span>(<span class="st">&quot;navyblue&quot;</span>, <span class="st">&quot;gold&quot;</span>)) +<span class="st"> </span>
+<span class="st">        </span><span class="kw">facet_wrap</span>(~<span class="st"> </span>ID, <span class="dt">ncol =</span> <span class="dv">1</span>, <span class="dt">scale =</span> <span class="st">&quot;free_y&quot;</span>)</code></pre>
 <p><img src="figures/patterns-plots-by_wday-1.png" title="" alt="" width="700" style="display: block; margin: auto;" /></p>
 <hr class="thin_separator">
 <p><a name="question_E"></a></p>
 </div>
 </div>
-<div id="e-estimate-the-number-of-bikes-at-stations-8f0f64-and-4a4b61-for-each-hour-on-the-hour-of-20131030" class="section level2">
-<h2>[E] Estimate the number of bikes at stations ‘8f0f64’ and ‘4a4b61’ for each hour on the hour of 2013/10/30</h2>
+<div id="estimate-the-number-of-bikes-at-stations-8f0f64-and-4a4b61-for-each-hour-on-the-hour-of-20131030" class="section level2">
+<h2>Estimate the number of bikes at stations ‘8f0f64’ and ‘4a4b61’ for each hour on the hour of 2013/10/30</h2>
 <div id="data-preparation-1" class="section level3">
 <h3>Data preparation</h3>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="co"># station IDs</span>
@@ -446,9 +469,13 @@ df.wide &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span c
 </div>
 <div id="plot" class="section level3">
 <h3>Plot</h3>
-<pre class="sourceCode r"><code class="sourceCode r">p3 &lt;-<span class="st"> </span><span class="kw">ggplot</span>(<span class="dt">data =</span> df, <span class="kw">aes</span>(<span class="dt">x =</span> hour, <span class="dt">y =</span> number, <span class="dt">fill =</span> ID)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span><span class="kw">xlab</span>(<span class="st">&quot;hour&quot;</span>) +<span class="st"> </span><span class="kw">theme</span>(<span class="dt">legend.position=</span><span class="st">&quot;none&quot;</span>) 
+<pre class="sourceCode r"><code class="sourceCode r">p3 &lt;-<span class="st"> </span><span class="kw">ggplot</span>(<span class="dt">data =</span> df, <span class="kw">aes</span>(<span class="dt">x =</span> hour, <span class="dt">y =</span> number, <span class="dt">fill =</span> ID)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span><span class="kw">theme</span>(<span class="dt">legend.position=</span><span class="st">&quot;none&quot;</span>) +
+<span class="st">        </span><span class="kw">xlab</span>(<span class="st">&quot;hour&quot;</span>)
+
 <span class="co"># histogram</span>
-p3 +<span class="st">  </span><span class="kw">geom_bar</span>(<span class="dt">stat =</span> <span class="st">&quot;identity&quot;</span>, <span class="dt">alpha =</span> <span class="fl">0.5</span>, <span class="dt">width =</span> <span class="fl">0.8</span>) +<span class="st"> </span><span class="kw">facet_grid</span>(ID ~<span class="st"> </span>.) +<span class="st"> </span><span class="kw">scale_fill_brewer</span>(<span class="dt">palette =</span> <span class="st">&quot;Set1&quot;</span>)</code></pre>
+p3 +<span class="st"> </span><span class="kw">geom_bar</span>(<span class="dt">stat =</span> <span class="st">&quot;identity&quot;</span>, <span class="dt">alpha =</span> <span class="fl">0.5</span>, <span class="dt">width =</span> <span class="fl">0.8</span>) +<span class="st"> </span>
+<span class="st">        </span><span class="kw">scale_fill_brewer</span>(<span class="dt">palette =</span> <span class="st">&quot;Set1&quot;</span>) +<span class="st"> </span>
+<span class="st">        </span><span class="kw">facet_grid</span>(ID ~<span class="st"> </span>.)</code></pre>
 <p><img src="figures/bikes_at_stations-plot-1.png" title="" alt="" width="700" style="display: block; margin: auto;" /></p>
 <hr class="separator">
 <p><a name="APPENDIX"></a></p>
@@ -457,6 +484,9 @@ p3 +<span class="st">  </span><span class="kw">geom_bar</span>(<span class="dt">
 </div>
 <div id="appendix" class="section level1">
 <h1>APPENDIX</h1>
+<p><a name="SessionInfo"></a></p>
+<div id="r-session-info" class="section level2">
+<h2>R Session Info</h2>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="kw">sessionInfo</span>()
 <span class="co"># R version 3.1.3 (2015-03-09)</span>
 <span class="co"># Platform: x86_64-pc-linux-gnu (64-bit)</span>
@@ -481,6 +511,7 @@ p3 +<span class="st">  </span><span class="kw">geom_bar</span>(<span class="dt">
 <span class="co"># [16] rmarkdown_0.7      scales_0.2.4       stringi_0.5-5      stringr_1.0.0      tools_3.1.3       </span>
 <span class="co"># [21] yaml_2.1.13</span></code></pre>
 <hr />
+</div>
 </div>
 
 
