@@ -1,12 +1,12 @@
 ---
 title: "Bike Sharing Data Challenge"
-subtitle: 
-author  : Giovanni Fossati
-job     : null
-output  : 
+subtitle : 
+author   : Giovanni Fossati
+job      : null
+output   : 
   html_document:
     self_contained: false
-    css: css/gf_small_touches.css
+    css: css/gf_new.css
     theme: cerulean
     highlight: tango
     keep_md: no
@@ -28,6 +28,7 @@ opts_chunk$set(message = FALSE,
                comment = '#',
                fig.align = 'center', 
                dpi = 100, 
+               dev = "png",
                fig.path = 'figures/')
 ```
 
@@ -45,6 +46,24 @@ library("plyr")
 library("ggplot2")
 library("gridExtra")
 ```
+
+
+## Outline
+
+* [LOADING AND PREPROCESSING THE DATA](#THE_DATA)
+    *  Checks on `NA` and stats on some variables
+* [QUESTIONS](#QUESTIONS)
+    * [Average trip duration (in seconds)](#question_A)
+    * [Estimate the minimum fraction of the original dataset that must be missing](#question_B)
+    * [Based on the available data, what is the average amount of time a bike spends at a station in seconds?](#question_C)
+    * [Describe and explain the major qualitative usage pattern for station 'fe2a5f' and how it differs from station 'fec8ff'](#question_D)
+    * [Estimate the number of bikes at stations '8f0f64' and '4a4b61' for each hour on the hour of 2013/10/30](#question_E)
+* [APPENDIX](#APPENDIX")
+    * [R Session Info](#SessionInfo)
+
+
+<hr class="thin_separator">
+<a name="THE_DATA"></a>
 
 # LOADING AND PREPROCESSING THE DATA
 
@@ -64,14 +83,18 @@ colnames(data) <- c("bike", "station2", "station1", "time1", "time2")
 
 # re-ordering columns
 data <- data[, c(1,3,2,4,5)]
+```
 
+```{r data-time_variables_manipulation, cache = TRUE}
 # converting strings into times
 data$time1 <- ymd_hms(data$time1, tz = "US/Eastern")
 data$time2 <- ymd_hms(data$time2, tz = "US/Eastern")
 
 # adding trip duration in seconds
 data$dt <- difftime(data$time2, data$time1, units = "secs")
+```
 
+```{r data-resorting, cache = TRUE}
 # Sorting the data frame by bike and time1
 i.sort <- order(data$bike, data$time1)
 data <- data[i.sort, ]
@@ -105,12 +128,15 @@ sum(! (stations1 %in% stations2) )  # 1 false ?
 sum(! (stations2 %in% stations1) )  # all true
 ```
  
-<hr class="thin_separator">
+
+<hr class="separator">
+<a name="QUESTIONS"></a>
+
+# QUESTIONS
+
 <a name="question_A"></a>
 
-# Questions
-
-## [A] Average trip duration (in seconds)
+## Average trip duration (in seconds)
 
 Average trip duration computed straight from the `dt` variable.
 
@@ -118,14 +144,14 @@ Average trip duration computed straight from the `dt` variable.
 summary(as.numeric(data$dt))
 ```
 
-The range of trip durations is quite wide, with __mean =`r summary(as.numeric(data$dt))[4]`__, 
+The range of trip durations is quite wide, with __mean = `r summary(as.numeric(data$dt))[4]`__, 
 but the __median = `r summary(as.numeric(data$dt))[3]`__ may be a better metric.
 
 
 <hr class="thin_separator">
 <a name="question_B"></a>
 
-## [B] Estimate the minimum fraction of the original dataset that must be missing
+## Estimate the minimum fraction of the original dataset that must be missing
 
 One way of addressing this question is to analyze the trips of each individual bike looking
 for mis-matches between arrival / departure stations.
@@ -158,7 +184,7 @@ $N_{mismatches} / (N_{data} + N_{mismatches})$, that is __`r round(min.missing.f
 <hr class="thin_separator">
 <a name="question_C"></a>
 
-## [C] Based on the available data, what is the average amount of time a bike spends at a station in seconds?
+## Based on the available data, what is the average amount of time a bike spends at a station in seconds?
 
 Why are there negative "parking" duration for otherwise fine-looking trips?!?!?!
 
@@ -178,7 +204,7 @@ good.tdiff <- main$tdiff[main$flag.combined & as.numeric(main$tdiff) > 0]
 length(good.tdiff)
 ```
 
-There are `r sum(main$flag.combined & as.numeric(main$tdiff) < 0)` valid (same bike, same station) 
+There are __`r sum(main$flag.combined & as.numeric(main$tdiff) < 0)`__ valid (same bike, same station) 
 parking intervals with NEGATIVE DURATION (!?).   
 We can safely ignore them for now considering that they are a tiny fraction of the accepted _stays_, i.e. 
 `r sum(main$flag.combined & as.numeric(main$tdiff) > 0)`.
@@ -196,7 +222,7 @@ sense considering that there is really no limit in principle to for how a bike m
 At any rate, the __mean time spent by a bike at a station is `r ss[4]`__, 
 while its __median__ is __`r ss[3]`__.
 
-```{r parking_time-2, eval = FALSE}
+```{r parking_time-2, eval = FALSE, echo = FALSE}
 # quick check of +/- 1 row around each of the odd ones
 neg.rows <- (1:nrow(main))[main$flag.combined & as.numeric(main$tdiff) < 0]
 rows2check <- sort(c(neg.rows, (neg.rows-1), (neg.rows+1)))
@@ -207,7 +233,7 @@ main[rows2check, ]
 <hr class="thin_separator">
 <a name="question_D"></a>
 
-## [D] Describe and explain the major qualitative usage pattern for station 'fe2a5f' and how it differs from station 'fec8ff'
+## Describe and explain the major qualitative usage pattern for station 'fe2a5f' and how it differs from station 'fec8ff'
 
 ### Data preparation
 
@@ -215,7 +241,7 @@ Let's first extract the relevant data, adding columns with the _time-during-the-
 each entry involving the two stations under examination.   
 We also add flags for whether a given activity was in/out, or during the week (M-F) or week end.
 
-```{r patterns-prepare_data}
+```{r patterns-prepare_data-subset_station_1}
 sid1 <- "fe2a5f"
 sid2 <- "fec8ff"
 
@@ -236,7 +262,9 @@ st1$type[st1$flag_in] <- 'in'
 st1$type[st1$flag_out] <- 'out'
 
 st1$ID <- sid1
+```
 
+```{r patterns-prepare_data-subset_station_2}
 # subset on station 2
 st2 <- subset(data, station1 == sid2 | station2 == sid2)
 st2$t1hc <- (hour(st2$time1)*60 + minute(st2$time1))/60.0
@@ -253,7 +281,9 @@ st2$type[st2$flag_in] <- 'in'
 st2$type[st2$flag_out] <- 'out'
 
 st2$ID <- sid2
+```
 
+```{r patterns-prepare_data-combine_df}
 # add a 'factor' column that would be handy for analysis
 st1$ID <- sid1
 st2$ID <- sid2
@@ -292,8 +322,9 @@ are summarized in the following simple plots, which show two clear qualitative d
 
 ```{r patterns-plots-by_hour, fig.width=7, fig.height=5, echo=TRUE}
 p1 <- ggplot(data = both, aes(x = t1hc, fill = type)) + theme_bw() + xlab("hour of the day")
+
 # density plot
-p1 + geom_density(alpha = 0.3) + facet_wrap(~ ID, ncol = 1) + scale_fill_brewer(palette = "Set1")
+p1 + geom_density(alpha = 0.5) + facet_wrap(~ ID, ncol = 1) + scale_fill_manual(values = c("navyblue", "gold"))
 ```
 
 
@@ -311,16 +342,22 @@ that lends further support to the idea that its location may be more residential
 
 
 ```{r patterns-plots-by_wday, fig.width=7, fig.height=5, echo=TRUE}
-p2 <- ggplot(data = both, aes(x = as.factor(wday1), fill = ID)) + theme_bw() + xlab("day of the week") + theme(legend.position="none") 
+p2 <- ggplot(data = both, aes(x = as.factor(wday1), fill = ID)) + theme_bw() + 
+        theme(legend.position="none") +
+        xlab("day of the week") 
+
 # histogram w/ free Y-scale
-p2 +  geom_bar(stat = "bin", alpha = 0.75, width = 0.8) + facet_wrap(~ ID, ncol = 1, scale = "free_y") + scale_fill_brewer(palette = "Set2")
+p2 +  geom_bar(stat = "bin", alpha = 0.75, width = 0.8) + 
+        # scale_fill_brewer(palette = "Set2") + 
+        scale_fill_manual(values = c("navyblue", "gold")) + 
+        facet_wrap(~ ID, ncol = 1, scale = "free_y")
 ```
 
 
 <hr class="thin_separator">
 <a name="question_E"></a>
 
-## [E] Estimate the number of bikes at stations '8f0f64' and '4a4b61' for each hour on the hour of 2013/10/30
+## Estimate the number of bikes at stations '8f0f64' and '4a4b61' for each hour on the hour of 2013/10/30
 
 ### Data preparation
 
@@ -476,9 +513,13 @@ print(df.wide, row.names = FALSE)
 ### Plot
 
 ```{r bikes_at_stations-plot, fig.width=7, fig.height=5, echo=TRUE}
-p3 <- ggplot(data = df, aes(x = hour, y = number, fill = ID)) + theme_bw() + xlab("hour") + theme(legend.position="none") 
+p3 <- ggplot(data = df, aes(x = hour, y = number, fill = ID)) + theme_bw() + theme(legend.position="none") +
+        xlab("hour")
+
 # histogram
-p3 +  geom_bar(stat = "identity", alpha = 0.5, width = 0.8) + facet_grid(ID ~ .) + scale_fill_brewer(palette = "Set1")
+p3 + geom_bar(stat = "identity", alpha = 0.5, width = 0.8) + 
+        scale_fill_brewer(palette = "Set1") + 
+        facet_grid(ID ~ .)
 ```
 
 
@@ -486,6 +527,10 @@ p3 +  geom_bar(stat = "identity", alpha = 0.5, width = 0.8) + facet_grid(ID ~ .)
 <a name="APPENDIX"></a>
 
 # APPENDIX
+
+<a name="SessionInfo"></a>
+
+## R Session Info
 
 ```{r R_session_info}
 sessionInfo()
