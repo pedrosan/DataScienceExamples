@@ -1,9 +1,9 @@
 ---
 title: "Baby Names Data Coding Challenge"
-subtitle: 
-author  : Giovanni Fossati
-job     : null
-output  : 
+subtitle : 
+author   : Giovanni Fossati
+job      : null
+output   : 
   html_document:
     self_contained: false
     css: css/baby_names.css
@@ -41,6 +41,7 @@ library("ggplot2")
 source("./scripts/my_functions_baby_names.R")
 ```
 
+<script src="./lib/toggle_GF.js"></script>
 
 ## PREAMBLE
 
@@ -88,7 +89,9 @@ df <- do.call(bind_rows, lapply( list.files(data_dir, pattern = "[A-Z][A-Z].TXT.
                 function(x) { read.csv(x, header = FALSE, stringsAsFactors = FALSE) }) )
 colnames(df) <- c("state", "gender", "year", "name", "count")
 ```
-```{r more_preparation, cache = TRUE, echo = FALSE}
+
+<button class="toggle_code">show hidden code</button>
+```{r more_preparation, cache = TRUE, echo = TRUE}
 unique_names_F <- filter(df, gender == "F") %>% dplyr::select(name) %>% unique(.)
 unique_names_M <- filter(df, gender == "M") %>% dplyr::select(name) %>% unique(.) 
 unique_names <- list(F = as.vector(unique_names_F), M = as.vector(unique_names_M))
@@ -135,6 +138,7 @@ are reported in this public data set (out of privacy concerns).
 and of these __`r nrow(bisex_names)`__ have been used for both females and males.
 
 This is an example of the entries in the data frame where I loaded and combined all the data, a sample of random rows: 
+
 ```{r q1-2}
 df[sample(1:nrow(df), 12), ]
 ```
@@ -168,7 +172,8 @@ Red and blue dashed lines are the best fit with a linear regression model to the
 Data were binned, with bin width $0.25 \log_{10}(5)$, and the plots show the counts in each bin,
 not a density (_i.e._ count divided by bin width).
 
-```{r plot_power_law_distribution_example_x4, fig.width = 7, fig.height = 4, echo = FALSE}
+<button class="toggle_code">show hidden code</button>
+```{r plot_power_law_distribution_example_x4, fig.width = 7, fig.height = 4, echo = TRUE}
 par(fig = c(0, 1, 0, 1), mar = c(5, 4, 4, 1)+0.1, cex.axis = 1.0)
 single_panel_mar <- c(2, 2, 2, 1)
 single_panel_oma <- c(0 ,0, 2, 0)
@@ -212,14 +217,22 @@ How many babies are given names that is unique to them (in a state and year)?!
 
 
 <hr class="thin_separator">
-<a name="question1"></a>
+<a name="question2"></a>
 
 ## Question #2
 
-```{r q2-prep, echo = FALSE}
+<button class="toggle_code">show hidden code</button>
+```{r q2-prep, echo = TRUE}
 top10_FM <- group_by(df, name) %>% summarize(n = sum(count)) %>% arrange(desc(n)) %>% head( . , 10)
-top10_F  <- filter(df, gender == "F") %>% group_by(name) %>% summarize(n = sum(count)) %>% arrange(desc(n)) %>% head( . , 10)
-top10_M  <- filter(df, gender == "M") %>% group_by(name) %>% summarize(n = sum(count)) %>% arrange(desc(n)) %>% head( . , 10)
+top10_F  <- filter(df, gender == "F") %>% group_by(name) %>% 
+                                          summarize(n = sum(count)) %>% 
+                                          arrange(desc(n)) %>% 
+                                          head( . , 10)
+top10_M  <- filter(df, gender == "M") %>% group_by(name) %>% 
+                                          summarize(n = sum(count)) %>% 
+                                          arrange(desc(n)) %>% 
+                                          head( . , 10)
+
 top10_all <- bind_cols(top10_FM, top10_F, top10_M)
 colnames(top10_all) <- c("AnyGender", "N_any", "Female", "N_female", "Male", "N_male")
 ```
@@ -233,6 +246,7 @@ colnames(top10_all) <- c("AnyGender", "N_any", "Female", "N_female", "Male", "N_
 
 For a little more information, here is the Table of Top 10 rankings, left to right, irrespective of gender, 
 female-given names, male-given names.
+
 ```{r q1-print_rankings_table, echo = FALSE}
 print(top10_all, print.gap = 5)
 ```
@@ -243,7 +257,8 @@ print(top10_all, print.gap = 5)
 
 ## Question #3
 
-```{r q3-most_ambiguous_names-prepare_data, echo = FALSE}
+<button class="toggle_code">show hidden code</button>
+```{r q3-most_ambiguous_names-prepare_data, echo = TRUE}
 # Preparing the relevant data frames
 c2013 <- intersect_MF_names_1year(data = df, select_year = 2013)$common
 c1945 <- intersect_MF_names_1year(data = df, select_year = 1945)$common
@@ -270,7 +285,9 @@ One option would be to select names for which the counts for female and male are
 and among these pick the name with the highest count. 
 This approach penalizes popular names given the increasingly smaller likelihood that the number 
 of occurrences in females and males match.  
-```{r q3-most_ambiguous_2013-method1, echo = FALSE}
+
+<button class="toggle_code">show hidden code</button>
+```{r q3-most_ambiguous_2013-method1, echo = TRUE}
 # diff = 0, sorted by total number
 top2013a <- filter(c2013, diff == 0) %>% arrange(desc(N_tot)) %>% as.data.frame(.) %>% head( . , N_show)
 kable(top2013a, row.names = TRUE)
@@ -283,7 +300,9 @@ popular, we could normalize the difference in male-female counts by the total co
 using the $\min(F/M, M/F)$). 
 Names with a $\Delta=0$ would still come up at the top, hence we exclude them in this case, pending
 a check of whether or not they would have ranked higher than the top name resulting from this second method.
-```{r q3-most_ambiguous_2013-method2a, echo = FALSE}
+
+<button class="toggle_code">show hidden code</button>
+```{r q3-most_ambiguous_2013-method2a, echo = TRUE}
 # diff > 0, sorted by normalized difference
 top2013a <- filter(c2013, diff > 0) %>% arrange(diff_norm) %>% as.data.frame(.) %>% head( . , N_show)
 kable(top2013a, row.names = TRUE)
@@ -301,7 +320,8 @@ To open up more the "name space" towards generally more common, hence more inter
 need allow for a range in the normalized difference or equivalently the count ratio.   
 If we include names with $min(F/M, M/F) > `r r_threshold`$, we get this new list:
 
-```{r q3-most_ambiguous_2013-method3, echo = FALSE}
+<button class="toggle_code">show hidden code</button>
+```{r q3-most_ambiguous_2013-method3, echo = TRUE}
 top2013 <- filter(c2013, diff_norm <= rn) %>% arrange(desc(N_tot)) %>% as.data.frame(.) %>% head( . , N_show)
 kable(top2013, row.names = TRUE)
 
@@ -312,7 +332,9 @@ This plot summarizes the analysis.
 * The green dashed diagonal lines mark the region allowed by $min(F/M, M/F) > `r r_threshold`$.
 * The green diamonds mark the top-5 most ambiguous names according to _Approach 3_, also labeled with the corresponding names.
 * The blue diamonds mark the top-5 names with a count difference strictly equal to zero (_approach 1_).
-```{r q3-most_ambiguous_2013-method3-plot, echo = FALSE, fig.width = 6.0, fig.height = 6.0}
+
+<button class="toggle_code">show hidden code</button>
+```{r q3-most_ambiguous_2013-method3-plot, echo = TRUE, fig.width = 6.0, fig.height = 6.0}
 single_panel_mar <- c(3, 3, 2, 2)
 single_panel_oma <- c(0 ,0, 2, 0)
 gr_par <- list( mar = single_panel_mar, oma = single_panel_oma, 
@@ -349,12 +371,14 @@ text(lab_x, lab_y, labels = lab_s, pos = lab_pos, cex = 0.9, adj = c(NA, 0))
 We skip the two less smart approaches and show directly the results from _Approach 3_, with table and figure.    
 The total number of bisex names for 1945 is __`r nrow(c1945)`__.
 
-```{r q3-most_ambiguous_1945-method3_v2, echo = FALSE}
+<button class="toggle_code">show hidden code</button>
+```{r q3-most_ambiguous_1945-method3_v2, echo = TRUE}
 top1945 <- filter(c1945, diff_norm <= rn) %>% arrange(desc(N_tot)) %>% as.data.frame(.) %>% head( . , N_show)
 kable(top1945, row.names = TRUE)
 ```
 
-```{r q3-most_ambiguous_1945-method3-plot, echo = FALSE, fig.width = 6.0, fig.height = 6.0}
+<button class="toggle_code">show hidden code</button>
+```{r q3-most_ambiguous_1945-method3-plot, echo = TRUE, fig.width = 6.0, fig.height = 6.0}
 par(gr_par)
 lab_x <- top1945[, "N_female"]
 lab_y <- top1945[, "N_male"]
@@ -366,8 +390,10 @@ plot(c1945$N_female, c1945$N_male, log = "xy",
      xlab = "N female",
      ylab = "N male",
      main = "Male/Female Counts of Ambiguous Names (1945)")
-points(c1945$N_female[c1945$diff_norm <= abs(rn)], c1945$N_male[c1945$diff_norm <= abs(rn)], pch = 23, col = "darkgreen", bg = rgb(0, 0.9, 0, 0.3))
-points(c1945$N_female[c1945$diff == 0], c1945$N_male[c1945$diff == 0], pch = 23, col = "blue2", bg = rgb(0, 0, 0.9, 0.3))
+points(c1945$N_female[c1945$diff_norm <= abs(rn)], c1945$N_male[c1945$diff_norm <= abs(rn)], 
+       pch = 23, col = "darkgreen", bg = rgb(0, 0.9, 0, 0.3))
+points(c1945$N_female[c1945$diff == 0], c1945$N_male[c1945$diff == 0], 
+       pch = 23, col = "blue2", bg = rgb(0, 0, 0.9, 0.3))
 lines(x, y1, lty = 4, lwd = 1.5, col = "forestgreen")
 lines(x, y2, lty = 4, lwd = 1.5, col = "forestgreen")
 grid()
@@ -380,7 +406,8 @@ text(lab_x, lab_y, labels = lab_s, pos = lab_pos, cex = 0.9, adj = c(NA, 0))
 
 ## Question #4
 
-```{r q4-largest_changes-prepare_data, echo = FALSE}
+<button class="toggle_code">show hidden code</button>
+```{r q4-largest_changes-prepare_data, echo = TRUE}
 all1980 <- filter(df, year == 1980) %>% mutate(nameg = paste0(name, "_", gender)) %>% 
                                         group_by(nameg) %>% 
                                         summarize(n1980 = sum(count))
@@ -415,7 +442,8 @@ max_rev_decrease <- max(inboth_names$rev_pct)
 N_show <- 5
 ```
 
-```{r q4-largest_change-prepare_data-exclusive_and_common_names, echo = FALSE}
+<button class="toggle_code">show hidden code</button>
+```{r q4-largest_change-prepare_data-exclusive_and_common_names, echo = TRUE}
 names_in_both   <-  (all1980$nameg %in% all2013$nameg)
 names_only_1980 <- !(all1980$nameg %in% all2013$nameg)
 names_only_2013 <- !(all2013$nameg %in% all1980$nameg)
@@ -435,7 +463,8 @@ Taking the straightforward approach of defining percentage increase as the ratio
 the difference 2013 and 1980 counts over the 1980 counts, _i.e._ $(n_{2013} - n_{1980})/n_{1980}$, 
 these are the names whose adoption increased the most between those two reference years:
 
-```{r q4-largest_increase_table, echo = FALSE}
+<button class="toggle_code">show hidden code</button>
+```{r q4-largest_increase_table, echo = TRUE}
 tab4a <- arrange(inboth_names, desc(change_pct)) %>% dplyr::select( . , -ntot, -rev_pct) 
 kable(head(tab4a, N_show), row.names = TRUE, digits = 0)
 
@@ -455,7 +484,8 @@ in the following table.
 To allow a more direct comparison with the changes reported for the increases, we added to this table
 a column with the percentage change computed with 2013 as baseline ("rev_pct").
 
-```{r q4-largest_decrease_table, echo = FALSE}
+<button class="toggle_code">show hidden code</button>
+```{r q4-largest_decrease_table, echo = TRUE}
 tab4b <- arrange(inboth_names, change_pct) %>% dplyr::select( . , -ntot)
 digits_vec <- rep(0, ncol(tab4b)) 
 digits_vec[which(colnames(tab4b)=="change_pct")] <- 2
@@ -507,14 +537,16 @@ Assigning, as noted, a _count = 1_ for 1980 to names existing in 2013 and not in
 compute their hypothetical percentage increase from 1 to their actual 2013 count.
 
 
-```{r q5-max_potential_increase, echo = FALSE}
+<button class="toggle_code">show hidden code</button>
+```{r q5-max_potential_increase, echo = TRUE}
 tab5a <- filter(in2013_not1980, change_if_1 > max_increase) %>% arrange(desc(change_if_1))
 
 kable(head(tab5a, N_show), row.names = TRUE, digits = 2)
 ```
 
 
-```{r q5-max_potential_decrease, echo = FALSE}
+<button class="toggle_code">show hidden code</button>
+```{r q5-max_potential_decrease, echo = TRUE}
 tab5b <- filter(in1980_not2013, rev_change_if_1 > max_rev_decrease) %>% arrange(desc(rev_change_if_1))
 
 kable(head(tab5b, N_show), row.names = TRUE, digits = 0)
@@ -535,7 +567,7 @@ presented above.
 
 
 <hr class="thin_separator">
-<a name="OTHER_BITs"></a>
+<a name="OTHER_BITS"></a>
 
 # OTHER BITS OF ANALYSIS
 
@@ -588,7 +620,8 @@ much more than bullet points at this stage, and not a particularly deeply though
 
 ## SOME BASIC TRENDS BY YEAR AND GENDER
 
-```{r other-prepare_data_by_year_by_gender, cache = TRUE, echo = FALSE}
+<button class="toggle_code">show hidden code</button>
+```{r other-prepare_data_by_year_by_gender, cache = TRUE, echo = TRUE}
 by_year_by_gender <- group_by(df, year, gender) %>% summarize(n = n(), 
                                                               tot_count = sum(count/1000), 
                                                               n_dist = n_distinct(name),
@@ -605,7 +638,8 @@ After that point male names have expanded but it does not look like the can catc
 Please note that the Y-axis scale is logarithmic, hence constant spacing means constant
 ratio (instead of constant difference). 
 
-```{r other-plot_number_of_distinct_names, fig.width = 7, fig.height = 5, echo = FALSE}
+<button class="toggle_code">show hidden code</button>
+```{r other-plot_number_of_distinct_names, fig.width = 7, fig.height = 5, echo = TRUE}
 colors_FM <- c("pink2", "dodgerblue2")
 
 ggplot(by_year_by_gender, aes(x = year, y = n_dist)) + theme_bw() + 
@@ -639,7 +673,8 @@ Steeper power law distributions, if they continue to lower counts below the thre
 would resuls in a larger loss of data for female names and male names.
 This in turn would bias the cumulative counts by gender.
 
-```{r other-plot_total_counts, fig.width = 7, fig.height = 5, echo = FALSE}
+<button class="toggle_code">show hidden code</button>
+```{r other-plot_total_counts, fig.width = 7, fig.height = 5, echo = TRUE}
 ggplot(by_year_by_gender, aes(x = year, y = tot_count)) + theme_bw() + 
        theme(legend.position = c(0.15, 0.85),
            axis.title = element_text(size = 14),
@@ -680,13 +715,18 @@ with their cores able to account a decreasing portion of the population.
 The spreading could be due to _increased creativity_, less 
 
 
-```{r coverage, cache = TRUE, echo = FALSE}
-by_year_coverage <- group_by(df, year, name) %>% summarize(tot_count = sum(count)) %>% arrange(year, desc(tot_count))
-by_year_coverage <- group_by(df, year, name) %>% summarize(tot_count = sum(count)) %>% arrange(year, desc(tot_count)) %>% mutate()
+<button class="toggle_code">show hidden code</button>
+```{r coverage, cache = TRUE, echo = TRUE}
+by_year_coverage <- group_by(df, year, name) %>% summarize(tot_count = sum(count)) %>% 
+                                                 arrange(year, desc(tot_count))
+by_year_coverage <- group_by(df, year, name) %>% summarize(tot_count = sum(count)) %>% 
+                                                 arrange(year, desc(tot_count)) %>% mutate()
 ```
 
-```{r some_aggregation, cache = TRUE, echo = FALSE}
-for_coverage2a <- group_by(df, year, name) %>% summarize(tot_count = sum(count)) %>% arrange(year, desc(tot_count)) %>% 
+<button class="toggle_code">show hidden code</button>
+```{r some_aggregation, cache = TRUE, echo = TRUE}
+for_coverage2a <- group_by(df, year, name) %>% summarize(tot_count = sum(count)) %>% 
+                                               arrange(year, desc(tot_count)) %>% 
                                                summarise(fn90 = get_coverage(tot_count, 90)$Fcov,
                                                          fn95 = get_coverage(tot_count, 95)$Fcov,
                                                          fn99 = get_coverage(tot_count, 99)$Fcov)
@@ -694,7 +734,8 @@ for_coverage2a <- group_by(df, year, name) %>% summarize(tot_count = sum(count))
 for_coverage2 <- gather(for_coverage2a, cutoff, fcov, fn90, fn95, fn99, -year)
 ```
 
-```{r other-plot_names_coverage_v2, fig.width = 7, fig.height = 5.5, echo = FALSE}
+<button class="toggle_code">show hidden code</button>
+```{r other-plot_names_coverage_v2, fig.width = 7, fig.height = 5.5, echo = TRUE}
 cols <- c("red2", "blue2", "orange")
 ggplot(for_coverage2, aes(x = year, y = fcov)) + theme_bw() + 
             theme(legend.position = c(0.2, 0.85),
@@ -734,7 +775,8 @@ counted from these data.
 In a few of these plots there is a hint of a possible "knee" in the distribution of male names,
 between the power law part (left / lower counts side).
 
-```{r other-plot_power_law_distribution_examples, fig.width = 7, fig.height = 10, echo = FALSE}
+<button class="toggle_code">show hidden code</button>
+```{r other-plot_power_law_distribution_examples, fig.width = 7, fig.height = 10, echo = TRUE}
 par(fig = c(0, 1, 0, 1), mar = c(5, 4, 4, 1)+0.1, cex.axis = 1.0)
 single_panel_mar <- c(2, 2, 2, 1)
 single_panel_oma <- c(0 ,0, 2, 0)
@@ -793,7 +835,8 @@ powerlaw_fits <- prepare_powerlaw_fits_data_frame(data = df)
 powerlaw_fits <- readRDS("my_data/powerlaw_fits.RDS")
 ```
 
-```{r other-plot-power_law_fits_slope_F, fig.width = 7, fig.height = 7, echo = FALSE}
+<button class="toggle_code">show hidden code</button>
+```{r other-plot-power_law_fits_slope_F, fig.width = 7, fig.height = 7, echo = TRUE}
 ggplot(powerlaw_fits, aes(x = Time, y = slopeF, color = State)) + theme_bw() + 
         theme(legend.position = "top", legend.title = element_blank()) +
         guides(col = guide_legend(nrow = 4, byrow = TRUE)) + 
@@ -804,7 +847,8 @@ ggplot(powerlaw_fits, aes(x = Time, y = slopeF, color = State)) + theme_bw() +
         labs(title = "Slope of Power Law Fit to Female Names Count Distributions")
 ```
 
-```{r other-plot-power_law_fits_slope_M, fig.width = 7, fig.height = 7, echo = FALSE}
+<button class="toggle_code">show hidden code</button>
+```{r other-plot-power_law_fits_slope_M, fig.width = 7, fig.height = 7, echo = TRUE}
 ggplot(powerlaw_fits, aes(x = Time, y = slopeM, color = factor(State))) + theme_bw() + 
         theme(legend.position = "top", legend.title = element_blank()) +
         guides(col = guide_legend(nrow = 4, byrow = TRUE)) + 
@@ -815,7 +859,8 @@ ggplot(powerlaw_fits, aes(x = Time, y = slopeM, color = factor(State))) + theme_
         labs(title = "Slope of Power Law Fit to Male Names Count Distributions")
 ```
 
-```{r other-plot-power_law_fits_slope_delta, fig.width = 7, fig.height = 7, echo = FALSE}
+<button class="toggle_code">show hidden code</button>
+```{r other-plot-power_law_fits_slope_delta, fig.width = 7, fig.height = 7, echo = TRUE}
 ggplot(powerlaw_fits, aes(x = Time, y = slopeM-slopeF, color = factor(State))) + theme_bw() + 
         theme(legend.position = "top", legend.title = element_blank()) +
         guides(col = guide_legend(nrow = 4, byrow = TRUE)) + 
