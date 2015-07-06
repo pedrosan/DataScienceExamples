@@ -1,5 +1,6 @@
 .cache/*
 my_lib/
+my_css/
 useful_files/
 .cache
 .Rhistory
