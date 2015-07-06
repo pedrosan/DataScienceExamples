@@ -13,7 +13,6 @@ output   :
     mathjax: default
     toc: no
     includes:
-      in_header: css/bits_with_js.html
       md_extensions: +fenced_code_attributes
 ---
 
@@ -36,6 +35,8 @@ opts_chunk$set(message = FALSE,
 # library("pkgmaker")
 # knit_hooks$set(toggle = hook_toggle())
 ```
+
+<script src="./lib/toggle_GF.js"></script>
 
 ## PREAMBLE
 
@@ -81,7 +82,7 @@ are perfomed:
 * the data frame is sorted by `bike` and `time`.
 * row names are removed.
 
-```{r load_data, cache = TRUE)
+```{r load_data, cache = TRUE}
 Classes <- c("character", "character", "character", "character", "character")
 data <- read.csv("data/bike_sharing_data.csv.gz", colClasses = Classes, nrows = 1804000, strip.white = TRUE)
 colnames(data) <- c("bike", "station2", "station1", "time1", "time2")
@@ -108,13 +109,14 @@ row.names(data) <- NULL
 ```
 
 The resulting data frame has the following structure:
+
 ```{r}
 str(data)
 ```
 
 ### Checks on `NA` and stats on some variables
 
-```{r #data_checks}
+```{r data_checks}
 # checking for NA
 sum(is.na(data))
 
@@ -325,7 +327,8 @@ are summarized in the following simple plots, which show two clear qualitative d
 	big peak of usage in the afternoon is almost entirely _leaving_.
 
 
-```{r patterns-plots-by_hour, fig.width=7, fig.height=5, echo=TRUE}
+<button class="toggle_code">show hidden code</button>
+```{r patterns-plots-by_hour, fig.width=7, fig.height=5, echo = TRUE}
 p1 <- ggplot(data = both, aes(x = t1hc, fill = type)) + theme_bw() + xlab("hour of the day")
 
 # density plot
@@ -347,7 +350,8 @@ There is instead a hint of increase of activity for station `fe2a5f` during the 
 that lends further support to the idea that its location may be more residential.
 
 
-```{r patterns-plots-by_wday, fig.width=7, fig.height=5, echo=TRUE}
+<button class="toggle_code">show hidden code</button>
+```{r patterns-plots-by_wday, fig.width=7, fig.height=5, echo = TRUE}
 p2 <- ggplot(data = both, aes(x = as.factor(wday1), fill = ID)) + theme_bw() + 
         theme(legend.position="none") +
         xlab("day of the week") 
@@ -415,6 +419,7 @@ We define a few flags to summarize the _"quality"_ of the data.
 * `flag.T.within` : TRUE is the stay is fully contained within the valid time window.
 
 
+<button class="toggle_code">show hidden code</button>
 ```{r bikes_at_stations-prepare_data_3-conditions_st1}
 st1$flag.in  <- st1$St_in  == sid1
 st1$flag.out <- st1$St_out == sid1
@@ -431,6 +436,7 @@ st1.cond.xbad  <- (st1$check + st1$check.T) == 3
 st1.cond.clean <- st1$check == 7 & st1$check.T == 7
 ```
 
+<button class="toggle_code">show hidden code</button>
 ```{r bikes_at_stations-prepare_data_3-conditions_st2}
 st2$flag.in  <- st2$St_in  == sid2
 st2$flag.out <- st2$St_out == sid2
@@ -447,6 +453,7 @@ st2.cond.xbad  <- (st2$check + st2$check.T) == 3
 st2.cond.clean <- st2$check == 7 & st2$check.T == 7
 ```
 
+<button class="toggle_code">show hidden code</button>
 ```{r bikes_at_stations-filtering_data-1}
 best1 <- st1[st1.cond.clean, ]
 best2 <- st2[st2.cond.clean, ]
@@ -472,6 +479,7 @@ with _hour-marks_ it encompasses, encoding it into a vector.
 We then use these indices to mark times with a 0/1 in a matrix comprising all stays
 for each station.
 
+<button class="toggle_code">show hidden code</button>
 ```{r bikes_at_stations-stats-1}
 # * The +1 is to shift the number to match a valid index value.
 # * Hours are 0-23, but indices are 1-24.
@@ -488,6 +496,7 @@ for(j in 1:nrow(best1)) {
 byHour1 <- colSums(presence1)
 ```
 
+<button class="toggle_code">show hidden code</button>
 ```{r bikes_at_stations-stats-2}
 st2.x1 <- hour(best2$T_in) + 1 + 1
 st2.x2 <- hour(best2$T_out) + 1
@@ -518,7 +527,8 @@ print(df.wide, row.names = FALSE)
 
 ### Plot
 
-```{r bikes_at_stations-plot, fig.width=7, fig.height=5, echo=TRUE}
+<button class="toggle_code">show hidden code</button>
+```{r bikes_at_stations-plot, fig.width=7, fig.height=5, echo = TRUE}
 p3 <- ggplot(data = df, aes(x = hour, y = number, fill = ID)) + theme_bw() + theme(legend.position="none") +
         xlab("hour")
 

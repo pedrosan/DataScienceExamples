@@ -1,4 +1,6 @@
 .cache/*
+my_lib/
+useful_files/
 .cache
 .Rhistory
 .Rproj.user
