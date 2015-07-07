@@ -262,7 +262,8 @@ for(j in 1:N) {
 }
 ```
 
-```{r annual_returns_simulated_from_gaussian, eval = TRUE, cache = TRUE, echo = TRUE}
+<button class="toggle_code">show hidden code</button>
+```{r annual_returns_simulated_2, eval = TRUE, cache = TRUE, echo = TRUE}
 # typical number of market days in a year is ~252
 ndays <- 252
 
@@ -270,23 +271,23 @@ ndays <- 252
   N <- 1e5
 # N <- 1e6
 
-set.seed(1414)
-test_rr_n1.W5000 <- rep(0, N)
+set.seed(1313)
+test_rl.W5000 <- rep(0, N)
 for(j in 1:N) {
-    dummy <- rnorm(ndays, WW$rr_fit_n1)
-    test_rr_n1.W5000[j] <- (cumprod(1 + dummy/100)[ndays] - 1.0)*100
+    dummy <- rgl(ndays, WW$rl_fit_gl)
+    test_rl.W5000[j] <- (cumprod(exp(dummy))[ndays] - 1.0)*100
 }
 
-test_rr_n1.SP500 <- rep(0, N)
+test_rl.SP500 <- rep(0, N)
 for(j in 1:N) {
-    dummy <- rnorm(ndays, SP$rr_fit_n1)
-    test_rr_n1.SP500[j] <- (cumprod(1 + dummy/100)[ndays] - 1.0)*100
+    dummy <- rgl(ndays, SP$rl_fit_gl)
+    test_rl.SP500[j] <- (cumprod(exp(dummy))[ndays] - 1.0)*100
 }
 
-test_rr_n1.N100 <- rep(0, N)
+test_rl.N100 <- rep(0, N)
 for(j in 1:N) {
-    dummy <- rnorm(ndays, NN$rr_fit_n1)
-    test_rr_n1.N100[j] <- (cumprod(1 + dummy/100)[ndays] - 1.0)*100
+    dummy <- rgl(ndays, NN$rl_fit_gl)
+    test_rl.N100[j] <- (cumprod(exp(dummy))[ndays] - 1.0)*100
 }
 ```
 
@@ -322,16 +323,21 @@ legend("topright", bty = "y", bg = "grey95", x.intersp = 0.7, y.intersp = 0.8,
 ```
 
 <button class="toggle_code">show hidden code</button>
-```{r plot-annual_returns_distr_2_from_gaussian, echo = TRUE, eval = FALSE, fig.width = 8.0, fig.height = 5.5}
+```{r plot-annual_returns_distr_2_rl, echo = TRUE, eval = TRUE, fig.width = 8.0, fig.height = 5.5}
+xx2 <- seq(-200, 200, by = 1.0)
+yy.W5000.n <- dnorm(xx2, mean = mean(test_rl.W5000), sd = sd(test_rl.W5000))
+yy.SP500.n <- dnorm(xx2, mean = mean(test_rl.SP500), sd = sd(test_rl.SP500))
+yy.N100.n  <- dnorm(xx2, mean = mean(test_rl.N100), sd = sd(test_rl.N100))
+
 plot(density(test_rl.N100), type = "n",
      xlim = c(-100.0, 200.0), 
      ylim = c(0.0, 0.037), 
      xlab = "annual return [%]", 
      main = "Wilshire5000, S&P500, NASDAQ100")
 grid()
-lines(density(test_rr_n1.N100),  col = "red2",   lwd = 3, lty = 3)
-lines(density(test_rr_n1.SP500), col = "blue2",  lwd = 3, lty = 3)
-lines(density(test_rr_n1.W5000), col = "green3", lwd = 3, lty = 3)
+lines(xx2, yy.N100.n,         col = "red2",   lwd = 3, lty = 3)
+lines(xx2, yy.SP500.n,        col = "blue2",  lwd = 3, lty = 3)
+lines(xx2, yy.W5000.n,        col = "green3", lwd = 3, lty = 3)
 lines(density(test_rl.N100),  col = "red2",   lwd = 3)
 lines(density(test_rl.SP500), col = "blue2",  lwd = 3)
 lines(density(test_rl.W5000), col = "green3", lwd = 3)
@@ -439,8 +445,20 @@ legend("topright", bty = "y", bg = "grey95", x.intersp = 0.7, y.intersp = 0.8,
 
 #### Time-series plots of returns
 
-```{r plot-annual_returns_timeseries_ggplot, echo = FALSE, eval = FALSE, fig.width = 10.0, fig.height = 5.5}
-# NOT EVALUATED
+```{r plot-annual_returns_timeseries, echo = FALSE, eval = FALSE, fig.width = 8.0, fig.height = 5.5}
+# plot(1:length(N100_rra), N100_rra, type = "n", 
+#      ylim = c(-75, 125),
+#      xlab = "index",
+#      ylab = "Annual Returns",
+#      main = "Wilshire5000, S&P500, NASDAQ100")
+# grid()
+# lines(1:length(N100_rra), N100_rra, type = "l", col = "red2")
+# lines(1:length(SP500_rra), SP500_rra, type = "l", col = "blue2")
+# lines(1:length(W5000_rra), W5000_rra, type = "l", col = "green3")
+```
+
+<button class="toggle_code">show hidden code</button>
+```{r plot-annual_returns_timeseries_ggplot, echo = TRUE, fig.width = 10.0, fig.height = 5.5}
 ggplot(data = rr.df, aes(x = time)) + theme_bw() + 
        theme(axis.title = element_text(size = 16),
              axis.text= element_text(size = 14),
@@ -489,9 +507,8 @@ ggplot(data = rr.df, aes(x = time)) + theme_bw() +
 
 #### Time-series plots of indices (normalized to 1996-01-02)
 
-```{r plot-indices_timeseries_ggplot_norm, echo = FALSE, eval = FALSE, fig.width = 10.0, fig.height = 5.5}
-# NOT EVALUATED
-
+<button class="toggle_code">show hidden code</button>
+```{r plot-indices_timeseries_ggplot_norm, echo = TRUE, eval = TRUE, fig.width = 10.0, fig.height = 5.5}
 ggplot(data = rr.df, aes(x = time)) + theme_bw() + 
        theme(axis.title = element_text(size = 16),
              axis.text= element_text(size = 14),
@@ -505,25 +522,6 @@ ggplot(data = rr.df, aes(x = time)) + theme_bw() +
        geom_line(aes(x = date, y = NNidx_n), col = "red2", show_guide = TRUE) + 
        geom_line(aes(x = date, y = SPidx_n), col = "blue2", show_guide = TRUE) + 
        geom_line(aes(x = date, y = WWidx_n), col = "green4")
-```
-
-<button class="toggle_code">show hidden code</button>
-```{r plot-indices_timeseries_ggplot_norm_ALT, echo = TRUE, eval = TRUE, fig.width = 10.0, fig.height = 5.5}
-tmp <- dplyr::select(rr.df, date, time, WWidx_n, SPidx_n, NNidx_n) %>% gather(. , name, value, NNidx_n, SPidx_n, WWidx_n)
-
-ggplot(data = tmp, aes(x = date, y = value)) + theme_bw() + 
-       theme(axis.title = element_text(size = 16),
-             axis.text= element_text(size = 14),
-             axis.line = element_line(size = 1),
-             legend.position = c(0.1, 0.85)) +
-       xlab("date") + 
-       ylab("indices (scaled to 1996-01-02)") + 
-       scale_x_date(minor_breaks = "1 year") +
-       scale_y_log10(breaks = c(1, 2, 4, 8)) +  
-       geom_hline(h = 0, lty = 2, col = "orange") +
-       geom_vline(xintercept = as.numeric(as.Date("1996-01-02")), lty = 2, col = "orange") +
-       geom_line(aes(color = name)) + 
-       scale_colour_manual(values = c("red2", "blue2", "green4"), name = "Index", labels = c("NASDAQ100", "S&P500", "Wilshire5000"))
 ```
 
 

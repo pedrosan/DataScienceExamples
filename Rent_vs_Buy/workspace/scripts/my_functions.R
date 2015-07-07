@@ -17,13 +17,22 @@ prepare_data <- function(data = NULL, xlin = NULL, xlog = NULL) {
     rr_fit_gl_y <- dgl(xlin, rr_fit_gl)
 
     # Fit with a Normal distribution, on the core of the data distribution
-    rr_fit_norm1 <- fitdistr(returns_rel[abs(returns_rel) <= 5.0], "normal")
-    rr_fit_norm2 <- fitdistr(returns_rel[abs(returns_rel) <= 2.0], "normal")
+    rr_mean <- mean(returns_rel)
+    rr_fit_norm1 <- fitdistr(returns_rel[abs(returns_rel - rr_mean) <= 5.0], "normal")
+    rr_fit_norm2 <- fitdistr(returns_rel[abs(returns_rel - rr_mean) <= 2.0], "normal")
+    # rr_fit_norm1 <- fitdistr(returns_rel[abs(returns_rel) <= 5.0], "normal")
+    # rr_fit_norm2 <- fitdistr(returns_rel[abs(returns_rel) <= 2.0], "normal")
 
     rr_fit_norm1_y <- dnorm(xlin, mean = rr_fit_norm1$estimate[1], sd = rr_fit_norm1$estimate[2])
     rr_fit_norm2_y <- dnorm(xlin, mean = rr_fit_norm2$estimate[1], sd = rr_fit_norm2$estimate[2])
+
+    rr_fit_n1 <- c(rr_fit_norm1$estimate[1], rr_fit_norm1$estimate[2])
+    rr_fit_n2 <- c(rr_fit_norm2$estimate[1], rr_fit_norm2$estimate[2])
     
-    returns_rel_distr.df <- data.frame(x = xlin, y_gl = rr_fit_gl_y, y_norm1 = rr_fit_norm1_y, y_norm2 = rr_fit_norm2_y)
+    returns_rel_distr.df <- data.frame(x = xlin, 
+                                       y_gl = rr_fit_gl_y, 
+                                       y_norm1 = rr_fit_norm1_y, 
+                                       y_norm2 = rr_fit_norm2_y)
 
     #---------------------------------------------------------------------
     # log returns
@@ -34,21 +43,34 @@ prepare_data <- function(data = NULL, xlin = NULL, xlog = NULL) {
     rl_fit_gl_y <- dgl(xlog, rl_fit_gl)
 
     # Fit with a Normal distribution, on the core of the data distribution
-    rl_fit_norm1 <- fitdistr(returns_log[abs(returns_log) <= 0.05], "normal")
-    rl_fit_norm2 <- fitdistr(returns_log[abs(returns_log) <= 0.02], "normal")
+    rl_mean <- mean(returns_log)
+    rl_fit_norm1 <- fitdistr(returns_log[abs(returns_log - rl_mean) <= 0.05], "normal")
+    rl_fit_norm2 <- fitdistr(returns_log[abs(returns_log - rl_mean) <= 0.02], "normal")
+    # rl_fit_norm1 <- fitdistr(returns_log[abs(returns_log) <= 0.05], "normal")
+    # rl_fit_norm2 <- fitdistr(returns_log[abs(returns_log) <= 0.02], "normal")
 
     rl_fit_norm1_y <- dnorm(xlog, mean = rl_fit_norm1$estimate[1], sd = rl_fit_norm1$estimate[2])
     rl_fit_norm2_y <- dnorm(xlog, mean = rl_fit_norm2$estimate[1], sd = rl_fit_norm2$estimate[2])
     
-    returns_log_distr.df <- data.frame(x = xlog, y_gl = rl_fit_gl_y, y_norm1 = rl_fit_norm1_y, y_norm2 = rl_fit_norm2_y)
+    rl_fit_n1 <- c(rl_fit_norm1$estimate[1], rl_fit_norm1$estimate[2])
+    rl_fit_n2 <- c(rl_fit_norm2$estimate[1], rl_fit_norm2$estimate[2])
+    
+    returns_log_distr.df <- data.frame(x = xlog, 
+                                       y_gl = rl_fit_gl_y, 
+                                       y_norm1 = rl_fit_norm1_y, 
+                                       y_norm2 = rl_fit_norm2_y)
 
     #---------------------------------------------------------------------
 
     list( rr_data = returns_rel,
           rr_fit_gl = rr_fit_gl,
+          rr_fit_n1 = rr_fit_n1,
+          rr_fit_n2 = rr_fit_n2,
           rr_distr = returns_rel_distr.df,
           rl_data = returns_log,
           rl_fit_gl = rl_fit_gl,
+          rl_fit_n1 = rl_fit_n1,
+          rl_fit_n2 = rl_fit_n2,
           rl_distr = returns_log_distr.df
         )
     
