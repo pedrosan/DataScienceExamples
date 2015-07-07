@@ -1,7 +1,7 @@
 BvsR
 ====
 
-## A _Buy vs. Rent_ calculator 
+## A _Buy vs. Rent_ calculator
 
 ### [[Running on ShinyApps]](https://pedrosan.shinyapps.io/AdvBvsR/)
 

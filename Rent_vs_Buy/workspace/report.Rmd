@@ -1,0 +1,367 @@
+---
+title: "Stock Market Returns Distributions"
+subtitle : 
+author   : Giovanni Fossati
+job      : null
+output   : 
+  html_document:
+    self_contained: false
+    css: css/gf_new.css
+    theme: cerulean
+    highlight: tango
+    keep_md: no
+    mathjax: default
+    toc: no
+    includes:
+      md_extensions: +fenced_code_attributes
+---
+
+```{r setup, cache = FALSE, echo = FALSE, message = FALSE, warning = FALSE, tidy = FALSE}
+require("knitr")
+options(width = 100, 
+        scipen = 5)
+opts_chunk$set(message = FALSE, 
+               error = FALSE, 
+               warning = FALSE, 
+               collapse = TRUE, 
+               tidy = FALSE,
+               cache = FALSE, 
+               cache.path = '.cache/', 
+               comment = '#',
+               fig.align = 'center', 
+               dpi = 100, 
+               dev = "png",
+               fig.path = 'figures/')
+# library("pkgmaker")
+# knit_hooks$set(toggle = hook_toggle())
+```
+
+## PRELIMINARIES
+
+Libraries needed for data processing and plotting:
+
+```{r load_packages, cache = FALSE, echo = TRUE, message = FALSE, warning = FALSE, tidy = FALSE}
+# library("lubridate")
+# library("plyr")
+library("ggplot2")
+library("gridExtra")
+```
+
+
+## Introduction
+
+Two interesting, blog posts:
+
+* [The Generalized Lambda Distribution and GLDEX Package: Fitting Financial Return Data](http://www.r-bloggers.com/the-generalized-lambda-distribution-and-gldex-package-fitting-financial-return-data/)
+* [The Generalized Lambda Distribution and GLDEX Package for Fitting Financial Return Data – Part 2](http://www.r-bloggers.com/the-generalized-lambda-distribution-and-gldex-package-for-fitting-financial-return-data-part-2/)
+
+The GLDEX package is available on [CRAN](http://cran.r-project.org/web/packages/GLDEX/index.html)
+
+
+<a name="THE_DATA"></a>
+
+## Libraries and Other Setup
+
+```{r load-libraries, echo = TRUE, cache = FALSE}
+library("quantmod")
+library("GLDEX")
+library("MASS")
+```
+
+```{r load-more_libraries_for_plotting, echo = TRUE, cache = FALSE}
+library("scales")
+source("./my_functions.R")
+```
+
+```{r set_dates}
+start.date <- "1986-01-01"
+end.date <- "2014-12-31"
+
+xxlin <- seq(-25.0, 25.0, by = 0.1)
+xxlog <- seq(-2.0, 2.0, by = 0.001)
+```
+
+<hr class="thin_separator">
+
+# Three Broad Market Indices : Daily Returns
+
+## Wilshire 5000
+
+Fetch the data with `quantmod`:
+
+```{r wilshire5000-load, cache = TRUE}
+# getSymbols("VTSMX", from = "1994-01-01")
+getSymbols("VTSMX", from = start.date, to = end.date)
+VTSMX.vec <- as.vector(VTSMX[, 4])
+```
+
+Prepare returns:
+
+```{r wilshire5000-prepare_data, cache = TRUE}
+WW <- prepare_data(data = VTSMX.vec, xlin = xxlin, xlog = xxlog)
+WW$dates <- index(VTSMX)
+WW$year <- substr(index(VTSMX), 1, 4)
+```
+
+```{r wilshire5000-plot_distributions_plain, echo = FALSE, cache = TRUE, eval = FALSE}
+hist(WW$rr_data, breaks = seq(-55.0, 55.0, by = 0.10), xlim = c(-8.0, 8.0), freq = FALSE,
+     xlab = "daily returns (%)",
+     main = "Wilshire 5000")
+lines(WW$rr_distr$x, WW$rr_distr$y_norm1, col = "green2", lwd = 2)
+lines(WW$rr_distr$x, WW$rr_distr$y_norm2, col = "blue2", lwd = 2)
+lines(WW$rr_distr$x, WW$rr_distr$y_gl, col = "red2", lwd = 2)
+```
+
+#### Distributions of _relative returns_ and of _log returns_:
+
+```{r wilshire5000-plot_distributions_ggplot_3, echo = FALSE, cache = TRUE, fig.width = 10.0, fig.height = 5.0}
+p1 <- plot_distr_rel_returns(data = WW$rr_data, fits = WW$rr_distr)
+p2 <- plot_distr_log_returns(data = WW$rl_data, fits = WW$rl_distr)
+grid.arrange(p1, p2, nrow=1)
+```
+
+
+<hr class="thin_separator">
+
+### S&P 500 
+
+Fetch the data with `quantmod`:
+
+```{r sp500-load, cache = TRUE}
+getSymbols("^GSPC", from = start.date, to = end.date)
+GSPC.vec <- as.vector(GSPC[, 4])
+```
+
+```{r sp500-prepare_data, cache = TRUE}
+SP <- prepare_data(data = GSPC.vec, xlin = xxlin, xlog = xxlog)
+SP$dates <- index(GSPC)
+SP$year <- substr(index(GSPC), 1, 4)
+```
+
+#### Distributions of _relative returns_ and of _log returns_:
+
+```{r sp500-plot_distributions_ggplot_3, echo = FALSE, cache = TRUE, fig.width = 10.0, fig.height = 5.0}
+p1 <- plot_distr_rel_returns(data = SP$rr_data, fits = SP$rr_distr)
+p2 <- plot_distr_log_returns(data = SP$rl_data, fits = SP$rl_distr)
+grid.arrange(p1, p2, nrow=1)
+```
+
+
+<hr class="thin_separator">
+
+### NASDAQ 100
+
+Fetch the data with `quantmod`:
+
+```{r nasdaq100-load, cache = TRUE}
+getSymbols("^NDX", from = start.date, to = end.date)
+NDX.vec <- as.vector(NDX[, 4])
+```
+
+```{r nasdaq100-prepare_data, cache = TRUE}
+NN <- prepare_data(data = NDX.vec, xlin = xxlin, xlog = xxlog)
+NN$dates <- index(NDX)
+NN$year <- substr(index(NDX), 1, 4)
+```
+
+#### Distributions of _relative returns_ and of _log returns_:
+
+```{r nasdaq100-plot_distributions_ggplot_3, echo = FALSE, cache = TRUE, fig.width = 10.0, fig.height = 5.0}
+p1 <- plot_distr_rel_returns(data = NN$rr_data, fits = NN$rr_distr)
+p2 <- plot_distr_log_returns(data = NN$rl_data, fits = NN$rl_distr)
+grid.arrange(p1, p2, nrow=1)
+```
+
+
+<hr class="thin_separator">
+
+# Three Broad Market Indices : Daily Returns
+
+
+## Annual from Daily Returns
+
+Simulating annual returns by compounding daily returns drawn from the 
+best fit _generalized gamma distributions_.
+
+```{r more_code, eval = TRUE, cache = TRUE}
+# typical number of market days in a year is ~252
+ndays <- 252
+
+# repeats
+  N <- 1e5
+# N <- 1e6
+
+set.seed(1212)
+test_rr.W5000 <- rep(0, N)
+for(j in 1:N) {
+    dummy <- rgl(ndays, WW$rr_fit_gl)
+    test_rr.W5000[j] <- (cumprod(1 + dummy/100)[ndays] - 1.0)*100
+}
+
+test_rr.SP500 <- rep(0, N)
+for(j in 1:N) {
+    dummy <- rgl(ndays, SP$rr_fit_gl)
+    test_rr.SP500[j] <- (cumprod(1 + dummy/100)[ndays] - 1.0)*100
+}
+
+test_rr.N100 <- rep(0, N)
+for(j in 1:N) {
+    dummy <- rgl(ndays, NN$rr_fit_gl)
+    test_rr.N100[j] <- (cumprod(1 + dummy/100)[ndays] - 1.0)*100
+}
+```
+
+```{r plot-annual_returns_distr_1, echo = FALSE, eval = TRUE, fig.width = 8.0, fig.height = 5.5}
+xx2 <- seq(-200, 200, by = 1.0)
+yy.W5000.n <- dnorm(xx2, mean = mean(test_rr.W5000), sd = sd(test_rr.W5000))
+yy.SP500.n <- dnorm(xx2, mean = mean(test_rr.SP500), sd = sd(test_rr.SP500))
+yy.N100.n  <- dnorm(xx2, mean = mean(test_rr.N100), sd = sd(test_rr.N100))
+
+plot(density(test_rr.N100), type = "n",
+     xlim = c(-100.0, 200.0), 
+     ylim = c(0.0, 0.037), 
+     xlab = "annual return [%]", 
+     main = "Wilshire5000, S&P500, NASDAQ100")
+grid()
+lines(xx2, yy.N100.n, col = "pink2", lty = 2, lwd = 3)
+lines(xx2, yy.SP500.n, col = "lightblue", lty = 2, lwd = 3)
+lines(xx2, yy.W5000.n, col = "lightgreen", lty = 2, lwd = 3)
+lines(density(test_rr.N100), col = "red2", lwd = 3)
+lines(density(test_rr.SP500), col = "blue2", lwd = 3)
+lines(density(test_rr.W5000), col = "forestgreen", lwd = 3)
+```
+
+## Annual straight from data
+
+```{r aligned_annual_returns, echo = FALSE}
+WWb <- VTSMX.vec[WW$year >= 1994]
+SPb <- GSPC.vec[SP$year >= 1994]
+NNb <- NDX.vec[NN$year >= 1994]
+WWd <- index(VTSMX)[WW$year >= 1994]
+SPd <- index(GSPC)[SP$year >= 1994]
+NNd <- index(NDX)[NN$year >= 1994]
+
+W5000_rla <- diff(log(WWb), lag = 252)
+W5000_rra <- 100.0*(exp(W5000_rla)-1)
+
+SP500_rla <- diff(log(SPb), lag = 252)
+SP500_rra <- 100.0*(exp(SP500_rla)-1)
+
+N100_rla <- diff(log(NNb), lag = 252)
+N100_rra <- 100.0*(exp(N100_rla)-1)
+
+rr.df <- data.frame(date = WWd[-(1:252)], WW = W5000_rra, SP = SP500_rra, NN = N100_rra)
+rr.df$time <- as.POSIXct(rr.df$date)
+
+rr.df$WWidx <- WWb[-(1:252)]
+rr.df$SPidx <- SPb[-(1:252)]
+rr.df$NNidx <- NNb[-(1:252)]
+
+rr.df$WWidx_n <- WWb[-(1:252)]/rr.df$WWidx[rr.df$date == "1996-01-02"]
+rr.df$SPidx_n <- SPb[-(1:252)]/rr.df$SPidx[rr.df$date == "1996-01-02"]
+rr.df$NNidx_n <- NNb[-(1:252)]/rr.df$NNidx[rr.df$date == "1996-01-02"]
+```
+
+```{r annual_returns, echo = FALSE, eval = FALSE}
+W5000_rla <- diff(log(VTSMX.vec), lag = 252)
+W5000_rra <- 100.0*(exp(W5000_rla)-1)
+
+SP500_rla <- diff(log(GSPC.vec), lag = 252)
+SP500_rra <- 100.0*(exp(SP500_rla)-1)
+
+N100_rla <- diff(log(NDX.vec), lag = 252)
+N100_rra <- 100.0*(exp(N100_rla)-1)
+```
+
+```{r plot-annual_returns_distr_2, echo = FALSE, eval = TRUE, fig.width = 8.0, fig.height = 5.5}
+plot(density(W5000_rra), type = "n", 
+     xlim = c(-100.0, 200.0), 
+     ylim = c(0.0, 0.037), 
+     xlab = "annual return [%]", 
+     main = "Wilshire5000, S&P500, NASDAQ100")
+grid()
+lines(density(N100_rra), col = "red", lty = 2, lwd = 3)
+lines(density(SP500_rra), col = "blue", lty = 2, lwd = 3)
+lines(density(W5000_rra), col = "green2", lty = 2, lwd = 3)
+lines(density(test_rr.N100), col = "red2", lwd = 3)
+lines(density(test_rr.SP500), col = "blue2", lwd = 3)
+lines(density(test_rr.W5000), col = "green3", lwd = 3)
+```
+
+```{r plot-annual_returns_timeseries, echo = FALSE, eval = FALSE, fig.width = 8.0, fig.height = 5.5}
+plot(1:length(N100_rra), N100_rra, type = "n", 
+     ylim = c(-75, 125),
+     xlab = "index",
+     ylab = "Annual Returns",
+     main = "Wilshire5000, S&P500, NASDAQ100")
+grid()
+lines(1:length(N100_rra), N100_rra, type = "l", col = "red2")
+lines(1:length(SP500_rra), SP500_rra, type = "l", col = "blue2")
+lines(1:length(W5000_rra), W5000_rra, type = "l", col = "green3")
+```
+
+```{r plot-annual_returns_timeseries_ggplot, echo = FALSE, eval = TRUE, fig.width = 10.0, fig.height = 5.5}
+ggplot(data = rr.df, aes(x = time)) + theme_bw() + 
+       theme(axis.title = element_text(size = 16),
+             axis.text= element_text(size = 14),
+             axis.line = element_line(size = 1)) +
+       ylim(-75.0, 125.0) +
+       xlab("date") + 
+       ylab("annualized returns") + 
+       # scale_x_continuous(minor_breaks = seq(1994, 2015, by = 1)) + 
+       # scale_x_date(minor_breaks = seq(1994, 2015, by = 1)) + 
+       scale_x_date(minor_breaks = "1 year") +
+       geom_hline(h=0, lty = 2, col = "orange") +
+       geom_line(aes(x = date, y = NN), col = "red2") + 
+       geom_line(aes(x = date, y = SP), col = "blue2") + 
+       geom_line(aes(x = date, y = WW), col = "green4")
+```
+
+```{r plot-indices_timeseries_ggplot, echo = FALSE, eval = FALSE, fig.width = 10.0, fig.height = 5.5}
+ggplot(data = rr.df, aes(x = time)) + theme_bw() + 
+       theme(axis.title = element_text(size = 16),
+             axis.text= element_text(size = 14),
+             axis.line = element_line(size = 1)) +
+       # ylim(-75.0, 125.0) +
+       xlab("date") + 
+       ylab("indices") + 
+       # scale_x_continuous(minor_breaks = seq(1994, 2015, by = 1)) + 
+       # scale_x_date(minor_breaks = seq(1994, 2015, by = 1)) + 
+       scale_x_date(minor_breaks = "1 year") +
+       scale_y_log10() +  
+       geom_line(aes(x = date, y = NNidx), col = "red2") + 
+       geom_line(aes(x = date, y = SPidx), col = "blue2") + 
+       geom_line(aes(x = date, y = WWidx), col = "green4")
+```
+
+```{r plot-indices_timeseries_ggplot_norm, echo = FALSE, eval = TRUE, fig.width = 10.0, fig.height = 5.5}
+ggplot(data = rr.df, aes(x = time)) + theme_bw() + 
+       theme(axis.title = element_text(size = 16),
+             axis.text= element_text(size = 14),
+             axis.line = element_line(size = 1)) +
+       # ylim(-75.0, 125.0) +
+       xlab("date") + 
+       ylab("indices (scaled to 1996-01-02)") + 
+       # scale_x_continuous(minor_breaks = seq(1994, 2015, by = 1)) + 
+       # scale_x_date(minor_breaks = seq(1994, 2015, by = 1)) + 
+       scale_x_date(minor_breaks = "1 year") +
+       scale_y_log10(breaks = c(1, 2, 4, 8)) +  
+       geom_line(aes(x = date, y = NNidx_n), col = "red2") + 
+       geom_line(aes(x = date, y = SPidx_n), col = "blue2") + 
+       geom_line(aes(x = date, y = WWidx_n), col = "green4")
+```
+
+
+<hr class="separator">
+<a name="APPENDIX"></a>
+
+# APPENDIX
+
+<a name="SessionInfo"></a>
+
+## R Session Info
+
+```{r R_session_info}
+sessionInfo()
+```
+---

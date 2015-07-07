@@ -30,7 +30,6 @@ shinyServer(function(input, output, session) {
   #
   sim.tradeoff <- reactive( do.call(simulate_tradeoff, getParams1(input, paramNames)) ) 
 
-
   # Expression that plot simulated data.
   # The expression is wrapped in a call to "renderPlot" and therefore
   # it is "reactive" and should be automatically re-executed when inputs change.

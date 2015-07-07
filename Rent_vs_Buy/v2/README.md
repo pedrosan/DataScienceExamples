@@ -3,13 +3,14 @@ BvsR
 
 ## A _Buy vs. Rent_ calculator
 
+### [[Running on ShinyApps]](https://pedrosan.shinyapps.io/AdvBvsR/)
+
 A calculator for a more comprehensive and realistic scenario comparing the cost/benefits of 
 buying a property vs. renting a comparable one.
 
 It takes into account taxes, and tax benefits of the mortgage interest deduction (if applicable when compared
 with a standard deduction), the benefits of re-investing money potentially saved by renting instead of buying,
 as well of the benefit of the return of investment of the capital not put into a down-payment.
-
 
 Given the parameter values, 250 simulations are performed, with stochastic 'predictions' of 
 the property appreciation, (alternative) investment return, inflation, rent increase.
