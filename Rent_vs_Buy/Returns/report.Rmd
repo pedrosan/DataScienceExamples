@@ -32,8 +32,6 @@ opts_chunk$set(message = FALSE,
                dpi = 100, 
                dev = "png",
                fig.path = 'figures/')
-# library("pkgmaker")
-# knit_hooks$set(toggle = hook_toggle())
 ```
 
 ## PRELIMINARIES
@@ -128,7 +126,8 @@ We add to this list dates from the timeseries _index_ and year:
 
 This is the structure of the resulting list:
 
-```{r wilshire5000-show_prepared_data_list}
+<button class="toggle_code">show output</button>
+```{r wilshire5000-show_prepared_data_list, echo = TRUE}
 str(WW)
 ```
  
@@ -152,7 +151,7 @@ The histograms are the return data, with overlayed
 It is quite obvious how much better the _generalized Gamma distribution_ describes the data, 
 both their "code" and the long fat tails.
 
-<button class="toggle_code">show hidden code</button>
+<button class="toggle_plot_code">show plot code</button>
 ```{r wilshire5000-plot_distributions_ggplot_3, echo = FALSE, cache = FALSE, fig.width = 10.0, fig.height = 5.0}
 p1 <- plot_distr_rel_returns(data = WW$rr_data, fits = WW$rr_distr)
 p2 <- plot_distr_log_returns(data = WW$rl_data, fits = WW$rl_distr)
@@ -175,7 +174,7 @@ GSPC.vec <- as.vector(GSPC[, 4])
 
 and prepare with the `prepare_data()` function:
 
-```{r sp500-prepare_data, cache = FALSE}
+```{r sp500-prepare_data, cache = TRUE}
 SP <- prepare_data(data = GSPC.vec, xlin = xxlin, xlog = xxlog)
 
 SP$dates <- index(GSPC)
@@ -184,14 +183,15 @@ SP$year <- substr(index(GSPC), 1, 4)
 
 This is the structure of the resulting list:
 
-```{r sp500-show_prepared_data_list}
+<button class="toggle_code">show output</button>
+```{r sp500-show_prepared_data_list, echo = TRUE}
 str(SP)
 ```
  
 
 #### Distributions of _relative returns_ and of _log returns_:
 
-<button class="toggle_code">show hidden code</button>
+<button class="toggle_plot_code">show plot code</button>
 ```{r sp500-plot_distributions_ggplot_3, echo = TRUE, cache = FALSE, fig.width = 10.0, fig.height = 5.0}
 p1 <- plot_distr_rel_returns(data = SP$rr_data, fits = SP$rr_distr)
 p2 <- plot_distr_log_returns(data = SP$rl_data, fits = SP$rl_distr)
@@ -210,7 +210,7 @@ getSymbols("^NDX", from = start.date, to = end.date)
 NDX.vec <- as.vector(NDX[, 4])
 ```
 
-```{r nasdaq100-prepare_data, cache = FALSE}
+```{r nasdaq100-prepare_data, cache = TRUE}
 NN <- prepare_data(data = NDX.vec, xlin = xxlin, xlog = xxlog)
 
 NN$dates <- index(NDX)
@@ -219,13 +219,14 @@ NN$year <- substr(index(NDX), 1, 4)
 
 This is the structure of the resulting list:
 
-```{r nasdaq100-show_prepared_data_list}
+<button class="toggle_code">show output</button>
+```{r nasdaq100-show_prepared_data_list, echo = TRUE}
 str(NN)
 ```
  
 #### Distributions of _relative returns_ and of _log returns_:
 
-<button class="toggle_code">show hidden code</button>
+<button class="toggle_plot_code">show plot code</button>
 ```{r nasdaq100-plot_distributions_ggplot_3, echo = TRUE, cache = FALSE, fig.width = 10.0, fig.height = 5.0}
 p1 <- plot_distr_rel_returns(data = NN$rr_data, fits = NN$rr_distr)
 p2 <- plot_distr_log_returns(data = NN$rl_data, fits = NN$rl_distr)
@@ -243,7 +244,7 @@ grid.arrange(p1, p2, nrow=1)
 Simulating annual returns by compounding daily returns drawn from the 
 best fit _generalized gamma distributions_.
 
-<button class="toggle_code">show hidden code</button>
+<button class="toggle_code">show code</button>
 ```{r annual_returns_simulated_1, eval = TRUE, cache = TRUE, echo = TRUE}
 # typical number of market days in a year is ~252
 ndays <- 252
@@ -272,7 +273,7 @@ for(j in 1:N) {
 }
 ```
 
-<button class="toggle_code">show hidden code</button>
+<button class="toggle_code">show code</button>
 ```{r annual_returns_simulated_from_gaussian, eval = TRUE, cache = TRUE, echo = TRUE}
 # typical number of market days in a year is ~252
 ndays <- 252
@@ -305,7 +306,7 @@ for(j in 1:N) {
 }
 ```
 
-<button class="toggle_code">show hidden code</button>
+<button class="toggle_plot_code">show plot code</button>
 ```{r plot-annual_returns_distr_1_rr, echo = TRUE, eval = TRUE, fig.width = 8.0, fig.height = 5.5}
 xx2 <- seq(-200, 200, by = 1.0)
 yy.W5000.n <- dnorm(xx2, mean = mean(test_rr.W5000), sd = sd(test_rr.W5000))
@@ -336,7 +337,7 @@ legend("topright", bty = "y", bg = "grey95", x.intersp = 0.7, y.intersp = 0.8,
        cex = 1.0)
 ```
 
-<button class="toggle_code">show hidden code</button>
+<button class="toggle_plot_code">show plot code</button>
 ```{r plot-annual_returns_distr_2_from_gaussian, echo = FALSE, eval = FALSE, fig.width = 8.0, fig.height = 5.5}
 # NOT EVALUATED ('test_rl' DATA NOT PREPARED)
 plot(density(test_rl.N100), type = "n",
@@ -387,7 +388,7 @@ of annual returns obtained straight from the data by looking at 252-day-lagged v
 For this analysis we restricted the data to the 1994-2014 interval, in order to have
 the same coverage for the three indices.
 
-<button class="toggle_code">show hidden code</button>
+<button class="toggle_code">show code</button>
 ```{r aligned_annual_returns, echo = TRUE}
 WWb <- VTSMX.vec[WW$year >= 1994]
 SPb <- GSPC.vec[SP$year >= 1994]
@@ -427,7 +428,7 @@ in the last 20 years, with two period of major losses almost isolated in the mid
 steady-ish rising trend (see plots further down).
 
 
-<button class="toggle_code">show hidden code</button>
+<button class="toggle_plot_code">show plot code</button>
 ```{r plot-annual_returns_distr_2, echo = TRUE, eval = TRUE, fig.width = 8.0, fig.height = 5.5}
 plot(density(W5000_rra), type = "n", 
      xlim = c(-100.0, 200.0), 
@@ -471,9 +472,10 @@ ggplot(data = rr.df, aes(x = time)) + theme_bw() +
        geom_line(aes(x = date, y = WW), col = "green4")
 ```
 
-<button class="toggle_code">show hidden code</button>
+<button class="toggle_plot_code">show plot code</button>
 ```{r plot-annual_returns_timeseries_ggplot_ALT, echo = TRUE, fig.width = 10.0, fig.height = 5.5}
-tmp <- dplyr::select(rr.df, date, time, WW, SP, NN) %>% gather(. , name, value, NN, SP, WW)
+tmp <- dplyr::select(rr.df, date, time, WW, SP, NN) %>% 
+              gather(. , name, value, NN, SP, WW)
 
 ggplot(data = tmp, aes(x = date, y = value)) + theme_bw() + 
        theme(axis.title = element_text(size = 16),
@@ -485,7 +487,8 @@ ggplot(data = tmp, aes(x = date, y = value)) + theme_bw() +
        ylab("annualized returns") + 
        geom_hline(h=0, lty = 2, col = "orange") +
        geom_line(aes(color = name)) + 
-       scale_colour_manual(values = c("red2", "blue2", "green4"), name = "Index", labels = c("NASDAQ100", "S&P500", "Wilshire5000"))
+       scale_colour_manual(values = c("red2", "blue2", "green4"), name = "Index", 
+                           labels = c("NASDAQ100", "S&P500", "Wilshire5000"))
 ```
 
 ```{r plot-indices_timeseries_ggplot, echo = FALSE, eval = FALSE, fig.width = 10.0, fig.height = 5.5}
@@ -523,9 +526,10 @@ ggplot(data = rr.df, aes(x = time)) + theme_bw() +
        geom_line(aes(x = date, y = WWidx_n), col = "green4")
 ```
 
-<button class="toggle_code">show hidden code</button>
+<button class="toggle_plot_code">show plot code</button>
 ```{r plot-indices_timeseries_ggplot_norm_ALT, echo = TRUE, eval = TRUE, fig.width = 10.0, fig.height = 5.5}
-tmp <- dplyr::select(rr.df, date, time, WWidx_n, SPidx_n, NNidx_n) %>% gather(. , name, value, NNidx_n, SPidx_n, WWidx_n)
+tmp <- dplyr::select(rr.df, date, time, WWidx_n, SPidx_n, NNidx_n) %>% 
+              gather(. , name, value, NNidx_n, SPidx_n, WWidx_n)
 
 ggplot(data = tmp, aes(x = date, y = value)) + theme_bw() + 
        theme(axis.title = element_text(size = 16),
@@ -539,7 +543,8 @@ ggplot(data = tmp, aes(x = date, y = value)) + theme_bw() +
        geom_hline(h = 0, lty = 2, col = "orange") +
        geom_vline(xintercept = as.numeric(as.Date("1996-01-02")), lty = 2, col = "orange") +
        geom_line(aes(color = name)) + 
-       scale_colour_manual(values = c("red2", "blue2", "green4"), name = "Index", labels = c("NASDAQ100", "S&P500", "Wilshire5000"))
+       scale_colour_manual(values = c("red2", "blue2", "green4"), name = "Index", 
+                           labels = c("NASDAQ100", "S&P500", "Wilshire5000"))
 ```
 
 
@@ -547,6 +552,21 @@ ggplot(data = tmp, aes(x = date, y = value)) + theme_bw() +
 <a name="APPENDIX"></a>
 
 # APPENDIX
+
+<a name="APPENDIX-functions"></a>
+
+## Functions
+
+Source code of the functions defined in `scripts/my_functions.R`:
+
+```{r read_my_functions, echo = FALSE, cache = FALSE}
+read_chunk("./scripts/my_functions.R")
+```
+
+```{r print_chunk, eval = FALSE, cache = FALSE}
+<<my_functions>>
+```
+
 
 <a name="SessionInfo"></a>
 
