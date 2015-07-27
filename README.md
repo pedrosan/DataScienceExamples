@@ -16,7 +16,6 @@ A __report__ is available for some of them, hosted under pedrosan.github.io usin
   * [REPORT](http://pedrosan.github.io/DataScienceExamples/Synthetic_Data/)
   * [repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Synthetic_Data)
 
-
 * Analysis of Human Activity Data:
   * [REPORT](http://pedrosan.github.io/DataScienceExamples/Human_Activity_1/)
   * [repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Human_Activity_1)
@@ -28,6 +27,13 @@ A __report__ is available for some of them, hosted under pedrosan.github.io usin
 * Human and Economic Cost of Major Storm Events: An Analysis of the NOAA/NCDC Database:
   * [REPORT](http://pedrosan.github.io/DataScienceExamples/Impact_of_Major_Storm_Events/)
   * [repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Impact_of_Major_Storm_Events)
+
+* Rent vs. Buy (simulation-based) calculator
+  * [repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Rent_vs_Buy)
+
+* Text Prediction Application
+  * [repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Text_Prediction)
+  
 
 
 ### Note on the Reports' _Reproducible_ Format

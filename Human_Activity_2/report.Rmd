@@ -114,9 +114,9 @@ of the body and weight dumbbell, and that are apparently very well picked out by
 
 ## Outline
 
-* [THE DATA SET](#THE_DATA_SET")
+* [THE DATA SET](#THE_DATA_SET)
     * [The Sensor Data](#sensor_data)
-* [DATA PREPARATION](#DATA_PREPARATION")
+* [DATA PREPARATION](#DATA_PREPARATION)
     * [Cleaning/Tidying](#cleaning)
         * Non-sensor variables
         * Individual measurements _vs_ _summaries_ : the `new_window` variable
@@ -126,14 +126,14 @@ of the body and weight dumbbell, and that are apparently very well picked out by
     * [About Feature Selection](#feature_selection)
         * Zero/low Variance Predictors
         * _Collinearity_ Between Predictors
-* [DATA SPLITTING: "NEW" _TRAINING_ AND _TESTING_ SUBSETS](#DATA_SPLITTING")
+* [DATA SPLITTING: "NEW" _TRAINING_ AND _TESTING_ SUBSETS](#DATA_SPLITTING)
     * Feature selection on _training_ / _testing_ subsets
-* [MODELING](#MODELING")
+* [MODELING](#MODELING)
     * [General Summary](#model-summary)
     * [_Random Forest_ case 1 : 4-fold _CV_](#model-rf1)
     * [_Random Forest_ case 2 : bootstrap, 25 reps](#model-rf1)
     * [_Random Forest_ case 3 : LGOCV, 25 repeats, 75%/25% splits](#model-rf1)
-* [APPENDIX](#APPENDIX")
+* [APPENDIX](#APPENDIX)
 
 
 <hr class="thin_separator">
