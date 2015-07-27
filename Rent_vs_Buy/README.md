@@ -12,10 +12,10 @@ The repository comprises the following:
   them in the _calculator_ (which uses them for return of investment of cash non-spent or not locked 
   into a mortgage down payment:
   * [REPORT](http://pedrosan.github.io/DataScienceExamples/Rent_vs_Buy/Returns/)
-  * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Rent_vs_Buy.Returns)
+  * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Rent_vs_Buy/Returns)
 
 * Source code for the _shiny application_ itself
-  * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/v2)
+  * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Rent_vs_Buy/v2)
 
 
 
