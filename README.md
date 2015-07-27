@@ -6,35 +6,36 @@ A __report__ is available for some of them, hosted under pedrosan.github.io usin
 
 * Bike Sharing Data Challenge:
   * [REPORT](http://pedrosan.github.io/DataScienceExamples/Bike_Sharing/)
-  * [repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Bike_Sharing)
+  * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Bike_Sharing)
 
 * Baby Names Data Challenge:
   * [REPORT](http://pedrosan.github.io/DataScienceExamples/Baby_Names/)
-  * [repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Baby_Names)
+  * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Baby_Names)
 
 * Data Challenge on Synthetic Data Set:
   * [REPORT](http://pedrosan.github.io/DataScienceExamples/Synthetic_Data/)
-  * [repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Synthetic_Data)
+  * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Synthetic_Data)
 
 * Analysis of Human Activity Data:
   * [REPORT](http://pedrosan.github.io/DataScienceExamples/Human_Activity_1/)
-  * [repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Human_Activity_1)
+  * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Human_Activity_1)
 
 * Machine-Learning-based Assessment of The Quality of Weight-lifting Exercises:
   * [REPORT](http://pedrosan.github.io/DataScienceExamples/Human_Activity_2/)
-  * [repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Human_Activity_2)
+  * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Human_Activity_2)
 
 * Human and Economic Cost of Major Storm Events: An Analysis of the NOAA/NCDC Database:
   * [REPORT](http://pedrosan.github.io/DataScienceExamples/Impact_of_Major_Storm_Events/)
-  * [repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Impact_of_Major_Storm_Events)
+  * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Impact_of_Major_Storm_Events)
 
 * Rent vs. Buy (simulation-based) calculator
-  * [repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Rent_vs_Buy)
+  * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Rent_vs_Buy)
 
 * Text Prediction Application
-  * [repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Text_Prediction)
+  * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Text_Prediction)
+  * [Progress Report](http://pedrosan.github.io/DataScienceExamples/Text_Prediction/MilestoneReport/)
+  * ["pitch slides](http://pedrosan.github.io/DataScienceExamples/Text_Prediction/Application/Slides/)
   
-
 
 ### Note on the Reports' _Reproducible_ Format
 

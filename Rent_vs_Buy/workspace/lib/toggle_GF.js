@@ -5,46 +5,25 @@ $(document).ready(function() {
     $('pre.sourceCode').show();
 
     $('div.hideThisCode').next('pre.sourceCode').hide();
-    $('button.toggle_code_alt').next('pre.sourceCode').hide();
+    // $('button.toggle_code_alt').next('pre.sourceCode').hide();
     $('button.toggle_code').next('pre.sourceCode').hide();
+    $('button.toggle_plot_code').next('pre.sourceCode').hide();
+
+    // $('div.narrow_table').next('table').attr("class","narrow");
+    // $('div.narrow_table').next('table').addClass("narrow_table");
+
+    $('div.narrow_table').next('table').hide();
+
+    $('.table').addClass("narrow");
+    // $('h3').css('background', 'yellow'); // THIS WORKED
+
+    // $('table').attr("class","narrow_table");
     
-//   // add a click handler to the heading links
-//   $('pre.sourceCode').click(function(){
-//   
-//       // if the current sub heading list is already open
-//       if($(this).next('pre.sourceCode:visible').length) {
-//           // close the sub heading list
-//           $(this).next('pre.sourceCode:visible').slideUp();
-//       } else {
-//           // close all open sub heading lists
-//                   $('pre.sourceCode pre.sourceCode:visible').slideUp();
-//           // slide open the next list
-//           $(this).next('pre.sourceCode').slideToggle('normal');
-//       }
-//   
-//   // return false to stop link following the href
-//   return false;
-//   });
+    // if ( $( 'table' ).length > 0 ) {
+    //     $(this).addClass("narrow"");
+    // };
 
-//   // add a click handler to the heading links
-//   $('div.hideThisCode').click(function(){
-//   
-//       // if the current sub heading list is already open
-//       if($(this).next('pre.sourceCode:visible').length) {
-//           // close the sub heading list
-//           $(this).next('pre.sourceCode:visible').slideUp();
-//       } else {
-//           // close all open sub heading lists
-//                   $('pre.sourceCode pre.sourceCode:visible').slideUp();
-//           // slide open the next list
-//           $(this).next('pre.sourceCode').slideToggle('normal');
-//       }
-//   
-//   // return false to stop link following the href
-//   return false;
-//   });
-
-    $(document).ready(function(){
+    // $(document).ready(function(){
         $("button").click(function(){
             $(this).next('pre.sourceCode').slideToggle('slow');
         });
@@ -53,6 +32,6 @@ $(document).ready(function() {
             $(this).next('pre.sourceCode').slideToggle('slow');
         });
 
-    });
+    // });
 
 });

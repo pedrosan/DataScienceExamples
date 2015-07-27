@@ -6,7 +6,7 @@ job      : null
 output   : 
   html_document:
     self_contained: false
-    css: css/gf_new.css
+    css: css/gf_new_nolines.css
     theme: cerulean
     highlight: tango
     keep_md: no
@@ -114,24 +114,21 @@ Prepare returns:
 
 ```{r wilshire5000-prepare_data, cache = TRUE}
 WW <- prepare_data(data = VTSMX.vec, xlin = xxlin, xlog = xxlog)
-```
 
-The function `prepare_data()` returns a list with (for each _rr_ and _rl_):
-return data, 
-parameters of the best fit with the generalized Gamma distribution,
-distributions for this latter and two Gaussians fit to the data in two narrow (less than $\sigma$ wide) 
-ranges around the mean.
-
-We add to this list dates from the timeseries _index_ and year:
-
-```{r wilshire5000-prepare_data-add_dates, cache = TRUE}
 WW$dates <- index(VTSMX)
 WW$year <- substr(index(VTSMX), 1, 4)
 ```
 
+The function `prepare_data()` returns a list with (for each _rr_ and _rl_):
+the data themselves, 
+parameters of the best fit with the generalized Gamma distribution,
+distributions for this latter and two Gaussians fit to the data in two narrow (less than $\sigma$ wide) 
+ranges around the mean.   
+We add to this list dates from the timeseries _index_ and year:
+
 This is the structure of the resulting list:
 
-```{r show_prepared_data_list}
+```{r wilshire5000-show_prepared_data_list}
 str(WW)
 ```
  
@@ -178,12 +175,19 @@ GSPC.vec <- as.vector(GSPC[, 4])
 
 and prepare with the `prepare_data()` function:
 
-```{r sp500-prepare_data, cache = TRUE}
+```{r sp500-prepare_data, cache = FALSE}
 SP <- prepare_data(data = GSPC.vec, xlin = xxlin, xlog = xxlog)
 
 SP$dates <- index(GSPC)
 SP$year <- substr(index(GSPC), 1, 4)
 ```
+
+This is the structure of the resulting list:
+
+```{r sp500-show_prepared_data_list}
+str(SP)
+```
+ 
 
 #### Distributions of _relative returns_ and of _log returns_:
 
@@ -206,13 +210,19 @@ getSymbols("^NDX", from = start.date, to = end.date)
 NDX.vec <- as.vector(NDX[, 4])
 ```
 
-```{r nasdaq100-prepare_data, cache = TRUE}
+```{r nasdaq100-prepare_data, cache = FALSE}
 NN <- prepare_data(data = NDX.vec, xlin = xxlin, xlog = xxlog)
 
 NN$dates <- index(NDX)
 NN$year <- substr(index(NDX), 1, 4)
 ```
 
+This is the structure of the resulting list:
+
+```{r nasdaq100-show_prepared_data_list}
+str(NN)
+```
+ 
 #### Distributions of _relative returns_ and of _log returns_:
 
 <button class="toggle_code">show hidden code</button>
@@ -262,6 +272,7 @@ for(j in 1:N) {
 }
 ```
 
+<button class="toggle_code">show hidden code</button>
 ```{r annual_returns_simulated_from_gaussian, eval = TRUE, cache = TRUE, echo = TRUE}
 # typical number of market days in a year is ~252
 ndays <- 252
@@ -272,6 +283,10 @@ ndays <- 252
 
 set.seed(1414)
 test_rr_n1.W5000 <- rep(0, N)
+
+print(ndays)
+print(WW$rr_fit_n1)
+
 for(j in 1:N) {
     dummy <- rnorm(ndays, WW$rr_fit_n1)
     test_rr_n1.W5000[j] <- (cumprod(1 + dummy/100)[ndays] - 1.0)*100
@@ -322,7 +337,8 @@ legend("topright", bty = "y", bg = "grey95", x.intersp = 0.7, y.intersp = 0.8,
 ```
 
 <button class="toggle_code">show hidden code</button>
-```{r plot-annual_returns_distr_2_from_gaussian, echo = TRUE, eval = FALSE, fig.width = 8.0, fig.height = 5.5}
+```{r plot-annual_returns_distr_2_from_gaussian, echo = FALSE, eval = FALSE, fig.width = 8.0, fig.height = 5.5}
+# NOT EVALUATED ('test_rl' DATA NOT PREPARED)
 plot(density(test_rl.N100), type = "n",
      xlim = c(-100.0, 200.0), 
      ylim = c(0.0, 0.037), 

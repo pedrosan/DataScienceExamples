@@ -49,7 +49,7 @@ code > span.er { font-weight: bold; }
 </style>
 
 
-<link rel="stylesheet" href="css/gf_new.css" type="text/css" />
+<link rel="stylesheet" href="css/gf_new_nolines.css" type="text/css" />
 
 </head>
 
@@ -133,23 +133,31 @@ xxlog &lt;-<span class="st"> </span><span class="kw">seq</span>(-<span class="fl
 <span class="co"># [1] &quot;VTSMX&quot;</span>
 VTSMX.vec &lt;-<span class="st"> </span><span class="kw">as.vector</span>(VTSMX[, <span class="dv">4</span>])</code></pre>
 <p>Prepare returns:</p>
-<pre class="sourceCode r"><code class="sourceCode r">WW &lt;-<span class="st"> </span><span class="kw">prepare_data</span>(<span class="dt">data =</span> VTSMX.vec, <span class="dt">xlin =</span> xxlin, <span class="dt">xlog =</span> xxlog)</code></pre>
-<p>The function <code>prepare_data()</code> returns a list with (for each <em>rr</em> and <em>rl</em>): return data, parameters of the best fit with the generalized Gamma distribution, distributions for this latter and two Gaussians fit to the data in two narrow (less than <span class="math">\(\sigma\)</span> wide) ranges around the mean.</p>
-<p>We add to this list dates from the timeseries <em>index</em> and year:</p>
-<pre class="sourceCode r"><code class="sourceCode r">WW$dates &lt;-<span class="st"> </span><span class="kw">index</span>(VTSMX)
+<pre class="sourceCode r"><code class="sourceCode r">WW &lt;-<span class="st"> </span><span class="kw">prepare_data</span>(<span class="dt">data =</span> VTSMX.vec, <span class="dt">xlin =</span> xxlin, <span class="dt">xlog =</span> xxlog)
+
+WW$dates &lt;-<span class="st"> </span><span class="kw">index</span>(VTSMX)
 WW$year &lt;-<span class="st"> </span><span class="kw">substr</span>(<span class="kw">index</span>(VTSMX), <span class="dv">1</span>, <span class="dv">4</span>)</code></pre>
+<p>The function <code>prepare_data()</code> returns a list with (for each <em>rr</em> and <em>rl</em>): the data themselves, parameters of the best fit with the generalized Gamma distribution, distributions for this latter and two Gaussians fit to the data in two narrow (less than <span class="math">\(\sigma\)</span> wide) ranges around the mean.<br />We add to this list dates from the timeseries <em>index</em> and year:</p>
 <p>This is the structure of the resulting list:</p>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="kw">str</span>(WW)
-<span class="co"># List of 8</span>
+<span class="co"># List of 12</span>
 <span class="co">#  $ rr_data  : num [1:5714] -0.299 0 1.8 0 0.688 ...</span>
 <span class="co">#  $ rr_fit_gl: num [1:4] 0.077 2.552 -0.279 -0.218</span>
+<span class="co">#  $ rr_fit_n1: Named num [1:2] 0.0402 1.0624</span>
+<span class="co">#   ..- attr(*, &quot;names&quot;)= chr [1:2] &quot;mean&quot; &quot;sd&quot;</span>
+<span class="co">#  $ rr_fit_n2: Named num [1:2] 0.0586 0.7716</span>
+<span class="co">#   ..- attr(*, &quot;names&quot;)= chr [1:2] &quot;mean&quot; &quot;sd&quot;</span>
 <span class="co">#  $ rr_distr :&#39;data.frame&#39;:    501 obs. of  4 variables:</span>
 <span class="co">#   ..$ x      : num [1:501] -25 -24.9 -24.8 -24.7 -24.6 -24.5 -24.4 -24.3 -24.2 -24.1 ...</span>
 <span class="co">#   ..$ y_gl   : num [1:501] 0.0000036 0.00000367 0.00000373 0.0000038 0.00000386 ...</span>
 <span class="co">#   ..$ y_norm1: num [1:501] 8.96e-122 8.20e-121 7.44e-120 6.68e-119 5.96e-118 ...</span>
-<span class="co">#   ..$ y_norm2: num [1:501] 4.91e-230 3.28e-228 2.15e-226 1.39e-224 8.84e-223 ...</span>
+<span class="co">#   ..$ y_norm2: num [1:501] 4.77e-230 3.19e-228 2.09e-226 1.35e-224 8.56e-223 ...</span>
 <span class="co">#  $ rl_data  : num [1:5714] -0.003 0 0.01784 0 0.00685 ...</span>
 <span class="co">#  $ rl_fit_gl: num [1:4] 0.000784 255.660582 -0.285599 -0.212883</span>
+<span class="co">#  $ rl_fit_n1: Named num [1:2] 0.000381 0.010626</span>
+<span class="co">#   ..- attr(*, &quot;names&quot;)= chr [1:2] &quot;mean&quot; &quot;sd&quot;</span>
+<span class="co">#  $ rl_fit_n2: Named num [1:2] 0.000575 0.007711</span>
+<span class="co">#   ..- attr(*, &quot;names&quot;)= chr [1:2] &quot;mean&quot; &quot;sd&quot;</span>
 <span class="co">#  $ rl_distr :&#39;data.frame&#39;:    4001 obs. of  4 variables:</span>
 <span class="co">#   ..$ x      : num [1:4001] -2 -2 -2 -2 -2 ...</span>
 <span class="co">#   ..$ y_gl   : num [1:4001] 0.0000000436 0.0000000437 0.0000000438 0.0000000439 0.0000000441 ...</span>
@@ -183,6 +191,33 @@ GSPC.vec &lt;-<span class="st"> </span><span class="kw">as.vector</span>(GSPC[, 
 
 SP$dates &lt;-<span class="st"> </span><span class="kw">index</span>(GSPC)
 SP$year &lt;-<span class="st"> </span><span class="kw">substr</span>(<span class="kw">index</span>(GSPC), <span class="dv">1</span>, <span class="dv">4</span>)</code></pre>
+<p>This is the structure of the resulting list:</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">str</span>(SP)
+<span class="co"># List of 12</span>
+<span class="co">#  $ rr_data  : num [1:7311] 0.615 -0.109 1.495 -2.727 -0.894 ...</span>
+<span class="co">#  $ rr_fit_gl: num [1:4] 0.0702 2.5498 -0.2594 -0.2118</span>
+<span class="co">#  $ rr_fit_n1: Named num [1:2] 0.0453 1.0377</span>
+<span class="co">#   ..- attr(*, &quot;names&quot;)= chr [1:2] &quot;mean&quot; &quot;sd&quot;</span>
+<span class="co">#  $ rr_fit_n2: Named num [1:2] 0.0559 0.7676</span>
+<span class="co">#   ..- attr(*, &quot;names&quot;)= chr [1:2] &quot;mean&quot; &quot;sd&quot;</span>
+<span class="co">#  $ rr_distr :&#39;data.frame&#39;:    501 obs. of  4 variables:</span>
+<span class="co">#   ..$ x      : num [1:501] -25 -24.9 -24.8 -24.7 -24.6 -24.5 -24.4 -24.3 -24.2 -24.1 ...</span>
+<span class="co">#   ..$ y_gl   : num [1:501] 0.0000023 0.00000234 0.00000239 0.00000243 0.00000248 ...</span>
+<span class="co">#   ..$ y_norm1: num [1:501] 1.22e-127 1.24e-126 1.26e-125 1.26e-124 1.24e-123 ...</span>
+<span class="co">#   ..$ y_norm2: num [1:501] 2.10e-232 1.47e-230 1.00e-228 6.77e-227 4.49e-225 ...</span>
+<span class="co">#  $ rl_data  : num [1:7311] 0.00614 -0.00109 0.01484 -0.02765 -0.00898 ...</span>
+<span class="co">#  $ rl_fit_gl: num [1:4] 0.000714 255.280258 -0.265821 -0.206393</span>
+<span class="co">#  $ rl_fit_n1: Named num [1:2] 0.000433 0.010393</span>
+<span class="co">#   ..- attr(*, &quot;names&quot;)= chr [1:2] &quot;mean&quot; &quot;sd&quot;</span>
+<span class="co">#  $ rl_fit_n2: Named num [1:2] 0.00055 0.00768</span>
+<span class="co">#   ..- attr(*, &quot;names&quot;)= chr [1:2] &quot;mean&quot; &quot;sd&quot;</span>
+<span class="co">#  $ rl_distr :&#39;data.frame&#39;:    4001 obs. of  4 variables:</span>
+<span class="co">#   ..$ x      : num [1:4001] -2 -2 -2 -2 -2 ...</span>
+<span class="co">#   ..$ y_gl   : num [1:4001] 0 0 0 0 0 0 0 0 0 0 ...</span>
+<span class="co">#   ..$ y_norm1: num [1:4001] 0 0 0 0 0 0 0 0 0 0 ...</span>
+<span class="co">#   ..$ y_norm2: num [1:4001] 0 0 0 0 0 0 0 0 0 0 ...</span>
+<span class="co">#  $ dates    : Date[1:7312], format: &quot;1986-01-02&quot; &quot;1986-01-03&quot; &quot;1986-01-06&quot; ...</span>
+<span class="co">#  $ year     : chr [1:7312] &quot;1986&quot; &quot;1986&quot; &quot;1986&quot; &quot;1986&quot; ...</span></code></pre>
 <div id="distributions-of-relative-returns-and-of-log-returns-1" class="section level4">
 <h4>Distributions of <em>relative returns</em> and of <em>log returns</em>:</h4>
 <button class="toggle_code">
@@ -205,6 +240,33 @@ NDX.vec &lt;-<span class="st"> </span><span class="kw">as.vector</span>(NDX[, <s
 
 NN$dates &lt;-<span class="st"> </span><span class="kw">index</span>(NDX)
 NN$year &lt;-<span class="st"> </span><span class="kw">substr</span>(<span class="kw">index</span>(NDX), <span class="dv">1</span>, <span class="dv">4</span>)</code></pre>
+<p>This is the structure of the resulting list:</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">str</span>(NN)
+<span class="co"># List of 12</span>
+<span class="co">#  $ rr_data  : num [1:7311] -0.537 -0.149 1.868 -1.227 -1.799 ...</span>
+<span class="co">#  $ rr_fit_gl: num [1:4] 0.113 1.68 -0.265 -0.213</span>
+<span class="co">#  $ rr_fit_n1: Named num [1:2] 0.0558 1.4476</span>
+<span class="co">#   ..- attr(*, &quot;names&quot;)= chr [1:2] &quot;mean&quot; &quot;sd&quot;</span>
+<span class="co">#  $ rr_fit_n2: Named num [1:2] 0.0949 0.8966</span>
+<span class="co">#   ..- attr(*, &quot;names&quot;)= chr [1:2] &quot;mean&quot; &quot;sd&quot;</span>
+<span class="co">#  $ rr_distr :&#39;data.frame&#39;:    501 obs. of  4 variables:</span>
+<span class="co">#   ..$ x      : num [1:501] -25 -24.9 -24.8 -24.7 -24.6 -24.5 -24.4 -24.3 -24.2 -24.1 ...</span>
+<span class="co">#   ..$ y_gl   : num [1:501] 0.0000111 0.0000112 0.0000114 0.0000116 0.0000119 ...</span>
+<span class="co">#   ..$ y_norm1: num [1:501] 2.43e-66 8.01e-66 2.63e-65 8.58e-65 2.79e-64 ...</span>
+<span class="co">#   ..$ y_norm2: num [1:501] 3.57e-171 8.05e-170 1.79e-168 3.94e-167 8.55e-166 ...</span>
+<span class="co">#  $ rl_data  : num [1:7311] -0.00539 -0.00149 0.01851 -0.01235 -0.01816 ...</span>
+<span class="co">#  $ rl_fit_gl: num [1:4] 0.00116 168.5565 -0.27619 -0.20523</span>
+<span class="co">#  $ rl_fit_n1: Named num [1:2] 0.000509 0.014442</span>
+<span class="co">#   ..- attr(*, &quot;names&quot;)= chr [1:2] &quot;mean&quot; &quot;sd&quot;</span>
+<span class="co">#  $ rl_fit_n2: Named num [1:2] 0.000915 0.008969</span>
+<span class="co">#   ..- attr(*, &quot;names&quot;)= chr [1:2] &quot;mean&quot; &quot;sd&quot;</span>
+<span class="co">#  $ rl_distr :&#39;data.frame&#39;:    4001 obs. of  4 variables:</span>
+<span class="co">#   ..$ x      : num [1:4001] -2 -2 -2 -2 -2 ...</span>
+<span class="co">#   ..$ y_gl   : num [1:4001] 0.000000127 0.000000127 0.000000127 0.000000128 0.000000128 ...</span>
+<span class="co">#   ..$ y_norm1: num [1:4001] 0 0 0 0 0 0 0 0 0 0 ...</span>
+<span class="co">#   ..$ y_norm2: num [1:4001] 0 0 0 0 0 0 0 0 0 0 ...</span>
+<span class="co">#  $ dates    : Date[1:7312], format: &quot;1986-01-02&quot; &quot;1986-01-03&quot; &quot;1986-01-06&quot; ...</span>
+<span class="co">#  $ year     : chr [1:7312] &quot;1986&quot; &quot;1986&quot; &quot;1986&quot; &quot;1986&quot; ...</span></code></pre>
 <div id="distributions-of-relative-returns-and-of-log-returns-2" class="section level4">
 <h4>Distributions of <em>relative returns</em> and of <em>log returns</em>:</h4>
 <button class="toggle_code">
@@ -252,6 +314,9 @@ for(j in <span class="dv">1</span>:N) {
     dummy &lt;-<span class="st"> </span><span class="kw">rgl</span>(ndays, NN$rr_fit_gl)
     test_rr.N100[j] &lt;-<span class="st"> </span>(<span class="kw">cumprod</span>(<span class="dv">1</span> +<span class="st"> </span>dummy/<span class="dv">100</span>)[ndays] -<span class="st"> </span><span class="fl">1.0</span>)*<span class="dv">100</span>
 }</code></pre>
+<button class="toggle_code">
+show hidden code
+</button>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="co"># typical number of market days in a year is ~252</span>
 ndays &lt;-<span class="st"> </span><span class="dv">252</span>
 
@@ -261,6 +326,13 @@ ndays &lt;-<span class="st"> </span><span class="dv">252</span>
 
 <span class="kw">set.seed</span>(<span class="dv">1414</span>)
 test_rr_n1.W5000 &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="dv">0</span>, N)
+
+<span class="kw">print</span>(ndays)
+<span class="co"># [1] 252</span>
+<span class="kw">print</span>(WW$rr_fit_n1)
+<span class="co">#      mean        sd </span>
+<span class="co"># 0.0402238 1.0624322</span>
+
 for(j in <span class="dv">1</span>:N) {
     dummy &lt;-<span class="st"> </span><span class="kw">rnorm</span>(ndays, WW$rr_fit_n1)
     test_rr_n1.W5000[j] &lt;-<span class="st"> </span>(<span class="kw">cumprod</span>(<span class="dv">1</span> +<span class="st"> </span>dummy/<span class="dv">100</span>)[ndays] -<span class="st"> </span><span class="fl">1.0</span>)*<span class="dv">100</span>
@@ -311,28 +383,6 @@ yy.N100.n  &lt;-<span class="st"> </span><span class="kw">dnorm</span>(xx2, <spa
 <button class="toggle_code">
 show hidden code
 </button>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(<span class="kw">density</span>(test_rl.N100), <span class="dt">type =</span> <span class="st">&quot;n&quot;</span>,
-     <span class="dt">xlim =</span> <span class="kw">c</span>(-<span class="fl">100.0</span>, <span class="fl">200.0</span>), 
-     <span class="dt">ylim =</span> <span class="kw">c</span>(<span class="fl">0.0</span>, <span class="fl">0.037</span>), 
-     <span class="dt">xlab =</span> <span class="st">&quot;annual return [%]&quot;</span>, 
-     <span class="dt">main =</span> <span class="st">&quot;Wilshire5000, S&amp;P500, NASDAQ100&quot;</span>)
-<span class="kw">grid</span>()
-<span class="kw">lines</span>(<span class="kw">density</span>(test_rr_n1.N100),  <span class="dt">col =</span> <span class="st">&quot;red2&quot;</span>,   <span class="dt">lwd =</span> <span class="dv">3</span>, <span class="dt">lty =</span> <span class="dv">3</span>)
-<span class="kw">lines</span>(<span class="kw">density</span>(test_rr_n1.SP500), <span class="dt">col =</span> <span class="st">&quot;blue2&quot;</span>,  <span class="dt">lwd =</span> <span class="dv">3</span>, <span class="dt">lty =</span> <span class="dv">3</span>)
-<span class="kw">lines</span>(<span class="kw">density</span>(test_rr_n1.W5000), <span class="dt">col =</span> <span class="st">&quot;green3&quot;</span>, <span class="dt">lwd =</span> <span class="dv">3</span>, <span class="dt">lty =</span> <span class="dv">3</span>)
-<span class="kw">lines</span>(<span class="kw">density</span>(test_rl.N100),  <span class="dt">col =</span> <span class="st">&quot;red2&quot;</span>,   <span class="dt">lwd =</span> <span class="dv">3</span>)
-<span class="kw">lines</span>(<span class="kw">density</span>(test_rl.SP500), <span class="dt">col =</span> <span class="st">&quot;blue2&quot;</span>,  <span class="dt">lwd =</span> <span class="dv">3</span>)
-<span class="kw">lines</span>(<span class="kw">density</span>(test_rl.W5000), <span class="dt">col =</span> <span class="st">&quot;green3&quot;</span>, <span class="dt">lwd =</span> <span class="dv">3</span>)
-<span class="kw">legend</span>(<span class="st">&quot;topleft&quot;</span>, <span class="dt">bty =</span> <span class="st">&quot;y&quot;</span>, <span class="dt">bg =</span> <span class="st">&quot;grey95&quot;</span>, <span class="dt">x.intersp =</span> <span class="fl">0.7</span>, <span class="dt">y.intersp =</span> <span class="fl">0.8</span>, 
-       <span class="dt">legend =</span> <span class="kw">c</span>(<span class="st">&quot;Nasdaq100&quot;</span>, <span class="st">&quot;S&amp;P 500&quot;</span>, <span class="st">&quot;Wilshire5000&quot;</span>), 
-       <span class="dt">lty =</span> <span class="dv">1</span>, <span class="dt">lwd =</span> <span class="dv">3</span>,
-       <span class="dt">col =</span> <span class="kw">c</span>(<span class="st">&quot;red2&quot;</span>, <span class="st">&quot;blue2&quot;</span>, <span class="st">&quot;green3&quot;</span>),
-       <span class="dt">cex =</span> <span class="fl">1.0</span>)
-<span class="kw">legend</span>(<span class="st">&quot;topright&quot;</span>, <span class="dt">bty =</span> <span class="st">&quot;y&quot;</span>, <span class="dt">bg =</span> <span class="st">&quot;grey95&quot;</span>, <span class="dt">x.intersp =</span> <span class="fl">0.7</span>, <span class="dt">y.intersp =</span> <span class="fl">0.8</span>, 
-       <span class="dt">legend =</span> <span class="kw">c</span>(<span class="st">&quot;from simulations&quot;</span>, <span class="st">&quot;Gaussian&quot;</span>),
-       <span class="dt">lty =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">3</span>), <span class="dt">lwd =</span> <span class="dv">3</span>, <span class="dt">seg.len =</span> <span class="dv">4</span>,
-       <span class="dt">col =</span> <span class="kw">c</span>(<span class="st">&quot;grey10&quot;</span>, <span class="st">&quot;grey10&quot;</span>),
-       <span class="dt">cex =</span> <span class="fl">1.0</span>)</code></pre>
 </div>
 <div id="annual-straight-from-data" class="section level2">
 <h2>Annual straight from data</h2>
@@ -461,16 +511,16 @@ show hidden code
 <span class="co"># [1] grid      stats     graphics  grDevices utils     datasets  methods   base     </span>
 <span class="co"># </span>
 <span class="co"># other attached packages:</span>
-<span class="co">#  [1] scales_0.2.4    MASS_7.3-41     GLDEX_2.0.0.2   cluster_2.0.1   quantmod_0.4-4  TTR_0.22-0     </span>
-<span class="co">#  [7] xts_0.9-7       zoo_1.7-12      gridExtra_0.9.1 ggplot2_1.0.1   tidyr_0.2.0     dplyr_0.4.2    </span>
-<span class="co"># [13] knitr_1.10.5   </span>
+<span class="co">#  [1] plyr_1.8.3      lubridate_1.3.3 scales_0.2.4    MASS_7.3-41     GLDEX_2.0.0.2   cluster_2.0.1  </span>
+<span class="co">#  [7] quantmod_0.4-4  TTR_0.22-0      xts_0.9-7       zoo_1.7-12      gridExtra_0.9.1 ggplot2_1.0.1  </span>
+<span class="co"># [13] tidyr_0.2.0     dplyr_0.4.2     knitr_1.10.5   </span>
 <span class="co"># </span>
 <span class="co"># loaded via a namespace (and not attached):</span>
-<span class="co">#  [1] DBI_0.3.1        R6_2.0.1         Rcpp_0.11.6      assertthat_0.1   colorspace_1.2-6</span>
-<span class="co">#  [6] digest_0.6.8     evaluate_0.7     formatR_1.2      gtable_0.1.2     htmltools_0.2.6 </span>
-<span class="co"># [11] labeling_0.3     lattice_0.20-31  lazyeval_0.1.10  magrittr_1.5     munsell_0.4.2   </span>
-<span class="co"># [16] parallel_3.1.3   plyr_1.8.3       proto_0.3-10     reshape2_1.4.1   rmarkdown_0.7   </span>
-<span class="co"># [21] stringi_0.5-5    stringr_1.0.0    tools_3.1.3      yaml_2.1.13</span></code></pre>
+<span class="co">#  [1] DBI_0.3.1        R6_2.0.1         Rcpp_0.11.6      assertthat_0.1   codetools_0.2-11</span>
+<span class="co">#  [6] colorspace_1.2-6 digest_0.6.8     evaluate_0.7     formatR_1.2      gtable_0.1.2    </span>
+<span class="co"># [11] htmltools_0.2.6  labeling_0.3     lattice_0.20-31  lazyeval_0.1.10  magrittr_1.5    </span>
+<span class="co"># [16] memoise_0.2.1    munsell_0.4.2    parallel_3.1.3   proto_0.3-10     reshape2_1.4.1  </span>
+<span class="co"># [21] rmarkdown_0.7    stringi_0.5-5    stringr_1.0.0    tools_3.1.3      yaml_2.1.13</span></code></pre>
 <hr />
 </div>
 </div>

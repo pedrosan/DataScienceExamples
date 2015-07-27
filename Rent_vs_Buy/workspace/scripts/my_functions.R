@@ -28,7 +28,7 @@ prepare_data <- function(data = NULL, xlin = NULL, xlog = NULL) {
 
     rr_fit_n1 <- c(rr_fit_norm1$estimate[1], rr_fit_norm1$estimate[2])
     rr_fit_n2 <- c(rr_fit_norm2$estimate[1], rr_fit_norm2$estimate[2])
-    
+
     returns_rel_distr.df <- data.frame(x = xlin, 
                                        y_gl = rr_fit_gl_y, 
                                        y_norm1 = rr_fit_norm1_y, 
