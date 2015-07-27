@@ -95,8 +95,9 @@ market returns.
 We consider two (obviously related) quantities expressing the return of an asset described by an ordered set of
 values ${x_i}$:
 
-* _log return_: $${rl}_{i} = \log\left(\frac{x_i}{x_{i-1}}\right)$$
-* _relative return_: $${rr}_i = e^{{rl}_i} - 1 = \frac{x_i - x_{i-1}}{x_{i-1}}$$
+* _log return_: $$ {rl}_i = \log\left(\frac{x_i}{x_{i-1}}\right) $$
+
+* _relative return_: $$ {rr}_i = e^{rl_i} - 1 = \frac{x_i - x_{i-1}}{x_{i-1}} $$
 
 ## Wilshire 5000
 
@@ -564,7 +565,7 @@ read_chunk("./scripts/my_functions.R")
 ```
 
 ```{r print_chunk, eval = FALSE, cache = FALSE}
-<<my_functions>>
+<<my_defs>>
 ```
 
 
