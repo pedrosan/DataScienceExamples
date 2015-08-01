@@ -886,9 +886,7 @@ ggplot(powerlaw_fits, aes(x = Time, y = slopeM-slopeF, color = factor(State))) +
 read_chunk("./scripts/my_functions.R")
 ```
 
-[source on GitHub](https://github.com/pedrosan/DataScienceExamples/blob/master/Baby_Names/scripts/my_functions.R)
-
-<a href="./scripts/my_functions.R" type="text/plain">[source on GitHub]</a>
+[Source on GitHub](https://github.com/pedrosan/DataScienceExamples/blob/master/Baby_Names/scripts/my_functions.R)
 or expand the following block of code:
 
 <button class="toggle_code">show hidden code</button>
