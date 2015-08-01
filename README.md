@@ -30,11 +30,13 @@ A __report__ is available for some of them, hosted under pedrosan.github.io usin
 
 * Rent vs. Buy (simulation-based) calculator
   * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Rent_vs_Buy)
+  * [Analysis](http://pedrosan.github.io/DataScienceExamples/Rent_vs_Buy/Returns/) of stock market returns 
+    (indices) to get a handle on how to include them in the _calculator_.
 
 * Text Prediction Application
   * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Text_Prediction)
   * [Progress Report](http://pedrosan.github.io/DataScienceExamples/Text_Prediction/MilestoneReport/)
-  * ["pitch slides](http://pedrosan.github.io/DataScienceExamples/Text_Prediction/Application/Slides/)
+  * ["pitch" slides](http://pedrosan.github.io/DataScienceExamples/Text_Prediction/Application/Slides/)
   
 
 ### Note on the Reports' _Reproducible_ Format

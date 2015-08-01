@@ -39,8 +39,6 @@ opts_chunk$set(message = FALSE,
 Libraries needed for data processing and plotting:
 
 ```{r load_packages, cache = FALSE, echo = TRUE, message = FALSE, warning = FALSE, tidy = FALSE}
-# library("lubridate")
-# library("plyr")
 library("dplyr")
 library("tidyr")
 library("ggplot2")
@@ -558,14 +556,17 @@ ggplot(data = tmp, aes(x = date, y = value)) + theme_bw() +
 
 ## Functions
 
-Source code of the functions defined in `scripts/my_functions.R`:
+Source code of the user-defined functions in 
+[scripts/my_functions.R](https://github.com/pedrosan/DataScienceExamples/tree/master/Rent_vs_Buy/Returns/scripts/my_functions.R) 
 
-```{r read_my_functions, echo = FALSE, cache = FALSE}
+
+```{r read_my_functions, eval = TRUE, echo = FALSE, cache = FALSE}
 read_chunk("./scripts/my_functions.R")
 ```
 
-```{r print_chunk, eval = FALSE, cache = FALSE}
-<<my_defs>>
+<button class="toggle_code">show code</button>
+```{r print_chunk, eval = FALSE, echo = TRUE, cache = FALSE}
+<<my_functions>>
 ```
 
 

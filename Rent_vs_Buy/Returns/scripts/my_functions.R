@@ -1,7 +1,7 @@
 
-## ---- my_defs
+## ---- my_functions
 
-#---------------------------------------------------------------------------------------------------
+#===================================================================================================
 
 prepare_data <- function(data = NULL, xlin = NULL, xlog = NULL) {
     
@@ -76,7 +76,7 @@ prepare_data <- function(data = NULL, xlin = NULL, xlog = NULL) {
     
 }
 
-#---------------------------------------------------------------------------------------------------
+#===================================================================================================
 
 mylog_trans <- function(base = exp(1), from = 0) {
     trans <- function(x) log(x, base) - from
@@ -84,7 +84,7 @@ mylog_trans <- function(base = exp(1), from = 0) {
     trans_new("mylog", trans, inv, log_breaks(base = base), domain = c(base^from, Inf))
 } 
 
-#---------------------------------------------------------------------------------------------------
+#===================================================================================================
 
 # plot_return_distributions <- function(data = NULL, fits = NULL) {
 plot_distr_rel_returns <- function(data = NULL, fits = NULL) {
@@ -112,7 +112,7 @@ plot_distr_rel_returns <- function(data = NULL, fits = NULL) {
 
 }
 
-#---------------------------------------------------------------------------------------------------
+#===================================================================================================
 # plot_return_distributions_ALT <- function(data = NULL, fits = NULL, xlim = NULL, binwidth = NULL) {
 # plot_return_distributions_ALT <- function(data = NULL, fits = NULL) {
 plot_distr_log_returns <- function(data = NULL, fits = NULL) {
@@ -143,7 +143,7 @@ plot_distr_log_returns <- function(data = NULL, fits = NULL) {
 
 }
 
-#---------------------------------------------------------------------------------------------------
+#===================================================================================================
 
-## ---- end-of-my_defs
+## ---- end-of-my_functions
 

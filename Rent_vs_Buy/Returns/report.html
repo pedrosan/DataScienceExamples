@@ -122,7 +122,7 @@ xxlog &lt;-<span class="st"> </span><span class="kw">seq</span>(-<span class="fl
 <p>We consider two (obviously related) quantities expressing the return of an asset described by an ordered set of values <span class="math">\({x_i}\)</span>:</p>
 <ul>
 <li><p><em>log return</em>: <span class="math">\[ {rl}_i = \log\left(\frac{x_i}{x_{i-1}}\right) \]</span></p></li>
-<li><p><em>relative return</em>: <span class="math">\[ {rr}_i = e^{{rl}_i} - 1 = \frac{x_i - x_{i-1}}{x_{i-1}} \]</span></p></li>
+<li><p><em>relative return</em>: <span class="math">\[ {rr}_i = e^{rl_i} - 1 = \frac{x_i - x_{i-1}}{x_{i-1}} \]</span></p></li>
 </ul>
 </div>
 <div id="wilshire-5000" class="section level2">
@@ -509,7 +509,153 @@ show plot code
 <p><a name="APPENDIX-functions"></a></p>
 <div id="functions" class="section level2">
 <h2>Functions</h2>
-<p>Source code of the functions defined in <code>scripts/my_functions.R</code>:</p>
+<p>Source code of the user-defined functions in <a href="https://github.com/pedrosan/DataScienceExamples/tree/master/Rent_vs_Buy/Returns/scripts/my_functions.R">scripts/my_functions.R</a></p>
+<button class="toggle_code">
+show code
+</button>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co">#===================================================================================================</span>
+
+prepare_data &lt;-<span class="st"> </span>function(<span class="dt">data =</span> <span class="ot">NULL</span>, <span class="dt">xlin =</span> <span class="ot">NULL</span>, <span class="dt">xlog =</span> <span class="ot">NULL</span>) {
+    
+    returns_log &lt;-<span class="st"> </span><span class="kw">diff</span>(<span class="kw">log</span>(data), <span class="dt">lag =</span> <span class="dv">1</span>)
+    returns_rel &lt;-<span class="st"> </span><span class="fl">100.0</span>*(<span class="kw">exp</span>(returns_log) -<span class="st"> </span><span class="dv">1</span>)
+    
+    <span class="co">#---------------------------------------------------------------------</span>
+    <span class="co"># relative returns (linear, %)</span>
+    <span class="co">#---------------------------------------------------------------------</span>
+
+    <span class="co"># Fit with Generalized Lambda Distribution:</span>
+    rr_fit_gl &lt;-<span class="st"> </span><span class="kw">fun.RMFMKL.ml</span>(returns_rel)
+    rr_fit_gl_y &lt;-<span class="st"> </span><span class="kw">dgl</span>(xlin, rr_fit_gl)
+
+    <span class="co"># Fit with a Normal distribution, on the core of the data distribution</span>
+    rr_mean &lt;-<span class="st"> </span><span class="kw">mean</span>(returns_rel)
+    rr_fit_norm1 &lt;-<span class="st"> </span><span class="kw">fitdistr</span>(returns_rel[<span class="kw">abs</span>(returns_rel -<span class="st"> </span>rr_mean) &lt;=<span class="st"> </span><span class="fl">5.0</span>], <span class="st">&quot;normal&quot;</span>)
+    rr_fit_norm2 &lt;-<span class="st"> </span><span class="kw">fitdistr</span>(returns_rel[<span class="kw">abs</span>(returns_rel -<span class="st"> </span>rr_mean) &lt;=<span class="st"> </span><span class="fl">2.0</span>], <span class="st">&quot;normal&quot;</span>)
+    <span class="co"># rr_fit_norm1 &lt;- fitdistr(returns_rel[abs(returns_rel) &lt;= 5.0], &quot;normal&quot;)</span>
+    <span class="co"># rr_fit_norm2 &lt;- fitdistr(returns_rel[abs(returns_rel) &lt;= 2.0], &quot;normal&quot;)</span>
+
+    rr_fit_norm1_y &lt;-<span class="st"> </span><span class="kw">dnorm</span>(xlin, <span class="dt">mean =</span> rr_fit_norm1$estimate[<span class="dv">1</span>], <span class="dt">sd =</span> rr_fit_norm1$estimate[<span class="dv">2</span>])
+    rr_fit_norm2_y &lt;-<span class="st"> </span><span class="kw">dnorm</span>(xlin, <span class="dt">mean =</span> rr_fit_norm2$estimate[<span class="dv">1</span>], <span class="dt">sd =</span> rr_fit_norm2$estimate[<span class="dv">2</span>])
+
+    rr_fit_n1 &lt;-<span class="st"> </span><span class="kw">c</span>(rr_fit_norm1$estimate[<span class="dv">1</span>], rr_fit_norm1$estimate[<span class="dv">2</span>])
+    rr_fit_n2 &lt;-<span class="st"> </span><span class="kw">c</span>(rr_fit_norm2$estimate[<span class="dv">1</span>], rr_fit_norm2$estimate[<span class="dv">2</span>])
+
+    returns_rel_distr.df &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">x =</span> xlin, 
+                                       <span class="dt">y_gl =</span> rr_fit_gl_y, 
+                                       <span class="dt">y_norm1 =</span> rr_fit_norm1_y, 
+                                       <span class="dt">y_norm2 =</span> rr_fit_norm2_y)
+
+    <span class="co">#---------------------------------------------------------------------</span>
+    <span class="co"># log returns</span>
+    <span class="co">#---------------------------------------------------------------------</span>
+
+    <span class="co"># Fit with Generalized Lambda Distribution:</span>
+    rl_fit_gl &lt;-<span class="st"> </span><span class="kw">fun.RMFMKL.ml</span>(returns_log)
+    rl_fit_gl_y &lt;-<span class="st"> </span><span class="kw">dgl</span>(xlog, rl_fit_gl)
+
+    <span class="co"># Fit with a Normal distribution, on the core of the data distribution</span>
+    rl_mean &lt;-<span class="st"> </span><span class="kw">mean</span>(returns_log)
+    rl_fit_norm1 &lt;-<span class="st"> </span><span class="kw">fitdistr</span>(returns_log[<span class="kw">abs</span>(returns_log -<span class="st"> </span>rl_mean) &lt;=<span class="st"> </span><span class="fl">0.05</span>], <span class="st">&quot;normal&quot;</span>)
+    rl_fit_norm2 &lt;-<span class="st"> </span><span class="kw">fitdistr</span>(returns_log[<span class="kw">abs</span>(returns_log -<span class="st"> </span>rl_mean) &lt;=<span class="st"> </span><span class="fl">0.02</span>], <span class="st">&quot;normal&quot;</span>)
+    <span class="co"># rl_fit_norm1 &lt;- fitdistr(returns_log[abs(returns_log) &lt;= 0.05], &quot;normal&quot;)</span>
+    <span class="co"># rl_fit_norm2 &lt;- fitdistr(returns_log[abs(returns_log) &lt;= 0.02], &quot;normal&quot;)</span>
+
+    rl_fit_norm1_y &lt;-<span class="st"> </span><span class="kw">dnorm</span>(xlog, <span class="dt">mean =</span> rl_fit_norm1$estimate[<span class="dv">1</span>], <span class="dt">sd =</span> rl_fit_norm1$estimate[<span class="dv">2</span>])
+    rl_fit_norm2_y &lt;-<span class="st"> </span><span class="kw">dnorm</span>(xlog, <span class="dt">mean =</span> rl_fit_norm2$estimate[<span class="dv">1</span>], <span class="dt">sd =</span> rl_fit_norm2$estimate[<span class="dv">2</span>])
+    
+    rl_fit_n1 &lt;-<span class="st"> </span><span class="kw">c</span>(rl_fit_norm1$estimate[<span class="dv">1</span>], rl_fit_norm1$estimate[<span class="dv">2</span>])
+    rl_fit_n2 &lt;-<span class="st"> </span><span class="kw">c</span>(rl_fit_norm2$estimate[<span class="dv">1</span>], rl_fit_norm2$estimate[<span class="dv">2</span>])
+    
+    returns_log_distr.df &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">x =</span> xlog, 
+                                       <span class="dt">y_gl =</span> rl_fit_gl_y, 
+                                       <span class="dt">y_norm1 =</span> rl_fit_norm1_y, 
+                                       <span class="dt">y_norm2 =</span> rl_fit_norm2_y)
+
+    <span class="co">#---------------------------------------------------------------------</span>
+
+    <span class="kw">list</span>( <span class="dt">rr_data =</span> returns_rel,
+          <span class="dt">rr_fit_gl =</span> rr_fit_gl,
+          <span class="dt">rr_fit_n1 =</span> rr_fit_n1,
+          <span class="dt">rr_fit_n2 =</span> rr_fit_n2,
+          <span class="dt">rr_distr =</span> returns_rel_distr.df,
+          <span class="dt">rl_data =</span> returns_log,
+          <span class="dt">rl_fit_gl =</span> rl_fit_gl,
+          <span class="dt">rl_fit_n1 =</span> rl_fit_n1,
+          <span class="dt">rl_fit_n2 =</span> rl_fit_n2,
+          <span class="dt">rl_distr =</span> returns_log_distr.df
+        )
+    
+}
+
+<span class="co">#===================================================================================================</span>
+
+mylog_trans &lt;-<span class="st"> </span>function(<span class="dt">base =</span> <span class="kw">exp</span>(<span class="dv">1</span>), <span class="dt">from =</span> <span class="dv">0</span>) {
+    trans &lt;-<span class="st"> </span>function(x) <span class="kw">log</span>(x, base) -<span class="st"> </span>from
+    inv &lt;-<span class="st"> </span>function(x) base^(x +<span class="st"> </span>from)
+    <span class="kw">trans_new</span>(<span class="st">&quot;mylog&quot;</span>, trans, inv, <span class="kw">log_breaks</span>(<span class="dt">base =</span> base), <span class="dt">domain =</span> <span class="kw">c</span>(base^from, <span class="ot">Inf</span>))
+} 
+
+<span class="co">#===================================================================================================</span>
+
+<span class="co"># plot_return_distributions &lt;- function(data = NULL, fits = NULL) {</span>
+plot_distr_rel_returns &lt;-<span class="st"> </span>function(<span class="dt">data =</span> <span class="ot">NULL</span>, <span class="dt">fits =</span> <span class="ot">NULL</span>) {
+    
+    df &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">returns =</span> data, <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
+
+    pl.distr &lt;-<span class="st"> </span><span class="kw">ggplot</span>(<span class="dt">data =</span> df, <span class="kw">aes</span>(<span class="dt">x =</span> returns)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span>
+<span class="st">                    </span><span class="kw">theme</span>(<span class="dt">axis.title =</span> <span class="kw">element_text</span>(<span class="dt">size =</span> <span class="dv">16</span>),
+                          <span class="dt">axis.text=</span> <span class="kw">element_text</span>(<span class="dt">size =</span> <span class="dv">14</span>),
+                          <span class="dt">axis.line =</span> <span class="kw">element_line</span>(<span class="dt">size =</span> <span class="dv">1</span>)) +
+<span class="st">                    </span><span class="kw">xlim</span>(-<span class="fl">8.0</span>, <span class="fl">8.0</span>) +<span class="st"> </span>
+<span class="st">                    </span><span class="kw">xlab</span>(<span class="st">&quot;daily relative returns (%)&quot;</span>) +<span class="st"> </span>
+<span class="st">                    </span><span class="kw">ylab</span>(<span class="st">&quot;density&quot;</span>) +<span class="st"> </span>
+<span class="st">                    </span><span class="kw">geom_histogram</span>(<span class="kw">aes</span>(<span class="dt">y =</span> ..density..), <span class="dt">stat =</span> <span class="st">&quot;bin&quot;</span>, <span class="dt">drop =</span> <span class="ot">TRUE</span>, 
+                                   <span class="dt">position =</span> <span class="st">&quot;identity&quot;</span>, 
+                                   <span class="dt">binwidth =</span> <span class="fl">0.2</span>, 
+                                   <span class="dt">color =</span> <span class="st">&quot;grey50&quot;</span>, <span class="dt">fill =</span> <span class="st">&quot;gold&quot;</span>, <span class="dt">alpha =</span> <span class="fl">0.3</span>) +<span class="st"> </span>
+<span class="st">                    </span><span class="kw">geom_line</span>(<span class="dt">data =</span> fits, <span class="kw">aes</span>(<span class="dt">x =</span> x, <span class="dt">y =</span> y_norm1), <span class="dt">color =</span> <span class="st">&quot;blue2&quot;</span>, <span class="dt">lty =</span> <span class="dv">2</span>, <span class="dt">lwd =</span> <span class="fl">1.5</span>) +<span class="st"> </span>
+<span class="st">                    </span><span class="kw">geom_line</span>(<span class="dt">data =</span> fits, <span class="kw">aes</span>(<span class="dt">x =</span> x, <span class="dt">y =</span> y_norm2), <span class="dt">color =</span> <span class="st">&quot;blue2&quot;</span>, <span class="dt">lwd =</span> <span class="fl">1.5</span>) +<span class="st"> </span>
+<span class="st">                    </span><span class="kw">geom_line</span>(<span class="dt">data =</span> fits, <span class="kw">aes</span>(<span class="dt">x =</span> x, <span class="dt">y =</span> y_gl), <span class="dt">color =</span> <span class="st">&quot;red2&quot;</span>, <span class="dt">lwd =</span> <span class="fl">1.5</span>) +<span class="st"> </span>
+<span class="st">                    </span><span class="kw">scale_y_continuous</span>(<span class="dt">trans =</span> <span class="kw">mylog_trans</span>(<span class="dt">base =</span> <span class="dv">10</span>, <span class="dt">from =</span> -<span class="dv">3</span>), 
+                                       <span class="dt">limits =</span> <span class="kw">c</span>(<span class="fl">0.001</span>, <span class="fl">1.1</span>), 
+                                       <span class="dt">breaks =</span> <span class="kw">c</span>(<span class="fl">0.001</span>, <span class="fl">0.01</span>, <span class="fl">0.1</span>, <span class="fl">1.0</span>))
+    pl.distr
+
+}
+
+<span class="co">#===================================================================================================</span>
+<span class="co"># plot_return_distributions_ALT &lt;- function(data = NULL, fits = NULL, xlim = NULL, binwidth = NULL) {</span>
+<span class="co"># plot_return_distributions_ALT &lt;- function(data = NULL, fits = NULL) {</span>
+plot_distr_log_returns &lt;-<span class="st"> </span>function(<span class="dt">data =</span> <span class="ot">NULL</span>, <span class="dt">fits =</span> <span class="ot">NULL</span>) {
+    
+    df &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">returns =</span> data, <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
+    hh &lt;-<span class="st"> </span><span class="kw">hist</span>(data, <span class="dt">breaks =</span> <span class="kw">seq</span>(-<span class="fl">2.5</span>, <span class="fl">2.5</span>, <span class="dt">by =</span><span class="fl">0.0025</span>), <span class="dt">plot =</span> <span class="ot">FALSE</span>)
+    ymax &lt;-<span class="st"> </span><span class="fl">10.0</span>**<span class="kw">ceiling</span>(<span class="kw">log10</span>(<span class="kw">max</span>(hh$density))) +<span class="st"> </span><span class="fl">0.1</span>
+
+    pl.distr &lt;-<span class="st"> </span><span class="kw">ggplot</span>(<span class="dt">data =</span> df, <span class="kw">aes</span>(<span class="dt">x =</span> returns)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span>
+<span class="st">                    </span><span class="kw">theme</span>(<span class="dt">axis.title =</span> <span class="kw">element_text</span>(<span class="dt">size =</span> <span class="dv">16</span>),
+                          <span class="dt">axis.text=</span> <span class="kw">element_text</span>(<span class="dt">size =</span> <span class="dv">14</span>),
+                          <span class="dt">axis.line =</span> <span class="kw">element_line</span>(<span class="dt">size =</span> <span class="dv">1</span>)) +
+<span class="st">                    </span><span class="kw">xlim</span>(-<span class="fl">0.1</span>, <span class="fl">0.1</span>) +
+<span class="st">                    </span><span class="kw">xlab</span>(<span class="st">&quot;log(daily returns)&quot;</span>) +<span class="st"> </span>
+<span class="st">                    </span><span class="kw">ylab</span>(<span class="st">&quot;density&quot;</span>) +<span class="st"> </span>
+<span class="st">                    </span><span class="kw">geom_histogram</span>(<span class="kw">aes</span>(<span class="dt">y =</span> ..density..), <span class="dt">stat =</span> <span class="st">&quot;bin&quot;</span>, <span class="dt">drop =</span> <span class="ot">TRUE</span>, 
+                                   <span class="dt">position =</span> <span class="st">&quot;identity&quot;</span>, 
+                                   <span class="dt">binwidth =</span> <span class="fl">0.0025</span>, 
+                                   <span class="dt">color =</span> <span class="st">&quot;grey50&quot;</span>, <span class="dt">fill =</span> <span class="st">&quot;gold&quot;</span>, <span class="dt">alpha =</span> <span class="fl">0.3</span>) +<span class="st"> </span>
+<span class="st">                    </span><span class="kw">geom_line</span>(<span class="dt">data =</span> fits, <span class="kw">aes</span>(<span class="dt">x =</span> x, <span class="dt">y =</span> y_norm1), <span class="dt">color =</span> <span class="st">&quot;blue2&quot;</span>, <span class="dt">lty =</span> <span class="dv">2</span>, <span class="dt">lwd =</span> <span class="fl">1.5</span>) +<span class="st"> </span>
+<span class="st">                    </span><span class="kw">geom_line</span>(<span class="dt">data =</span> fits, <span class="kw">aes</span>(<span class="dt">x =</span> x, <span class="dt">y =</span> y_norm2), <span class="dt">color =</span> <span class="st">&quot;blue2&quot;</span>, <span class="dt">lwd =</span> <span class="fl">1.5</span>) +<span class="st"> </span>
+<span class="st">                    </span><span class="kw">geom_line</span>(<span class="dt">data =</span> fits, <span class="kw">aes</span>(<span class="dt">x =</span> x, <span class="dt">y =</span> y_gl), <span class="dt">color =</span> <span class="st">&quot;red2&quot;</span>, <span class="dt">lwd =</span> <span class="fl">1.5</span>) +
+<span class="st">                    </span><span class="kw">scale_y_continuous</span>(<span class="dt">trans =</span> <span class="kw">mylog_trans</span>(<span class="dt">base =</span> <span class="dv">10</span>, <span class="dt">from =</span> -<span class="dv">2</span>),
+                                       <span class="dt">limits =</span> <span class="kw">c</span>(<span class="fl">0.01</span>, ymax))
+                                       <span class="co"># breaks = c(0.001, 0.01, 0.1, 1.0))</span>
+
+    pl.distr
+
+}
+
+<span class="co">#===================================================================================================</span></code></pre>
 <p><a name="SessionInfo"></a></p>
 </div>
 <div id="r-session-info" class="section level2">
