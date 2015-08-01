@@ -1,0 +1,10 @@
+  html_document:
+    lib_dir: common/libs
+    css: common/css/gf_xnew_nolines.css
+    theme: cerulean
+    highlight: tango
+    mathjax: default
+    keep_md: no
+    toc: no
+    includes:
+        in_header: common/include/header.html

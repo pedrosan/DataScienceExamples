@@ -3,9 +3,16 @@ title: "Baby Names"
 subtitle : 
 author   : Giovanni Fossati
 job      : null
+lib_dir  : ../lib/
 output   : 
   html_document:
     self_contained: false
+    css: css/gf_xnew_nolines.css
+    theme: cerulean
+    highlight: tango
+    keep_md: no
+    mathjax: default
+    toc: no
 ---
 
 ```{r setup, cache = FALSE, echo = FALSE, message = FALSE, warning = FALSE, tidy = FALSE}
@@ -35,6 +42,7 @@ library("ggplot2")
 source("./scripts/my_functions.R")
 ```
 
+<script src="lib/toggle_GF.js"></script>
 <a name="TOP"></a>
 
 ## Preamble
