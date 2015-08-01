@@ -1,9 +1,9 @@
+
+## ---- my_functions
+
 #===================================================================================================
 # Nothing Yey
-#---------------------------------------------------------------------------------------------------
 
-#-----------------------------------------------------------
-# 
 intersect_MF_names_1year <- function(data = NULL, 
                                      select_year = NULL) {
 
@@ -18,9 +18,10 @@ intersect_MF_names_1year <- function(data = NULL,
     return(list(female = tmp_f, male = tmp_m, common = tmp_c))
 }
 
-#-----------------------------------------------------------
+#===-----------------------------------------------------------
 # 
-get_coverage <- function(cnt = NULL, cutoff = NULL) {
+get_coverage <- function(cnt = NULL, 
+                         cutoff = NULL) {
 
     tot <- sum(cnt)
     cov <- cumsum(cnt)/tot*100
@@ -28,13 +29,16 @@ get_coverage <- function(cnt = NULL, cutoff = NULL) {
     Ncov <- sum(cov <= cutoff)
     Fcov <- Ncov/length(cnt)
     return( list(Ncov = Ncov, Fcov = Fcov) )
-    # return( sum(cov <= cutoff) )
+
 }
 
-#-----------------------------------------------------------
+#===-----------------------------------------------------------
 # from: https://github.com/cran/descr/blob/master/R/file.head.R
 # 
-file.head <- function(file, n = 6, truncate.cols = TRUE){
+file.head <- function(file, 
+                      n = 6, 
+                      truncate.cols = TRUE) {
+
     lns <- readLines(file, n = n)
     lns <- gsub("\t", "\\\\t", lns)
     if(truncate.cols){
@@ -47,7 +51,7 @@ file.head <- function(file, n = 6, truncate.cols = TRUE){
     cat(file.head.lns, sep = "\n")
 }
 
-#-----------------------------------------------------------
+#===-----------------------------------------------------------
 #  - subset must be passed enclosed in 'quote()'
 #
 plot_hist_state_year_with_fit <- function(data = NULL, 
@@ -147,7 +151,7 @@ plot_hist_state_year_with_fit <- function(data = NULL,
 
 }
 
-#-----------------------------------------------------------
+#===-----------------------------------------------------------
 #
 prepare_powerlaw_fits_data_frame <- function(data = NULL) {
     
@@ -197,3 +201,6 @@ prepare_powerlaw_fits_data_frame <- function(data = NULL) {
 }
 
 #===================================================================================================
+
+## ---- end-of-my_functions
+

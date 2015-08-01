@@ -1,12 +1,12 @@
 ---
-title: "Baby Names Data Coding Challenge"
+title: "Baby Names"
 subtitle : 
 author   : Giovanni Fossati
 job      : null
 output   : 
   html_document:
     self_contained: false
-    css: css/baby_names.css
+    css: css/gf_xnew_nolines.css
     theme: cerulean
     highlight: tango
     keep_md: no
@@ -42,8 +42,9 @@ source("./scripts/my_functions_baby_names.R")
 ```
 
 <script src="./lib/toggle_GF.js"></script>
+<a name="TOP"></a>
 
-## PREAMBLE
+## Preamble
 
 The source files are posted on [GitHub](https://github.com/pedrosan/DataScienceExamples/tree/master/Baby_Names/)
 
@@ -60,6 +61,8 @@ The source files are posted on [GitHub](https://github.com/pedrosan/DataScienceE
 * [OTHER BITS OF ANALYSIS](#OTHER_BITS)
     * [Some Basic Trends by Year and Gender](#basictrends)
     * [Count Distributions by State, Time, and Gender](#counts)
+* [APPENDIX](#APPENDIX)
+    * [User Defined Functions](#APPENDIX-my_functions)
 
 
 ### Note on the Report _Reproducible_ Format
@@ -68,6 +71,7 @@ This report is generated from a _Rmarkdown_ document which includes all code to 
 data processing, modeling, plotting, etc. (except for functions defined in external scripts, 
 included in the archive).
 However, for readability only a few bits of code are _echoed_ explicitly in the compiled document.
+
 The full straight reproducibility is only limited by the fact that in the interest of simplicity
 and for computational convenience some parts of the processing have been flagged as _inactive_ 
 (`eval = FALSE`), and in its current form some data are instead loaded from previously saved work,
@@ -172,7 +176,7 @@ Red and blue dashed lines are the best fit with a linear regression model to the
 Data were binned, with bin width $0.25 \log_{10}(5)$, and the plots show the counts in each bin,
 not a density (_i.e._ count divided by bin width).
 
-<button class="toggle_code">show hidden code</button>
+<button class="toggle_plot_code">show plot code</button>
 ```{r plot_power_law_distribution_example_x4, fig.width = 7, fig.height = 4, echo = TRUE}
 par(fig = c(0, 1, 0, 1), mar = c(5, 4, 4, 1)+0.1, cex.axis = 1.0)
 single_panel_mar <- c(2, 2, 2, 1)
@@ -333,7 +337,7 @@ This plot summarizes the analysis.
 * The green diamonds mark the top-5 most ambiguous names according to _Approach 3_, also labeled with the corresponding names.
 * The blue diamonds mark the top-5 names with a count difference strictly equal to zero (_approach 1_).
 
-<button class="toggle_code">show hidden code</button>
+<button class="toggle_plot_code">show plot code</button>
 ```{r q3-most_ambiguous_2013-method3-plot, echo = TRUE, fig.width = 6.0, fig.height = 6.0}
 single_panel_mar <- c(3, 3, 2, 2)
 single_panel_oma <- c(0 ,0, 2, 0)
@@ -377,7 +381,7 @@ top1945 <- filter(c1945, diff_norm <= rn) %>% arrange(desc(N_tot)) %>% as.data.f
 kable(top1945, row.names = TRUE)
 ```
 
-<button class="toggle_code">show hidden code</button>
+<button class="toggle_plot_code">show plot code</button>
 ```{r q3-most_ambiguous_1945-method3-plot, echo = TRUE, fig.width = 6.0, fig.height = 6.0}
 par(gr_par)
 lab_x <- top1945[, "N_female"]
@@ -638,7 +642,7 @@ After that point male names have expanded but it does not look like the can catc
 Please note that the Y-axis scale is logarithmic, hence constant spacing means constant
 ratio (instead of constant difference). 
 
-<button class="toggle_code">show hidden code</button>
+<button class="toggle_plot_code">show plot code</button>
 ```{r other-plot_number_of_distinct_names, fig.width = 7, fig.height = 5, echo = TRUE}
 colors_FM <- c("pink2", "dodgerblue2")
 
@@ -673,7 +677,7 @@ Steeper power law distributions, if they continue to lower counts below the thre
 would resuls in a larger loss of data for female names and male names.
 This in turn would bias the cumulative counts by gender.
 
-<button class="toggle_code">show hidden code</button>
+<button class="toggle_plot_code">show plot code</button>
 ```{r other-plot_total_counts, fig.width = 7, fig.height = 5, echo = TRUE}
 ggplot(by_year_by_gender, aes(x = year, y = tot_count)) + theme_bw() + 
        theme(legend.position = c(0.15, 0.85),
@@ -734,7 +738,7 @@ for_coverage2a <- group_by(df, year, name) %>% summarize(tot_count = sum(count))
 for_coverage2 <- gather(for_coverage2a, cutoff, fcov, fn90, fn95, fn99, -year)
 ```
 
-<button class="toggle_code">show hidden code</button>
+<button class="toggle_plot_code">show plot code</button>
 ```{r other-plot_names_coverage_v2, fig.width = 7, fig.height = 5.5, echo = TRUE}
 cols <- c("red2", "blue2", "orange")
 ggplot(for_coverage2, aes(x = year, y = fcov)) + theme_bw() + 
@@ -775,7 +779,7 @@ counted from these data.
 In a few of these plots there is a hint of a possible "knee" in the distribution of male names,
 between the power law part (left / lower counts side).
 
-<button class="toggle_code">show hidden code</button>
+<button class="toggle_plot_code">show plot code</button>
 ```{r other-plot_power_law_distribution_examples, fig.width = 7, fig.height = 10, echo = TRUE}
 par(fig = c(0, 1, 0, 1), mar = c(5, 4, 4, 1)+0.1, cex.axis = 1.0)
 single_panel_mar <- c(2, 2, 2, 1)
@@ -835,7 +839,7 @@ powerlaw_fits <- prepare_powerlaw_fits_data_frame(data = df)
 powerlaw_fits <- readRDS("my_data/powerlaw_fits.RDS")
 ```
 
-<button class="toggle_code">show hidden code</button>
+<button class="toggle_plot_code">show plot code</button>
 ```{r other-plot-power_law_fits_slope_F, fig.width = 7, fig.height = 7, echo = TRUE}
 ggplot(powerlaw_fits, aes(x = Time, y = slopeF, color = State)) + theme_bw() + 
         theme(legend.position = "top", legend.title = element_blank()) +
@@ -847,7 +851,7 @@ ggplot(powerlaw_fits, aes(x = Time, y = slopeF, color = State)) + theme_bw() +
         labs(title = "Slope of Power Law Fit to Female Names Count Distributions")
 ```
 
-<button class="toggle_code">show hidden code</button>
+<button class="toggle_plot_code">show plot code</button>
 ```{r other-plot-power_law_fits_slope_M, fig.width = 7, fig.height = 7, echo = TRUE}
 ggplot(powerlaw_fits, aes(x = Time, y = slopeM, color = factor(State))) + theme_bw() + 
         theme(legend.position = "top", legend.title = element_blank()) +
@@ -859,7 +863,7 @@ ggplot(powerlaw_fits, aes(x = Time, y = slopeM, color = factor(State))) + theme_
         labs(title = "Slope of Power Law Fit to Male Names Count Distributions")
 ```
 
-<button class="toggle_code">show hidden code</button>
+<button class="toggle_plot_code">show plot code</button>
 ```{r other-plot-power_law_fits_slope_delta, fig.width = 7, fig.height = 7, echo = TRUE}
 ggplot(powerlaw_fits, aes(x = Time, y = slopeM-slopeF, color = factor(State))) + theme_bw() + 
         theme(legend.position = "top", legend.title = element_blank()) +
@@ -873,8 +877,28 @@ ggplot(powerlaw_fits, aes(x = Time, y = slopeM-slopeF, color = factor(State))) +
 ```
 
 
+<hr class="separator">
+<a name="APPENDIX"></a>
 
-<hr class="thin_separator">
+# APPENDIX 
+
+[Back to the Top](#TOP)
+
+
+<a name="APPENDIX-my_functions"></a>
+
+## User Defined Functions
+
+```{r read_my_functions, eval = TRUE, echo = FALSE, cache = FALSE}
+read_chunk("./scripts/my_functions_baby_names.R")
+```
+
+<button class="toggle_code">show code</button>
+```{r print_chunk, eval = FALSE, echo = TRUE, cache = FALSE}
+<<my_functions>>
+```
+
+
 <a name="SessionInfo"></a>
 
 ## R Session Info
@@ -882,7 +906,5 @@ ggplot(powerlaw_fits, aes(x = Time, y = slopeM-slopeF, color = factor(State))) +
 ```{r R_session_info}
 sessionInfo()
 ```
-
-<hr class="separator">
 
 

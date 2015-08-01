@@ -11,7 +11,7 @@
 <meta name="author" content="Giovanni Fossati" />
 
 
-<title>Baby Names Data Coding Challenge</title>
+<title>Baby Names</title>
 
 <script src="main_files/jquery-1.11.0/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -49,7 +49,7 @@ code > span.er { font-weight: bold; }
 </style>
 
 
-<link rel="stylesheet" href="css/baby_names.css" type="text/css" />
+<link rel="stylesheet" href="css/gf_xnew_nolines.css" type="text/css" />
 
 </head>
 
@@ -74,14 +74,15 @@ img {
 
 
 <div id="header">
-<h1 class="title">Baby Names Data Coding Challenge</h1>
+<h1 class="title">Baby Names</h1>
 <h4 class="author"><em>Giovanni Fossati</em></h4>
 </div>
 
 
 <script src="./lib/toggle_GF.js"></script>
+<p><a name="TOP"></a></p>
 <div id="preamble" class="section level2">
-<h2>PREAMBLE</h2>
+<h2>Preamble</h2>
 <p>The source files are posted on <a href="https://github.com/pedrosan/DataScienceExamples/tree/master/Baby_Names/">GitHub</a></p>
 <div id="outline" class="section level3">
 <h3>Outline</h3>
@@ -100,11 +101,16 @@ img {
 <li><a href="#basictrends">Some Basic Trends by Year and Gender</a></li>
 <li><a href="#counts">Count Distributions by State, Time, and Gender</a></li>
 </ul></li>
+<li><a href="#APPENDIX">APPENDIX</a>
+<ul>
+<li><a href="#APPENDIX-my_functions">User Defined Functions</a></li>
+</ul></li>
 </ul>
 </div>
 <div id="note-on-the-report-reproducible-format" class="section level3">
 <h3>Note on the Report <em>Reproducible</em> Format</h3>
-<p>This report is generated from a <em>Rmarkdown</em> document which includes all code to perform data processing, modeling, plotting, etc. (except for functions defined in external scripts, included in the archive). However, for readability only a few bits of code are <em>echoed</em> explicitly in the compiled document. The full straight reproducibility is only limited by the fact that in the interest of simplicity and for computational convenience some parts of the processing have been flagged as <em>inactive</em> (<code>eval = FALSE</code>), and in its current form some data are instead loaded from previously saved work, namely the model fitting. That said, the document includes the code to perform the entire analysis, and a few changes would allow to do so by compiling it.</p>
+<p>This report is generated from a <em>Rmarkdown</em> document which includes all code to perform data processing, modeling, plotting, etc. (except for functions defined in external scripts, included in the archive). However, for readability only a few bits of code are <em>echoed</em> explicitly in the compiled document.</p>
+<p>The full straight reproducibility is only limited by the fact that in the interest of simplicity and for computational convenience some parts of the processing have been flagged as <em>inactive</em> (<code>eval = FALSE</code>), and in its current form some data are instead loaded from previously saved work, namely the model fitting. That said, the document includes the code to perform the entire analysis, and a few changes would allow to do so by compiling it.</p>
 <hr class="thin_separator">
 <p><a name="data_loading"></a></p>
 </div>
@@ -187,8 +193,8 @@ bisex_names &lt;-<span class="st"> </span><span class="kw">intersect</span>(uniq
 <p>First off, given the wide range of state populations (about a factor of 50), this threshold at a fixed value effectively introduces a distortion in the data in the sense that <span class="math">\(n\ge5\)</span> truncates the distribution of names at different levels depending on a state population (taken as a proxy for number of births). On the other hand, we are dealing with an inherently discrete quantity and below 5 there are always only four other “levels” 1, 2, 3, 4, no matter how large is a state population. So, it is not clear to me how much is the impact of the cutoff in practice. One pertinent question is how much data would be there, and a good starting point is looking at how the available data are distributed.</p>
 <p>As with many things in nature, the distribution of the number of names vs. their frequency follows fairly closely a power law distribution. Here are a couple of examples, for two states, with data added over a 5-year period. Please note that this is a <em>log-log</em> plot, the best way to look at data following a power law distribution, which comes out just like a straight line. Pink symbols show the distribution of female names, blue symbols that for male names. Red and blue dashed lines are the best fit with a linear regression model to the log-log data (points covered by a grey square were exclude from the fit.)</p>
 <p>Data were binned, with bin width <span class="math">\(0.25 \log_{10}(5)\)</span>, and the plots show the counts in each bin, not a density (<em>i.e.</em> count divided by bin width).</p>
-<button class="toggle_code">
-show hidden code
+<button class="toggle_plot_code">
+show plot code
 </button>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="kw">par</span>(<span class="dt">fig =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">1</span>), <span class="dt">mar =</span> <span class="kw">c</span>(<span class="dv">5</span>, <span class="dv">4</span>, <span class="dv">4</span>, <span class="dv">1</span>)+<span class="fl">0.1</span>, <span class="dt">cex.axis =</span> <span class="fl">1.0</span>)
 single_panel_mar &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">2</span>, <span class="dv">2</span>, <span class="dv">1</span>)
@@ -509,8 +515,8 @@ show hidden code
 <li>The green diamonds mark the top-5 most ambiguous names according to <em>Approach 3</em>, also labeled with the corresponding names.</li>
 <li>The blue diamonds mark the top-5 names with a count difference strictly equal to zero (<em>approach 1</em>).</li>
 </ul>
-<button class="toggle_code">
-show hidden code
+<button class="toggle_plot_code">
+show plot code
 </button>
 <pre class="sourceCode r"><code class="sourceCode r">single_panel_mar &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">3</span>, <span class="dv">3</span>, <span class="dv">2</span>, <span class="dv">2</span>)
 single_panel_oma &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">0</span> ,<span class="dv">0</span>, <span class="dv">2</span>, <span class="dv">0</span>)
@@ -617,8 +623,8 @@ show hidden code
 </tr>
 </tbody>
 </table>
-<button class="toggle_code">
-show hidden code
+<button class="toggle_plot_code">
+show plot code
 </button>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="kw">par</span>(gr_par)
 lab_x &lt;-<span class="st"> </span>top1945[, <span class="st">&quot;N_female&quot;</span>]
@@ -1014,8 +1020,8 @@ show hidden code
 <div id="number-of-distinct-names-vs.time" class="section level3">
 <h3>Number of Distinct Names vs. Time</h3>
 <p>Right after WW2, or so it seems, female names’ variety started to grow while the used pool of male names remained fairly stable until the end of the 1960’s.<br />After that point male names have expanded but it does not look like the can catch up. Please note that the Y-axis scale is logarithmic, hence constant spacing means constant ratio (instead of constant difference).</p>
-<button class="toggle_code">
-show hidden code
+<button class="toggle_plot_code">
+show plot code
 </button>
 <pre class="sourceCode r"><code class="sourceCode r">colors_FM &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;pink2&quot;</span>, <span class="st">&quot;dodgerblue2&quot;</span>)
 
@@ -1039,8 +1045,8 @@ show hidden code
 <h3>Total Counts vs. Time</h3>
 <p>Total number of births as counted from this dataset. These would be the figures to compare with accurate data about birthrates, to investigate the effect of the low-count threshold for inclusion in the data.</p>
 <p>The fact that the total counts for female and male births are systematically offset from each other by an amount that would seem hard to explain with natural causes, may be related to the presence of the threshold. The count distributions for female names are steeper than those for males, quite systematically independently of the state and by a larger degree in more recent decades. Steeper power law distributions, if they continue to lower counts below the threshold would resuls in a larger loss of data for female names and male names. This in turn would bias the cumulative counts by gender.</p>
-<button class="toggle_code">
-show hidden code
+<button class="toggle_plot_code">
+show plot code
 </button>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="kw">ggplot</span>(by_year_by_gender, <span class="kw">aes</span>(<span class="dt">x =</span> year, <span class="dt">y =</span> tot_count)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span>
 <span class="st">       </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="kw">c</span>(<span class="fl">0.15</span>, <span class="fl">0.85</span>),
@@ -1083,8 +1089,8 @@ show hidden code
                                                          <span class="dt">fn99 =</span> <span class="kw">get_coverage</span>(tot_count, <span class="dv">99</span>)$Fcov)
 
 for_coverage2 &lt;-<span class="st"> </span><span class="kw">gather</span>(for_coverage2a, cutoff, fcov, fn90, fn95, fn99, -year)</code></pre>
-<button class="toggle_code">
-show hidden code
+<button class="toggle_plot_code">
+show plot code
 </button>
 <pre class="sourceCode r"><code class="sourceCode r">cols &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;red2&quot;</span>, <span class="st">&quot;blue2&quot;</span>, <span class="st">&quot;orange&quot;</span>)
 <span class="kw">ggplot</span>(for_coverage2, <span class="kw">aes</span>(<span class="dt">x =</span> year, <span class="dt">y =</span> fcov)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span>
@@ -1112,8 +1118,8 @@ show hidden code
 <p>First a few more examples of the count distributions. They are all for the period 2009-2013, for eight states in different regions and of different size. In all of them the female name counts distributions are steeper than the male’s. Because broadly speaking their total integral should be approximately similar, their different slopes mean that they will cross-over, and so there are many more names with high-count among male names, and many more names with low-count among female names.</p>
 <p>We noted above that the steeper slope of the female names distribution combined with the low-count threshold may have something to do with the offset between total number of female and male births counted from these data.</p>
 <p>In a few of these plots there is a hint of a possible “knee” in the distribution of male names, between the power law part (left / lower counts side).</p>
-<button class="toggle_code">
-show hidden code
+<button class="toggle_plot_code">
+show plot code
 </button>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="kw">par</span>(<span class="dt">fig =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">1</span>), <span class="dt">mar =</span> <span class="kw">c</span>(<span class="dv">5</span>, <span class="dv">4</span>, <span class="dv">4</span>, <span class="dv">1</span>)+<span class="fl">0.1</span>, <span class="dt">cex.axis =</span> <span class="fl">1.0</span>)
 single_panel_mar &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">2</span>, <span class="dv">2</span>, <span class="dv">1</span>)
@@ -1152,8 +1158,8 @@ mat.layout &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span cl
 <li>Looking at the means, we can appreciate that the slope for female names has been steeper than that of male names since the 1960’s.</li>
 <li>This is illustrate more directly in the third figure, plotting the difference of the two slopes. It has been increasing for almost a century.</li>
 </ul>
-<button class="toggle_code">
-show hidden code
+<button class="toggle_plot_code">
+show plot code
 </button>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="kw">ggplot</span>(powerlaw_fits, <span class="kw">aes</span>(<span class="dt">x =</span> Time, <span class="dt">y =</span> slopeF, <span class="dt">color =</span> State)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span>
 <span class="st">        </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">&quot;top&quot;</span>, <span class="dt">legend.title =</span> <span class="kw">element_blank</span>()) +
@@ -1164,8 +1170,8 @@ show hidden code
 <span class="st">        </span><span class="kw">stat_summary</span>(<span class="dt">fun.y =</span> <span class="st">&quot;mean&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;line&quot;</span>, <span class="kw">aes</span>(<span class="dt">group=</span><span class="dv">1</span>), <span class="dt">size =</span> <span class="fl">2.0</span>, <span class="dt">lty =</span> <span class="dv">5</span>) +
 <span class="st">        </span><span class="kw">labs</span>(<span class="dt">title =</span> <span class="st">&quot;Slope of Power Law Fit to Female Names Count Distributions&quot;</span>)</code></pre>
 <p><img src="figures/other-plot-power_law_fits_slope_F-1.png" title="" alt="" width="700" style="display: block; margin: auto;" /></p>
-<button class="toggle_code">
-show hidden code
+<button class="toggle_plot_code">
+show plot code
 </button>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="kw">ggplot</span>(powerlaw_fits, <span class="kw">aes</span>(<span class="dt">x =</span> Time, <span class="dt">y =</span> slopeM, <span class="dt">color =</span> <span class="kw">factor</span>(State))) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span>
 <span class="st">        </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">&quot;top&quot;</span>, <span class="dt">legend.title =</span> <span class="kw">element_blank</span>()) +
@@ -1176,8 +1182,8 @@ show hidden code
 <span class="st">        </span><span class="kw">stat_summary</span>(<span class="dt">fun.y =</span> <span class="st">&quot;mean&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;line&quot;</span>, <span class="kw">aes</span>(<span class="dt">group=</span><span class="dv">1</span>), <span class="dt">size =</span> <span class="fl">2.0</span>, <span class="dt">lty =</span> <span class="dv">5</span>) +
 <span class="st">        </span><span class="kw">labs</span>(<span class="dt">title =</span> <span class="st">&quot;Slope of Power Law Fit to Male Names Count Distributions&quot;</span>)</code></pre>
 <p><img src="figures/other-plot-power_law_fits_slope_M-1.png" title="" alt="" width="700" style="display: block; margin: auto;" /></p>
-<button class="toggle_code">
-show hidden code
+<button class="toggle_plot_code">
+show plot code
 </button>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="kw">ggplot</span>(powerlaw_fits, <span class="kw">aes</span>(<span class="dt">x =</span> Time, <span class="dt">y =</span> slopeM-slopeF, <span class="dt">color =</span> <span class="kw">factor</span>(State))) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span>
 <span class="st">        </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">&quot;top&quot;</span>, <span class="dt">legend.title =</span> <span class="kw">element_blank</span>()) +
@@ -1189,9 +1195,221 @@ show hidden code
 <span class="st">        </span><span class="kw">geom_abline</span>(<span class="dt">slope =</span> <span class="dv">0</span>, <span class="dt">lty =</span> <span class="dv">2</span>, <span class="dt">col =</span> <span class="st">&quot;grey40&quot;</span>, <span class="dt">size =</span> <span class="dv">1</span>) +
 <span class="st">        </span><span class="kw">labs</span>(<span class="dt">title =</span> <span class="st">&quot;Difference b/w Male and Female Power Law Slopes&quot;</span>)</code></pre>
 <p><img src="figures/other-plot-power_law_fits_slope_delta-1.png" title="" alt="" width="700" style="display: block; margin: auto;" /></p>
-<hr class="thin_separator">
-<p><a name="SessionInfo"></a></p>
+<hr class="separator">
+<p><a name="APPENDIX"></a></p>
 </div>
+</div>
+</div>
+<div id="appendix" class="section level1">
+<h1>APPENDIX</h1>
+<p><a href="#TOP">Back to the Top</a></p>
+<p><a name="APPENDIX-my_functions"></a></p>
+<div id="user-defined-functions" class="section level2">
+<h2>User Defined Functions</h2>
+<button class="toggle_code">
+show code
+</button>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co">#===================================================================================================</span>
+<span class="co"># Nothing Yey</span>
+
+intersect_MF_names_1year &lt;-<span class="st"> </span>function(<span class="dt">data =</span> <span class="ot">NULL</span>, 
+                                     <span class="dt">select_year =</span> <span class="ot">NULL</span>) {
+
+    tmp_f &lt;-<span class="st"> </span><span class="kw">filter</span>(data, year ==<span class="st"> </span>select_year &amp;<span class="st"> </span>gender ==<span class="st"> &quot;F&quot;</span>) %&gt;%<span class="st"> </span><span class="kw">group_by</span>(name) %&gt;%<span class="st"> </span><span class="kw">summarize</span>(<span class="dt">n =</span> <span class="kw">sum</span>(count)) 
+    tmp_m &lt;-<span class="st"> </span><span class="kw">filter</span>(data, year ==<span class="st"> </span>select_year &amp;<span class="st"> </span>gender ==<span class="st"> &quot;M&quot;</span>) %&gt;%<span class="st"> </span><span class="kw">group_by</span>(name) %&gt;%<span class="st"> </span><span class="kw">summarize</span>(<span class="dt">n =</span> <span class="kw">sum</span>(count)) 
+
+    tmp_c &lt;-<span class="st"> </span><span class="kw">inner_join</span>(tmp_f, tmp_m, <span class="dt">by =</span> <span class="st">&quot;name&quot;</span>) %&gt;%<span class="st"> </span><span class="kw">mutate</span>(<span class="dt">ntot =</span> n.x +<span class="st"> </span>n.y, 
+                                                              <span class="dt">diff =</span> <span class="kw">abs</span>(n.x -<span class="st"> </span>n.y), 
+                                                              <span class="dt">diff_norm =</span> <span class="kw">round</span>(<span class="kw">abs</span>(n.x -<span class="st"> </span>n.y)/ntot, <span class="dv">4</span>), 
+                                                              <span class="dt">ratio =</span> <span class="kw">round</span>(<span class="kw">pmin</span>(n.x/n.y, n.y/n.x), <span class="dv">4</span>))
+    <span class="kw">colnames</span>(tmp_c)[<span class="dv">1</span>:<span class="dv">4</span>] &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;Name&quot;</span>, <span class="st">&quot;N_female&quot;</span>, <span class="st">&quot;N_male&quot;</span>, <span class="st">&quot;N_tot&quot;</span>)
+    <span class="kw">return</span>(<span class="kw">list</span>(<span class="dt">female =</span> tmp_f, <span class="dt">male =</span> tmp_m, <span class="dt">common =</span> tmp_c))
+}
+
+<span class="co">#===-----------------------------------------------------------</span>
+<span class="co"># </span>
+get_coverage &lt;-<span class="st"> </span>function(<span class="dt">cnt =</span> <span class="ot">NULL</span>, 
+                         <span class="dt">cutoff =</span> <span class="ot">NULL</span>) {
+
+    tot &lt;-<span class="st"> </span><span class="kw">sum</span>(cnt)
+    cov &lt;-<span class="st"> </span><span class="kw">cumsum</span>(cnt)/tot*<span class="dv">100</span>
+
+    Ncov &lt;-<span class="st"> </span><span class="kw">sum</span>(cov &lt;=<span class="st"> </span>cutoff)
+    Fcov &lt;-<span class="st"> </span>Ncov/<span class="kw">length</span>(cnt)
+    <span class="kw">return</span>( <span class="kw">list</span>(<span class="dt">Ncov =</span> Ncov, <span class="dt">Fcov =</span> Fcov) )
+
+}
+
+<span class="co">#===-----------------------------------------------------------</span>
+<span class="co"># from: https://github.com/cran/descr/blob/master/R/file.head.R</span>
+<span class="co"># </span>
+file.head &lt;-<span class="st"> </span>function(file, 
+                      <span class="dt">n =</span> <span class="dv">6</span>, 
+                      <span class="dt">truncate.cols =</span> <span class="ot">TRUE</span>) {
+
+    lns &lt;-<span class="st"> </span><span class="kw">readLines</span>(file, <span class="dt">n =</span> n)
+    lns &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\t</span><span class="st">&quot;</span>, <span class="st">&quot;</span><span class="ch">\\\\</span><span class="st">t&quot;</span>, lns)
+    if(truncate.cols){
+        <span class="kw">try</span>(file.head.lns &lt;-<span class="st"> </span><span class="kw">substr</span>(lns, <span class="dv">1</span>, <span class="kw">getOption</span>(<span class="st">&quot;width&quot;</span>) -<span class="st"> </span><span class="dv">1</span>), <span class="dt">silent =</span> <span class="ot">TRUE</span>)
+        if(!<span class="kw">exists</span>(<span class="st">&quot;file.head.lns&quot;</span>)){
+            <span class="kw">Encoding</span>(lns) &lt;-<span class="st"> &quot;bytes&quot;</span>
+            file.head.lns &lt;-<span class="st"> </span><span class="kw">substr</span>(lns, <span class="dv">1</span>, <span class="kw">getOption</span>(<span class="st">&quot;width&quot;</span>) -<span class="st"> </span><span class="dv">1</span>)
+        }
+    }
+    <span class="kw">cat</span>(file.head.lns, <span class="dt">sep =</span> <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
+}
+
+<span class="co">#===-----------------------------------------------------------</span>
+<span class="co">#  - subset must be passed enclosed in &#39;quote()&#39;</span>
+<span class="co">#</span>
+plot_hist_state_year_with_fit &lt;-<span class="st"> </span>function(<span class="dt">data =</span> <span class="ot">NULL</span>, 
+                                          <span class="dt">STATE =</span> <span class="ot">NULL</span>, 
+                                          <span class="dt">YEAR =</span> <span class="ot">NULL</span>, 
+                                          <span class="dt">subset =</span> <span class="ot">NULL</span>,
+                                          <span class="dt">return_fit =</span> <span class="ot">FALSE</span>, 
+                                          <span class="dt">debug =</span> <span class="ot">FALSE</span>) {
+
+    <span class="co"># require(&quot;dplyr&quot;)   </span>
+    if( <span class="kw">is.null</span>(STATE) &amp;<span class="st"> </span>!<span class="kw">is.null</span>(YEAR)) { data_for_histo &lt;-<span class="st"> </span><span class="kw">subset</span>(data, year %in%<span class="st"> </span>YEAR) }
+    if(!<span class="kw">is.null</span>(STATE) &amp;<span class="st">  </span><span class="kw">is.null</span>(YEAR)) { data_for_histo &lt;-<span class="st"> </span><span class="kw">subset</span>(data, state %in%<span class="st"> </span>STATE) }
+    if(!<span class="kw">is.null</span>(STATE) &amp;<span class="st"> </span>!<span class="kw">is.null</span>(YEAR)) { data_for_histo &lt;-<span class="st"> </span><span class="kw">subset</span>(data, state %in%<span class="st"> </span>STATE &amp;<span class="st"> </span>year %in%<span class="st"> </span>YEAR) }
+    
+    <span class="co"># log_breaks &lt;- seq(log10(5), log10(2*max(data_for_histo$count)), by = 0.25*log10(5))</span>
+    log_breaks &lt;-<span class="st"> </span><span class="kw">seq</span>(<span class="dv">0</span>, <span class="fl">4.1</span>, <span class="dt">by =</span> <span class="fl">0.2</span>*<span class="kw">log10</span>(<span class="dv">5</span>)) +<span class="st"> </span><span class="kw">log10</span>(<span class="dv">5</span>)
+    
+    <span class="co">#---</span>
+    fit_df &lt;-<span class="st"> </span>data_for_histo %&gt;%<span class="st"> </span><span class="kw">mutate</span>(<span class="dt">log_c =</span> <span class="kw">log10</span>(count)) %&gt;%<span class="st"> </span>dplyr::<span class="kw">select</span>( . , gender, log_c)
+    if( debug ) { <span class="kw">print</span>(<span class="kw">nrow</span>(fit_df)) }
+    hh_F &lt;-<span class="st"> </span><span class="kw">hist</span>(<span class="kw">subset</span>(fit_df$log_c, fit_df$gender ==<span class="st"> &quot;F&quot;</span>), <span class="dt">breaks =</span> log_breaks, <span class="dt">plot =</span> <span class="ot">FALSE</span>)
+    hh_M &lt;-<span class="st"> </span><span class="kw">hist</span>(<span class="kw">subset</span>(fit_df$log_c, fit_df$gender ==<span class="st"> &quot;M&quot;</span>), <span class="dt">breaks =</span> log_breaks, <span class="dt">plot =</span> <span class="ot">FALSE</span>)
+    
+    hh_F_df &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">x =</span> hh_F$mids, <span class="dt">y =</span> <span class="kw">log10</span>(hh_F$counts), <span class="dt">g =</span> <span class="st">&quot;F&quot;</span>, <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>) 
+    hh_M_df &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">x =</span> hh_M$mids, <span class="dt">y =</span> <span class="kw">log10</span>(hh_M$counts), <span class="dt">g =</span> <span class="st">&quot;M&quot;</span>, <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>) 
+    hh_df &lt;-<span class="st"> </span><span class="kw">bind_rows</span>(hh_F_df, hh_M_df) %&gt;%<span class="st"> </span><span class="kw">filter</span>( . , y !=<span class="st"> </span>-<span class="ot">Inf</span>)
+    hh_df$xy &lt;-<span class="st"> </span>hh_df$y +<span class="st"> </span>hh_df$x
+    
+    <span class="co">#---</span>
+    <span class="co"># needed for understanding the passed subset expression</span>
+    x &lt;-<span class="st"> </span>hh_df$x
+    y &lt;-<span class="st"> </span>hh_df$y
+    <span class="co">#</span>
+    if( <span class="kw">is.null</span>(subset) ) {
+        flag_subset &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="ot">TRUE</span>, <span class="kw">nrow</span>(hh_df)) 
+    } else {
+        flag_subset &lt;-<span class="st"> </span><span class="kw">eval</span>(subset)
+    }
+    <span class="co">#---</span>
+
+    mod &lt;-<span class="st"> </span><span class="kw">lm</span>(y ~<span class="st"> </span><span class="kw">I</span>(x<span class="dv">-1</span>)*g, <span class="dt">data =</span> hh_df, <span class="dt">subset =</span> flag_subset)
+    cx &lt;-<span class="st"> </span><span class="kw">summary</span>(mod)$coeff
+    ab &lt;-<span class="st"> </span>cx[, <span class="dv">1</span>]
+    
+    cx_at_1 &lt;-<span class="st"> </span><span class="kw">c</span>(ab[<span class="dv">1</span>], ab[<span class="dv">2</span>], ab[<span class="dv">1</span>]+ab[<span class="dv">3</span>], ab[<span class="dv">2</span>]+ab[<span class="dv">4</span>])
+    <span class="kw">names</span>(cx_at_1) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;nF&quot;</span>, <span class="st">&quot;slopeF&quot;</span>, <span class="st">&quot;nM&quot;</span>, <span class="st">&quot;slopeM&quot;</span>)
+    
+    ab_F &lt;-<span class="st"> </span><span class="kw">c</span>( ab[<span class="dv">1</span>] -<span class="st"> </span>ab[<span class="dv">2</span>], ab[<span class="dv">2</span>] )
+    ab_M &lt;-<span class="st"> </span><span class="kw">c</span>( (ab[<span class="dv">1</span>]+ab[<span class="dv">3</span>]) -<span class="st"> </span>(ab[<span class="dv">2</span>]+ab[<span class="dv">4</span>]), ab[<span class="dv">2</span>]+ab[<span class="dv">4</span>])
+
+    if( debug ) { <span class="kw">print</span>(cx[, -<span class="dv">3</span>]) }
+    if( debug ) { <span class="kw">print</span>(cx_at_1) }
+    if( debug ) { <span class="kw">print</span>(<span class="kw">rbind</span>(ab_F, ab_M)) }
+    
+    <span class="co">#---</span>
+    if( !<span class="kw">is.null</span>(STATE) ) {
+        label_STATE &lt;-<span class="st"> </span><span class="kw">deparse</span>(<span class="kw">substitute</span>(STATE)) %&gt;%<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&#39;&quot;&#39;</span>, <span class="st">&#39;&#39;</span>, .)
+    } else {
+        label_STATE &lt;-<span class="st"> &quot;&quot;</span>
+    }
+    if( !<span class="kw">is.null</span>(YEAR) ) {
+        label_YEAR  &lt;-<span class="st"> </span><span class="kw">deparse</span>(<span class="kw">substitute</span>(YEAR)) %&gt;%<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&#39;&quot;&#39;</span>, <span class="st">&#39;&#39;</span>, .)
+    } else {
+        label_YEAR  &lt;-<span class="st"> &quot;&quot;</span>
+    }
+
+    label_main &lt;-<span class="st"> </span><span class="kw">paste0</span>(label_STATE, <span class="st">&quot; / &quot;</span>, label_YEAR)
+    <span class="co">#---</span>
+    
+    <span class="co"># single_panel_mar &lt;- c(3, 4, 2, 1)</span>
+    <span class="co"># single_panel_oma &lt;- c(0 ,0, 2, 0)</span>
+    <span class="co"># gr_par &lt;- list( mar = single_panel_mar, oma = single_panel_oma, </span>
+    <span class="co">#                 cex = 1.0, cex.axis = 1.0, cex.lab = 1.0, cex.main = 1.25,</span>
+    <span class="co">#                 las = 0, mgp = c(1.5, 0.5, 0),</span>
+    <span class="co">#                 tcl = 0.3)</span>
+    <span class="co"># par(gr_par)</span>
+
+    colors_FM &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;pink2&quot;</span>, <span class="st">&quot;dodgerblue2&quot;</span>)
+    <span class="kw">plot</span>(hh_df$x, hh_df$y, 
+         <span class="dt">xlim =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="fl">4.1</span>), 
+         <span class="dt">ylim =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="fl">4.5</span>), 
+         <span class="dt">type =</span> <span class="st">&quot;n&quot;</span>, 
+         <span class="dt">xlab =</span> <span class="st">&quot;log10(Counts)&quot;</span>, 
+         <span class="dt">ylab =</span> <span class="st">&quot;log10(Frequency)&quot;</span>,
+         <span class="dt">main =</span> label_main)
+    
+    <span class="kw">points</span>(hh_df$x[hh_df$g ==<span class="st"> &quot;F&quot;</span>], hh_df$y[hh_df$g ==<span class="st"> &quot;F&quot;</span>], <span class="dt">col =</span> colors_FM[<span class="dv">1</span>], <span class="dt">pch =</span> <span class="dv">19</span>, <span class="dt">cex =</span> <span class="fl">1.5</span>)
+    <span class="kw">points</span>(hh_df$x[hh_df$g ==<span class="st"> &quot;M&quot;</span>], hh_df$y[hh_df$g ==<span class="st"> &quot;M&quot;</span>], <span class="dt">col =</span> colors_FM[<span class="dv">2</span>], <span class="dt">pch =</span> <span class="dv">19</span>, <span class="dt">cex =</span> <span class="fl">1.5</span>)
+
+    <span class="kw">abline</span>(ab_F, <span class="dt">col =</span> <span class="st">&quot;red2&quot;</span>, <span class="dt">lty =</span> <span class="dv">2</span>)
+    <span class="kw">abline</span>(ab_M, <span class="dt">col =</span> <span class="st">&quot;blue2&quot;</span>, <span class="dt">lty =</span> <span class="dv">2</span>)
+    <span class="kw">grid</span>()
+
+    <span class="kw">points</span>(hh_df$x[!flag_subset], hh_df$y[!flag_subset], <span class="dt">pch =</span> <span class="dv">15</span>, <span class="dt">col =</span> <span class="kw">rgb</span>(<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="fl">0.2</span>), <span class="dt">cex =</span> <span class="fl">2.2</span>)
+
+    if( return_fit ) { <span class="kw">return</span>(cx_at_1) }
+
+}
+
+<span class="co">#===-----------------------------------------------------------</span>
+<span class="co">#</span>
+prepare_powerlaw_fits_data_frame &lt;-<span class="st"> </span>function(<span class="dt">data =</span> <span class="ot">NULL</span>) {
+    
+    vec_states &lt;-<span class="st"> </span><span class="kw">unique</span>(data$state)
+    <span class="co"># vec_states &lt;- c(&quot;MA&quot;, &quot;WY&quot;, &quot;NM&quot;, &quot;FL&quot;)</span>
+    
+    vec_years &lt;-<span class="st"> </span><span class="kw">unique</span>(data$year) %&gt;%<span class="st"> </span><span class="kw">sort</span>( . , <span class="dt">decreasing =</span> <span class="ot">FALSE</span>)
+    last_year &lt;-<span class="st"> </span><span class="dv">2013</span>
+    
+    y_start_step &lt;-<span class="st"> </span><span class="dv">5</span>
+    start_years &lt;-<span class="st"> </span><span class="kw">seq</span>(<span class="dv">1910</span>, <span class="dv">2014</span>, <span class="dt">by =</span> y_start_step)
+    y_window &lt;-<span class="st"> </span><span class="dv">10</span>
+    
+    store &lt;-<span class="st"> </span><span class="kw">list</span>()
+    
+    i &lt;-<span class="st"> </span><span class="dv">0</span>
+    for( S in vec_states ) {
+        state_df &lt;-<span class="st"> </span><span class="kw">filter</span>(data, state ==<span class="st"> </span>S)
+        for( y1 in start_years ) {
+            i &lt;-<span class="st"> </span>i +<span class="st"> </span><span class="dv">1</span>
+            <span class="co"># y2 &lt;- min(y1 + y_start_step - 1, last_year)</span>
+            y2 &lt;-<span class="st"> </span><span class="kw">min</span>(y1 +<span class="st"> </span>y_window -<span class="st"> </span><span class="dv">1</span>, last_year)
+            <span class="kw">cat</span>(<span class="st">&quot; &quot;</span>, S, <span class="st">&quot; : &quot;</span>, y1, <span class="st">&quot; - &quot;</span>, y2, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
+            <span class="co"># name &lt;- paste0(S, &quot;_&quot;, y1, &quot;_&quot;, y2)</span>
+            name &lt;-<span class="st"> </span><span class="kw">paste0</span>(S, y1)
+            
+            fname &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="st">&quot;distr2_&quot;</span>, S, <span class="st">&quot;_&quot;</span>, y1, <span class="st">&quot;_&quot;</span>, y2, <span class="st">&quot;.png&quot;</span>)
+            <span class="kw">png</span>(<span class="dt">file =</span> fname, <span class="dt">width =</span> <span class="dv">900</span>, <span class="dt">height =</span> <span class="dv">900</span>, <span class="dt">res =</span> <span class="dv">96</span>, <span class="dt">bg =</span> <span class="st">&quot;white&quot;</span>)
+            cx &lt;-<span class="st"> </span><span class="kw">plot_hist_state_year_with_fit</span>(<span class="dt">data =</span> state_df, <span class="dt">YEAR =</span> y1:y2, <span class="dt">subset =</span> <span class="kw">quote</span>(y &gt;<span class="st"> </span><span class="kw">log10</span>(<span class="dv">25</span>)), <span class="dt">return_fit =</span> <span class="ot">TRUE</span>)
+            <span class="co"># store[[i]] &lt;- cx</span>
+            store[[name]] &lt;-<span class="st"> </span><span class="kw">c</span>(name, cx)
+            
+            <span class="kw">dev.off</span>()
+        }
+    }
+    
+    powerlaw_fits &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(<span class="kw">t</span>(<span class="kw">as.data.frame</span>(store, <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)), <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
+    <span class="kw">colnames</span>(powerlaw_fits)[<span class="dv">1</span>] &lt;-<span class="st"> &quot;StateYear&quot;</span>
+    
+    powerlaw_fits[, <span class="dv">2</span>:<span class="dv">5</span>] &lt;-<span class="st"> </span><span class="kw">apply</span>(powerlaw_fits[,<span class="dv">2</span>:<span class="dv">5</span>], <span class="dv">2</span>, as.numeric)
+    <span class="kw">row.names</span>(powerlaw_fits) &lt;-<span class="st"> </span><span class="ot">NULL</span>
+    powerlaw_fits &lt;-<span class="st"> </span><span class="kw">separate</span>(powerlaw_fits, StateYear, <span class="kw">c</span>(<span class="st">&quot;State&quot;</span>, <span class="st">&quot;Time&quot;</span>), <span class="dt">sep =</span> <span class="dv">2</span>)
+    powerlaw_fits$Time &lt;-<span class="st"> </span><span class="kw">as.integer</span>(powerlaw_fits$Time) +<span class="st"> </span><span class="fl">0.5</span>*y_window
+    
+    <span class="kw">return</span>(powerlaw_fits)
+    
+}
+
+<span class="co">#===================================================================================================</span></code></pre>
+<p><a name="SessionInfo"></a></p>
 </div>
 <div id="r-session-info" class="section level2">
 <h2>R Session Info</h2>
@@ -1218,7 +1436,6 @@ show hidden code
 <span class="co"># [11] gtable_0.1.2     highr_0.5        htmltools_0.2.6  labeling_0.3     lazyeval_0.1.10 </span>
 <span class="co"># [16] munsell_0.4.2    parallel_3.1.3   plyr_1.8.3       proto_0.3-10     reshape2_1.4.1  </span>
 <span class="co"># [21] rmarkdown_0.7    scales_0.2.4     stringi_0.5-5    tools_3.1.3      yaml_2.1.13</span></code></pre>
-<hr class="separator">
 </div>
 </div>
 
