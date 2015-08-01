@@ -1,4 +1,4 @@
-# DataScienceExamples
+# Data Science 
 
 Mix of projects showcasing some of data science work
 

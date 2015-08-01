@@ -1,19 +1,11 @@
 ---
-title: "Bike Sharing Data Challenge"
+title: "Bike Sharing Data"
 subtitle : 
 author   : Giovanni Fossati
 job      : null
 output   : 
   html_document:
     self_contained: false
-    css: css/gf_xnew_nolines.css
-    theme: cerulean
-    highlight: tango
-    keep_md: no
-    mathjax: default
-    toc: no
-    includes:
-      md_extensions: +fenced_code_attributes
 ---
 
 ```{r setup, cache = FALSE, echo = FALSE, message = FALSE, warning = FALSE, tidy = FALSE}
@@ -36,7 +28,7 @@ opts_chunk$set(message = FALSE,
 # knit_hooks$set(toggle = hook_toggle())
 ```
 
-<script src="./lib/toggle_GF.js"></script>
+<a name="TOP"></a>
 
 ## Preamble
 
@@ -64,7 +56,7 @@ library("gridExtra")
     * [Based on the available data, what is the average amount of time a bike spends at a station in seconds?](#question_C)
     * [Describe and explain the major qualitative usage pattern for station 'fe2a5f' and how it differs from station 'fec8ff'](#question_D)
     * [Estimate the number of bikes at stations '8f0f64' and '4a4b61' for each hour on the hour of 2013/10/30](#question_E)
-* [APPENDIX](#APPENDIX")
+* [APPENDIX](#APPENDIX)
     * [R Session Info](#SessionInfo)
 
 
@@ -543,6 +535,9 @@ p3 + geom_bar(stat = "identity", alpha = 0.5, width = 0.8) +
 <a name="APPENDIX"></a>
 
 # APPENDIX
+
+[[Back to the Top](#TOP)]
+
 
 <a name="SessionInfo"></a>
 

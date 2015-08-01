@@ -12,7 +12,7 @@ body {
     /* color: #333333 !important; */
     color: #5D5D5D !important;
     /* background-color: #EEEEEE !important; */
-    background: #EEFEEE url(./body-bg.png) 0 0 repeat !important; 
+    background: #EEEEEE url(../images/body-bg.png) 0 0 repeat !important; 
     /* font-size: 14px !important;  */
     /* font-size: 12px;  */
     font-family: 'Roboto+Condensed';
@@ -34,11 +34,11 @@ p {
     /* background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1)); */
     /* background: linear-gradient(to bottom, rgba(255,255,255,0), #FEFEFE 5%, #FEFEFE);  */
 
-    /* background: -moz-linear-gradient(to bottom, rgba(255,255,255,0), #FEFEFE 5%, #FEFEFE), url(./highlight-bg.jpg) 0 0 no-repeat;  */
-    /* background: -webkit-linear-gradient(to bottom, rgba(255,255,255,0), #FEFEFE 5%, #FEFEFE), url(./highlight-bg.jpg) 0 0 no-repeat;  */
-    /* background: -ms-linear-gradient(to bottom, rgba(255,255,255,0), #FEFEFE 5%, #FEFEFE), url(./highlight-bg.jpg) 0 0 no-repeat;  */
+    /* background: -moz-linear-gradient(to bottom, rgba(255,255,255,0), #FEFEFE 5%, #FEFEFE), url(../images/highlight-bg.jpg) 0 0 no-repeat;  */
+    /* background: -webkit-linear-gradient(to bottom, rgba(255,255,255,0), #FEFEFE 5%, #FEFEFE), url(../images/highlight-bg.jpg) 0 0 no-repeat;  */
+    /* background: -ms-linear-gradient(to bottom, rgba(255,255,255,0), #FEFEFE 5%, #FEFEFE), url(../images/highlight-bg.jpg) 0 0 no-repeat;  */
 
-    /* background: linear-gradient(to bottom, rgba(255,255,255,0), #FEFEFE 5%, #FEFEFE), url(./highlight-bg.jpg) 0 0 no-repeat;  */
+    /* background: linear-gradient(to bottom, rgba(255,255,255,0), #FEFEFE 5%, #FEFEFE), url(../images/highlight-bg.jpg) 0 0 no-repeat;  */
     background: linear-gradient(to right, #EEEEEE, #FEFEFE 2%, #FEFEFE 98%, #EEEEEE);
     /* background: linear-gradient(to right, rgba(255,255,255,0), #FEFEFE 3%, #FEFEFE 97%, rgba(255,255,255,0)); */
 }
@@ -125,7 +125,7 @@ h1.title {
 h1.subtitle { 
     font-size: 1.6em; 
     color: #882222; 
-    margin-top: 4px !important;
+    margin-top: 0px !important;
 } 
 
 h4.author   { 
