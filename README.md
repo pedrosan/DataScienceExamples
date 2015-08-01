@@ -4,15 +4,15 @@ Mix of projects showcasing some of data science work
 
 A __report__ is available for some of them, hosted under pedrosan.github.io using the _pages_ feature.
 
-* Bike Sharing Data Challenge:
+* Bike Sharing "Data Challenge":
   * [REPORT](http://pedrosan.github.io/DataScienceExamples/Bike_Sharing/)
   * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Bike_Sharing)
 
-* Baby Names Data Challenge:
+* Baby Names "Data Challenge":
   * [REPORT](http://pedrosan.github.io/DataScienceExamples/Baby_Names/)
   * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Baby_Names)
 
-* Data Challenge on Synthetic Data Set:
+* "Data Challenge" on Synthetic Data Set:
   * [REPORT](http://pedrosan.github.io/DataScienceExamples/Synthetic_Data/)
   * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Synthetic_Data)
 
