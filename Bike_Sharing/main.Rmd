@@ -6,7 +6,7 @@ job      : null
 output   : 
   html_document:
     self_contained: false
-    css: css/gf_new.css
+    css: css/gf_xnew_nolines.css
     theme: cerulean
     highlight: tango
     keep_md: no
@@ -38,11 +38,11 @@ opts_chunk$set(message = FALSE,
 
 <script src="./lib/toggle_GF.js"></script>
 
-## PREAMBLE
+## Preamble
 
 The source files are posted on [GitHub](https://github.com/pedrosan/DataScienceExamples/tree/master/Bike_Sharing/)
 
-## PRELIMINARIES
+## Preliminaries
 
 Libraries needed for data processing and plotting:
 
@@ -203,9 +203,9 @@ of `station1` and `station2` offset by one row at once on the full data frame.
 # on the full dataset
 main <- data[-nrow(data), ]
 main$tdiff <- difftime(data$time1[-1], data$time2[-nrow(data)])
-main$flag.combined <-  (data$station1[-1] == data$station2[-nrow(data)]) & (data$bike[-1] == data$bike[-nrow(data)])
+main$flag.combined <- (data$station1[-1] == data$station2[-nrow(data)]) & 
+                      (data$bike[-1] == data$bike[-nrow(data)])
 main$flag.station <- c(main$station1[-1] == main$station2[-nrow(main)], NA)
-# main[main$flag.combined & as.numeric(main$tdiff) < 0, ]
 
 good.tdiff <- main$tdiff[main$flag.combined & as.numeric(main$tdiff) > 0]
 length(good.tdiff)
@@ -214,7 +214,7 @@ length(good.tdiff)
 There are __`r sum(main$flag.combined & as.numeric(main$tdiff) < 0)`__ valid (same bike, same station) 
 parking intervals with NEGATIVE DURATION (!?).   
 We can safely ignore them for now considering that they are a tiny fraction of the accepted _stays_, i.e. 
-`r sum(main$flag.combined & as.numeric(main$tdiff) > 0)`.
+__`r sum(main$flag.combined & as.numeric(main$tdiff) > 0)`__.
 
 The statistics of the duration of _stays_ are therefore:
 
@@ -226,7 +226,7 @@ ss
 As it was the case for trip durations, the range of _stays_ durations is quite wide, in fact even wider and it makes
 sense considering that there is really no limit in principle to for how a bike may remain unused.
 
-At any rate, the __mean time spent by a bike at a station is `r ss[4]`__, 
+At any rate, the __mean time spent by a bike at a station__ is __`r ss[4]`__, 
 while its __median__ is __`r ss[3]`__.
 
 ```{r parking_time-2, eval = FALSE, echo = FALSE}
@@ -327,7 +327,7 @@ are summarized in the following simple plots, which show two clear qualitative d
 	big peak of usage in the afternoon is almost entirely _leaving_.
 
 
-<button class="toggle_code">show hidden code</button>
+<button class="toggle_plot_code">show plot code</button>
 ```{r patterns-plots-by_hour, fig.width=7, fig.height=5, echo = TRUE}
 p1 <- ggplot(data = both, aes(x = t1hc, fill = type)) + theme_bw() + xlab("hour of the day")
 
@@ -350,7 +350,7 @@ There is instead a hint of increase of activity for station `fe2a5f` during the 
 that lends further support to the idea that its location may be more residential.
 
 
-<button class="toggle_code">show hidden code</button>
+<button class="toggle_plot_code">show plot code</button>
 ```{r patterns-plots-by_wday, fig.width=7, fig.height=5, echo = TRUE}
 p2 <- ggplot(data = both, aes(x = as.factor(wday1), fill = ID)) + theme_bw() + 
         theme(legend.position="none") +
@@ -527,7 +527,7 @@ print(df.wide, row.names = FALSE)
 
 ### Plot
 
-<button class="toggle_code">show hidden code</button>
+<button class="toggle_plot_code">show plot code</button>
 ```{r bikes_at_stations-plot, fig.width=7, fig.height=5, echo = TRUE}
 p3 <- ggplot(data = df, aes(x = hour, y = number, fill = ID)) + theme_bw() + theme(legend.position="none") +
         xlab("hour")
@@ -551,4 +551,3 @@ p3 + geom_bar(stat = "identity", alpha = 0.5, width = 0.8) +
 ```{r R_session_info}
 sessionInfo()
 ```
----

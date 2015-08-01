@@ -25,6 +25,8 @@ body {
     border-left: 2px dotted black !important; 
     border-right: 2px dotted black !important; 
     padding: 0px 25px 25px 25px !important; 
+    /* padding: 1em !important;  */
+    /* background: transparent url(./highlight-bg.jpg) 0 0 repeat; */
     /* background-color: #FEFEFE !important;  */
     /* background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1)); */
     /* background: linear-gradient(to bottom, rgba(255,255,255,0), #FEFEFE 5%, #FEFEFE);  */
@@ -119,6 +121,7 @@ code {
     border-top: 0px dotted #AAD; 
     border-bottom: 1px dotted #A77; 
     padding: 0px 2px 0px 2px;
+    /* background-color: #ADADFD; */
     background-color: #F5F5FF !important;  
     color: #339933;
     border-radius: 1px;
@@ -131,7 +134,8 @@ pre.sourceCode {
     /* background: transparent url(./highlight-bg.jpg) 0 0 repeat; */
     /* background: linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,1)); */
     /* background: linear-gradient(to right, #F8F8F8, #F8F8F8 40%, rgba(255,255,255,0)); */
-    background: linear-gradient(120deg, #F4F4F4, #F6F6F6 40%, rgba(255,255,255,0)); 
+    background: linear-gradient(120deg, #F4F6F6, #F6F6F6 40%, rgba(255,255,255,0)); 
+    /* background: linear-gradient(120deg, red, blue); */
 }
 
 pre > code {
@@ -183,25 +187,18 @@ img {
     padding: 0px;
     border: 0px;
     margin: 0px;
-    clear: right;
-    z-index: 9; 
     /* margin-left: 10%; */
     /* margin-right: 10%; */
     /* padding: 5px 0.5em 5px 0.5em; */
     /* border: 1px solid #000000; */
 }
 
-a { 
-    color: #009; 
-    text-decoration: underline dotted;
-}
+a { color: #009; }
 a:hover { 
     color: #900; 
     background-color: #DEF; 
-    text-decoration: none;
     /* background-color: #FFD;  */
 }
-
 
 /*
 div.hidecode + pre {display: none}

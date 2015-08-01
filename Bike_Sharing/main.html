@@ -49,7 +49,7 @@ code > span.er { font-weight: bold; }
 </style>
 
 
-<link rel="stylesheet" href="css/gf_new.css" type="text/css" />
+<link rel="stylesheet" href="css/gf_xnew_nolines.css" type="text/css" />
 
 </head>
 
@@ -81,11 +81,11 @@ img {
 
 <script src="./lib/toggle_GF.js"></script>
 <div id="preamble" class="section level2">
-<h2>PREAMBLE</h2>
+<h2>Preamble</h2>
 <p>The source files are posted on <a href="https://github.com/pedrosan/DataScienceExamples/tree/master/Bike_Sharing/">GitHub</a></p>
 </div>
 <div id="preliminaries" class="section level2">
-<h2>PRELIMINARIES</h2>
+<h2>Preliminaries</h2>
 <p>Libraries needed for data processing and plotting:</p>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(<span class="st">&quot;lubridate&quot;</span>)
 <span class="kw">library</span>(<span class="st">&quot;plyr&quot;</span>)
@@ -222,21 +222,21 @@ min.missing.fraction &lt;-<span class="st"> </span>N.mismatches /<span class="st
 <pre class="sourceCode r"><code class="sourceCode r"><span class="co"># on the full dataset</span>
 main &lt;-<span class="st"> </span>data[-<span class="kw">nrow</span>(data), ]
 main$tdiff &lt;-<span class="st"> </span><span class="kw">difftime</span>(data$time1[-<span class="dv">1</span>], data$time2[-<span class="kw">nrow</span>(data)])
-main$flag.combined &lt;-<span class="st">  </span>(data$station1[-<span class="dv">1</span>] ==<span class="st"> </span>data$station2[-<span class="kw">nrow</span>(data)]) &amp;<span class="st"> </span>(data$bike[-<span class="dv">1</span>] ==<span class="st"> </span>data$bike[-<span class="kw">nrow</span>(data)])
+main$flag.combined &lt;-<span class="st"> </span>(data$station1[-<span class="dv">1</span>] ==<span class="st"> </span>data$station2[-<span class="kw">nrow</span>(data)]) &amp;<span class="st"> </span>
+<span class="st">                      </span>(data$bike[-<span class="dv">1</span>] ==<span class="st"> </span>data$bike[-<span class="kw">nrow</span>(data)])
 main$flag.station &lt;-<span class="st"> </span><span class="kw">c</span>(main$station1[-<span class="dv">1</span>] ==<span class="st"> </span>main$station2[-<span class="kw">nrow</span>(main)], <span class="ot">NA</span>)
-<span class="co"># main[main$flag.combined &amp; as.numeric(main$tdiff) &lt; 0, ]</span>
 
 good.tdiff &lt;-<span class="st"> </span>main$tdiff[main$flag.combined &amp;<span class="st"> </span><span class="kw">as.numeric</span>(main$tdiff) &gt;<span class="st"> </span><span class="dv">0</span>]
 <span class="kw">length</span>(good.tdiff)
 <span class="co"># [1] 1580813</span></code></pre>
-<p>There are <strong>43</strong> valid (same bike, same station) parking intervals with NEGATIVE DURATION (!?).<br />We can safely ignore them for now considering that they are a tiny fraction of the accepted <em>stays</em>, i.e. 1580813.</p>
+<p>There are <strong>43</strong> valid (same bike, same station) parking intervals with NEGATIVE DURATION (!?).<br />We can safely ignore them for now considering that they are a tiny fraction of the accepted <em>stays</em>, i.e. <strong>1580813</strong>.</p>
 <p>The statistics of the duration of <em>stays</em> are therefore:</p>
 <pre class="sourceCode r"><code class="sourceCode r">ss &lt;-<span class="st"> </span><span class="kw">summary</span>(<span class="kw">as.numeric</span>(good.tdiff))
 ss
 <span class="co">#    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span>
 <span class="co">#       1     433    1721   10090    7115 4088000</span></code></pre>
 <p>As it was the case for trip durations, the range of <em>stays</em> durations is quite wide, in fact even wider and it makes sense considering that there is really no limit in principle to for how a bike may remain unused.</p>
-<p>At any rate, the <strong>mean time spent by a bike at a station is 10090</strong>, while its <strong>median</strong> is <strong>1721</strong>.</p>
+<p>At any rate, the <strong>mean time spent by a bike at a station</strong> is <strong>10090</strong>, while its <strong>median</strong> is <strong>1721</strong>.</p>
 <hr class="thin_separator">
 <p><a name="question_D"></a></p>
 </div>
@@ -306,8 +306,8 @@ both$flag_day &lt;-<span class="st"> </span><span class="kw">as.factor</span>(bo
 <li><p>The tentative association with <em>working hours</em> is corroborated by the striking asymmetry of the split between <strong>incoming</strong> and <strong>outgoing</strong> trips: morning usage is almost exclusively <em>arriving</em>, while the big peak of usage in the afternoon is almost entirely <em>leaving</em>.</p></li>
 </ul></li>
 </ul>
-<button class="toggle_code">
-show hidden code
+<button class="toggle_plot_code">
+show plot code
 </button>
 <pre class="sourceCode r"><code class="sourceCode r">p1 &lt;-<span class="st"> </span><span class="kw">ggplot</span>(<span class="dt">data =</span> both, <span class="kw">aes</span>(<span class="dt">x =</span> t1hc, <span class="dt">fill =</span> type)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span><span class="kw">xlab</span>(<span class="st">&quot;hour of the day&quot;</span>)
 
@@ -320,8 +320,8 @@ p1 +<span class="st"> </span><span class="kw">geom_density</span>(<span class="d
 <h3>Plots : by day of the week</h3>
 <p>The by-hour usage patterns seem to suggest that a more leisure-related kind of activity characterizes station <code>fe2acf</code>, while the usage of bikes in/out of station <code>fec8ff</code> is fairly closely associated to office hours and the idea that it is driven by people using the bikes to “commute” to work.</p>
 <p>The usage by day of the week adds weight to this idea by showing a “significant” drop in traffic for station <code>fec8ff</code> during the weekend.<br />There is instead a hint of increase of activity for station <code>fe2a5f</code> during the weekend, that lends further support to the idea that its location may be more residential.</p>
-<button class="toggle_code">
-show hidden code
+<button class="toggle_plot_code">
+show plot code
 </button>
 <pre class="sourceCode r"><code class="sourceCode r">p2 &lt;-<span class="st"> </span><span class="kw">ggplot</span>(<span class="dt">data =</span> both, <span class="kw">aes</span>(<span class="dt">x =</span> <span class="kw">as.factor</span>(wday1), <span class="dt">fill =</span> ID)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span>
 <span class="st">        </span><span class="kw">theme</span>(<span class="dt">legend.position=</span><span class="st">&quot;none&quot;</span>) +
@@ -492,8 +492,8 @@ df.wide &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span c
 </div>
 <div id="plot" class="section level3">
 <h3>Plot</h3>
-<button class="toggle_code">
-show hidden code
+<button class="toggle_plot_code">
+show plot code
 </button>
 <pre class="sourceCode r"><code class="sourceCode r">p3 &lt;-<span class="st"> </span><span class="kw">ggplot</span>(<span class="dt">data =</span> df, <span class="kw">aes</span>(<span class="dt">x =</span> hour, <span class="dt">y =</span> number, <span class="dt">fill =</span> ID)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span><span class="kw">theme</span>(<span class="dt">legend.position=</span><span class="st">&quot;none&quot;</span>) +
 <span class="st">        </span><span class="kw">xlab</span>(<span class="st">&quot;hour&quot;</span>)
@@ -536,7 +536,6 @@ p3 +<span class="st"> </span><span class="kw">geom_bar</span>(<span class="dt">s
 <span class="co"># [11] magrittr_1.5       memoise_0.2.1      munsell_0.4.2      proto_0.3-10       reshape2_1.4.1    </span>
 <span class="co"># [16] rmarkdown_0.7      scales_0.2.4       stringi_0.5-5      stringr_1.0.0      tools_3.1.3       </span>
 <span class="co"># [21] yaml_2.1.13</span></code></pre>
-<hr />
 </div>
 </div>
 
