@@ -13,12 +13,14 @@
 
 <title>Human and Economic Cost of Major Storm Events: An Analysis of the NOAA/NCDC Database</title>
 
-<script src="report_files/jquery-1.11.0/jquery.min.js"></script>
+<script src="common/libs/jquery-1.11.0/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<link href="report_files/bootstrap-3.3.1/css/cerulean.min.css" rel="stylesheet" />
-<script src="report_files/bootstrap-3.3.1/js/bootstrap.min.js"></script>
-<script src="report_files/bootstrap-3.3.1/shim/html5shiv.min.js"></script>
-<script src="report_files/bootstrap-3.3.1/shim/respond.min.js"></script>
+<link href="common/libs/bootstrap-3.3.1/css/cerulean.min.css" rel="stylesheet" />
+<script src="common/libs/bootstrap-3.3.1/js/bootstrap.min.js"></script>
+<script src="common/libs/bootstrap-3.3.1/shim/html5shiv.min.js"></script>
+<script src="common/libs/bootstrap-3.3.1/shim/respond.min.js"></script>
+
+<script src="common/js/toggle_GF.js"></script>
 
 
 <style type="text/css">code{white-space: pre;}</style>
@@ -49,7 +51,7 @@ code > span.er { font-weight: bold; }
 </style>
 
 
-<link rel="stylesheet" href="css/gf_new.css" type="text/css" />
+<link rel="stylesheet" href="common/css/gf_xnew_nolines.css" type="text/css" />
 
 </head>
 
@@ -80,7 +82,7 @@ img {
 
 
 <div id="preamble" class="section level2">
-<h2>PREAMBLE</h2>
+<h2>Preamble</h2>
 <p>Report for the first assignment of the <a href="https://www.coursera.org/course/repdata"><em>Reproducible Research</em></a> course of the <em>Coursera/JHSPH Data Science Specialization</em>.</p>
 <p>The source files are posted on <a href="https://github.com/pedrosan/DataScienceExamples/tree/master/Impact_of_Major_Storm_Events">GitHub</a>.</p>
 </div>
@@ -134,7 +136,7 @@ img {
 <li><a href="#population_health">Population Health: Injuries and Fatalities</a></li>
 <li><a href="#a%20name=&quot;economic_impact">Economic Impact: Property, Agricultural and Total Damages</a></li>
 </ul></li>
-<li><a href="#APPENDIX&quot;">APPENDIX</a>
+<li><a href="#APPENDIX">APPENDIX</a>
 <ul>
 <li><a href="#napa_flood_anomaly">The <em>“anomalous”</em> 2005 Napa Valley Flood</a></li>
 <li><a href="#EVTYPE_regularization"><em>EVTYPE</em> regularization</a></li>
@@ -181,7 +183,7 @@ img {
 <div id="loading-the-dataset" class="section level2">
 <h2>Loading the Dataset</h2>
 <p>The data set comes as a compressed <em>csv</em> file, which can be read directly with <code>read.csv()</code>. After reviewing the data we set our preferred values for the classes of the variables loaded in the data-frame and we set them on loading via the <code>colClasses</code> option, using a character vector read from an auxiliary file.</p>
-<p>NOTE: given the substantial size of the data set we set the options <code>cache = TRUE</code> to reduce the <code>knitr</code> processing time to a manageable length.</p>
+<p><strong>NOTE</strong>: given the substantial size of the data set we set the options <code>cache = TRUE</code> to reduce the <code>knitr</code> processing time to a manageable length.</p>
 <pre class="sourceCode r"><code class="sourceCode r">col.cl &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class="st">&quot;data/readin_classes.csv&quot;</span>, <span class="dt">stringsAsFactors=</span><span class="ot">FALSE</span>, <span class="dt">strip.white=</span><span class="ot">TRUE</span>)
 col.cl$newclass2
 <span class="co">#  [1] &quot;numeric&quot;   &quot;character&quot; &quot;character&quot; &quot;factor&quot;    &quot;numeric&quot;   &quot;character&quot; &quot;factor&quot;    &quot;character&quot;</span>
@@ -305,7 +307,7 @@ good &lt;-<span class="st"> </span>good[<span class="kw">order</span>(good$BGN_D
 <span class="co">#    3    3    3  160  266  384  199  135  122  118  110  120   99   51   38   46   50   46   46   46 </span>
 <span class="co"># 2010 2011 </span>
 <span class="co">#   46   46</span></code></pre>
-<p>Until 1993 <em>“Tornado”</em>“, <em>“Thunderstorm Wind”</em>” and <em>“Hail”</em>&quot; type of events were recorded. The 1993 and 1995 data have been extracted from unformatted text files, and this helps explain the high level of <em>noise</em> of <code>EVTYPE</code> during those years. It is less clear why after the Directive of 1996 the data have not become</p>
+<p>Until 1993 <em>“Tornado”</em>, <em>“Thunderstorm Wind”</em> and <em>“Hail”</em> type of events were recorded. The 1993 and 1995 data have been extracted from unformatted text files, and this helps explain the high level of <em>noise</em> of <code>EVTYPE</code> during those years. It is less clear why after the Directive of 1996 the data have not become</p>
 <p>A quick census of the most frequent <code>EVTYPE</code> can be extracted with <code>table()</code></p>
 <pre class="sourceCode r"><code class="sourceCode r">evt.census &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(<span class="kw">table</span>(data$EVTYPE))
 <span class="kw">head</span>(evt.census[<span class="kw">order</span>(evt.census$Freq, <span class="dt">decreasing=</span><span class="ot">TRUE</span>),],<span class="dv">10</span>)
@@ -1349,6 +1351,23 @@ economic &lt;-<span class="st"> </span><span class="kw">subset</span>(economic, 
 </tr>
 </tbody>
 </table>
+<button class="toggle_plot_code">
+show plot code
+</button>
+<pre class="sourceCode r"><code class="sourceCode r">p &lt;-<span class="st"> </span><span class="kw">ggplot</span>(<span class="dt">data=</span>eco20plot, <span class="kw">aes</span>(<span class="dt">x=</span>EVTYPE)) +<span class="st"> </span><span class="kw">theme_bw</span>()
+
+ecoplot.p1 &lt;-<span class="st"> </span>p +<span class="st"> </span><span class="kw">geom_bar</span>(<span class="dt">stat=</span><span class="st">&quot;identity&quot;</span>, <span class="kw">aes</span>(<span class="dt">y=</span>PrDmg.tot), <span class="dt">fill=</span><span class="st">&quot;skyblue&quot;</span>) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">45</span>, <span class="dt">hjust =</span> <span class="dv">1</span>)) +<span class="st"> </span><span class="kw">theme</span>(<span class="dt">legend.position=</span><span class="st">&quot;none&quot;</span>) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">scale_y_log10</span>() +<span class="st"> </span><span class="kw">coord_cartesian</span>(<span class="dt">ylim=</span><span class="kw">c</span>(<span class="fl">1e1</span>, <span class="fl">3e5</span>)) +
+<span class="st">    </span><span class="kw">xlab</span>(<span class="st">&quot;&quot;</span>) +<span class="st"> </span><span class="kw">ylab</span>(<span class="st">&quot;Damages (Million of Dollars)&quot;</span>) +
+<span class="st">    </span><span class="kw">ggtitle</span>(<span class="st">&quot;Total Property Damages by Event Type&quot;</span>) 
+
+ecoplot.p2 &lt;-<span class="st"> </span>p +<span class="st"> </span><span class="kw">geom_bar</span>(<span class="dt">stat=</span><span class="st">&quot;identity&quot;</span>, <span class="kw">aes</span>(<span class="dt">y=</span>pct.with.PrDmg), <span class="dt">fill=</span><span class="st">&quot;navyblue&quot;</span>) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">45</span>, <span class="dt">hjust =</span> <span class="dv">1</span>)) +<span class="st"> </span><span class="kw">theme</span>(<span class="dt">legend.position=</span><span class="st">&quot;none&quot;</span>) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">xlab</span>(<span class="st">&quot;Event Type&quot;</span>) +<span class="st"> </span><span class="kw">ylab</span>(<span class="st">&quot;Percentage&quot;</span>) +<span class="st"> </span><span class="kw">ylim</span>(<span class="kw">c</span>(-<span class="dv">5</span>,<span class="dv">105</span>)) +
+<span class="st">    </span><span class="kw">ggtitle</span>(<span class="st">&quot;Fraction of Events Causing Damages&quot;</span>)
+
+<span class="kw">grid.draw</span>(<span class="kw">rbind</span>(<span class="kw">ggplotGrob</span>(ecoplot.p1), <span class="kw">ggplotGrob</span>(ecoplot.p2),  <span class="dt">size=</span><span class="st">&quot;last&quot;</span>))</code></pre>
 <p><img src="figures/plot-econ-1.png" title="" alt="" width="800" style="display: block; margin: auto;" /></p>
 <p>Next, we can apply the same logic to identify the events which cause the greatest economic impacts. First, we’ll split the dataframe in order to sum the total property damages and crop damages per event type and then we’ll sort the data and extract the top 10 events which cause the most economic damages to properties and to crops.</p>
 <hr class="separator">
@@ -1359,6 +1378,7 @@ economic &lt;-<span class="st"> </span><span class="kw">subset</span>(economic, 
 </div>
 <div id="appendix" class="section level1">
 <h1>APPENDIX</h1>
+<p>[<a href="#TOP">Back to the Top</a>]</p>
 <p><a name="napa_flood_anomaly"></a></p>
 <div id="the-anomalous-2005-napa-valley-flood" class="section level2">
 <h2>The <em>“anomalous”</em> 2005 Napa Valley Flood</h2>
@@ -1377,6 +1397,9 @@ recent$PropDamage[<span class="kw">which.max</span>(recent$PropDamage)]
 <div id="evtype-regularization-1" class="section level2">
 <h2><em>EVTYPE</em> regularization</h2>
 <p>This is the source of the <code>evt_regularization.R</code> script:</p>
+<button class="toggle_code">
+show code
+</button>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="kw">cat</span>(<span class="st">&quot;# Entering &#39;evtype_regularization&#39; script</span><span class="ch">\n</span><span class="st">&quot;</span>)
 TESTvec &lt;-<span class="st"> </span>good$EVTYPE
 
@@ -1457,21 +1480,21 @@ TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;LAKE.*SNOW&quot;</s
 TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;LAKE.*FLOOD&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;LAKESHORE FLOOD&quot;</span>
 TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;HURRICANE-GENERATED SWELLS&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;STORM SURGE&quot;</span>
 
-TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^HURRICANE&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;HURRICANE&quot;</span>                 <span class="co"># run after |HURRICANE-GENERATED SWELLS</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^HURRICANE&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;HURRICANE&quot;</span>             <span class="co"># after |HURRICANE-GENERATED SWELLS</span>
 
-TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^ICE[ /S][A-EO-T]&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;ICE STORM&quot;</span>          <span class="co"># run after |[VF]OG</span>
-TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^FREEZING [DR]&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;SLEET&quot;</span>                 <span class="co"># run after |[VF]OG</span>
-TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^WINT.* MIX&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;SLEET&quot;</span>                    <span class="co"># run after |^WINTER W</span>
-TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;SURGE&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;STORM SURGE&quot;</span>                    <span class="co"># run after |^COASTAL</span>
-TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;FUNNEL&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;FUNNEL CLOUD&quot;</span>                  <span class="co"># run after |^WATER</span>
-TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;TORNADO&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;TORNADO&quot;</span>                      <span class="co"># run after |^WATER</span>
-TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;DUST&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;DUST STORM&quot;</span>                      <span class="co"># run after |^DUST D</span>
-TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^HIGH WIN&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;HIGH WIND&quot;</span>                  <span class="co"># run after |DUST</span>
-TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^FLOOD&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;FLOOD&quot;</span>                         <span class="co"># run after |^FLO.*FLA</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^ICE[ /S][A-EO-T]&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;ICE STORM&quot;</span>      <span class="co"># after |[VF]OG</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^FREEZING [DR]&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;SLEET&quot;</span>             <span class="co"># after |[VF]OG</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^WINT.* MIX&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;SLEET&quot;</span>                <span class="co"># after |^WINTER W</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;SURGE&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;STORM SURGE&quot;</span>                <span class="co"># after |^COASTAL</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;FUNNEL&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;FUNNEL CLOUD&quot;</span>              <span class="co"># after |^WATER</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;TORNADO&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;TORNADO&quot;</span>                  <span class="co"># after |^WATER</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;DUST&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;DUST STORM&quot;</span>                  <span class="co"># after |^DUST D</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^HIGH WIN&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;HIGH WIND&quot;</span>              <span class="co"># after |DUST</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^FLOOD&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;FLOOD&quot;</span>                     <span class="co"># after |^FLO.*FLA</span>
 
-TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^COLD&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;COLD/WIND CHILL&quot;</span>                <span class="co"># run after |FUNNEL  , |TORNADO</span>
-TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^THUNDERSTORM&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;THUNDERSTORM WIND&quot;</span>      <span class="co"># run after |FUNNEL</span>
-TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^THU.*TOR.*WI&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;THUNDERSTORM WIND&quot;</span>      <span class="co"># run after |FUNNEL</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^COLD&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;COLD/WIND CHILL&quot;</span>            <span class="co"># after |FUNNEL  , |TORNADO</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^THUNDERSTORM&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;THUNDERSTORM WIND&quot;</span>  <span class="co"># after |FUNNEL</span>
+TESTvec[<span class="kw">grepl</span>(<span class="st">&quot;^THU.*TOR.*WI&quot;</span>, TESTvec, <span class="dt">perl=</span><span class="ot">TRUE</span>)] &lt;-<span class="st"> &quot;THUNDERSTORM WIND&quot;</span>  <span class="co"># after |FUNNEL</span>
 
 <span class="kw">cat</span>(<span class="st">&quot;# Leaving &#39;evtype_regularization&#39; script</span><span class="ch">\n</span><span class="st">&quot;</span>)</code></pre>
 <p><a name="SessionInfo"></a></p>

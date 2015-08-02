@@ -6,12 +6,6 @@ job      : null
 output   : 
   html_document:
     self_contained: false
-    css: css/gf_new.css
-    theme: cerulean
-    highlight: tango
-    keep_md: no
-    mathjax: default
-    toc: no
 ---
 
 ```{r setup, cache = FALSE, echo = FALSE, message = FALSE, warning = FALSE, tidy = FALSE}
@@ -43,7 +37,7 @@ library("grid")
 ```
 
 
-## PREAMBLE
+## Preamble
 
 Report for the first assignment of the [_Reproducible Research_](https://www.coursera.org/course/repdata) 
 course of the _Coursera/JHSPH Data Science Specialization_.
@@ -120,7 +114,7 @@ further investigation, such as
 * [RESULTS](#RESULTS)
     * [Population Health: Injuries and Fatalities](#population_health)
     * [Economic Impact: Property, Agricultural and Total Damages](#a name="economic_impact)
-* [APPENDIX](#APPENDIX")
+* [APPENDIX](#APPENDIX)
     * [The _"anomalous"_ 2005 Napa Valley Flood](#napa_flood_anomaly)
     * [_EVTYPE_ regularization](#EVTYPE_regularization)
     * [R Session Info](#SessionInfo)
@@ -175,8 +169,8 @@ After reviewing the data we set our preferred values for the classes of the vari
 in the data-frame and we set them on loading via the `colClasses` option, using a character
 vector read from an auxiliary file.
 
-NOTE: given the substantial size of the data set we set the options `cache = TRUE` to reduce the 
-`knitr` processing time to a manageable length.
+__NOTE__: given the substantial size of the data set we set the options `cache = TRUE` to reduce 
+the `knitr` processing time to a manageable length.
 
 ```{r data-set_classes}
 col.cl <- read.csv("data/readin_classes.csv", stringsAsFactors=FALSE, strip.white=TRUE)
@@ -295,7 +289,7 @@ EVTYPE.by.year <- tapply(good$EVTYPE, good$YEAR, function(x) table(x), simplify=
 sapply(EVTYPE.by.year, function(x) length(names(x)))
 ```
 
-Until 1993 _"Tornado"_", _"Thunderstorm Wind"_" and _"Hail"_" type of events were recorded.
+Until 1993 _"Tornado"_, _"Thunderstorm Wind"_ and _"Hail"_ type of events were recorded.
 The 1993 and 1995 data have been extracted from unformatted text files, and this helps explain 
 the high level of _noise_ of `EVTYPE` during those years. 
 It is less clear why after the Directive of 1996 the data have not become 
@@ -633,7 +627,8 @@ eco20plot$CrDmg.pct.rank <- factor(eco20plot$CrDmg.pct.rank, levels=1:20, ordere
 ```
 
 
-```{r plot-econ, fig.width = 8.0, fig.height = 10, echo = FALSE}
+<button class="toggle_plot_code">show plot code</button>
+```{r plot-econ, fig.width = 8.0, fig.height = 10, echo = TRUE}
 p <- ggplot(data=eco20plot, aes(x=EVTYPE)) + theme_bw()
 
 ecoplot.p1 <- p + geom_bar(stat="identity", aes(y=PrDmg.tot), fill="skyblue") + 
@@ -661,6 +656,8 @@ properties and to crops.
 <a name="APPENDIX"></a>
 
 # APPENDIX
+
+[[Back to the Top](#TOP)]
 
 <a name="napa_flood_anomaly"></a>
 
@@ -699,7 +696,8 @@ This is the source of the `evt_regularization.R` script:
 read_chunk("./scripts/evtype_regularization.R")
 ```
 
-```{r eval = FALSE, cache = FALSE}
+<button class="toggle_code">show code</button>
+```{r eval = FALSE, cache = FALSE, echo = TRUE}
 <<regularization>>
 ```
 

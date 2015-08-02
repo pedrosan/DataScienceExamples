@@ -81,21 +81,21 @@ TESTvec[grepl("LAKE.*SNOW", TESTvec, perl=TRUE)] <- "LAKE-EFFECT SNOW"
 TESTvec[grepl("LAKE.*FLOOD", TESTvec, perl=TRUE)] <- "LAKESHORE FLOOD"
 TESTvec[grepl("HURRICANE-GENERATED SWELLS", TESTvec, perl=TRUE)] <- "STORM SURGE"
 
-TESTvec[grepl("^HURRICANE", TESTvec, perl=TRUE)] <- "HURRICANE"                 # run after |HURRICANE-GENERATED SWELLS
+TESTvec[grepl("^HURRICANE", TESTvec, perl=TRUE)] <- "HURRICANE"             # after |HURRICANE-GENERATED SWELLS
 
-TESTvec[grepl("^ICE[ /S][A-EO-T]", TESTvec, perl=TRUE)] <- "ICE STORM"          # run after |[VF]OG
-TESTvec[grepl("^FREEZING [DR]", TESTvec, perl=TRUE)] <- "SLEET"                 # run after |[VF]OG
-TESTvec[grepl("^WINT.* MIX", TESTvec, perl=TRUE)] <- "SLEET"                    # run after |^WINTER W
-TESTvec[grepl("SURGE", TESTvec, perl=TRUE)] <- "STORM SURGE"                    # run after |^COASTAL
-TESTvec[grepl("FUNNEL", TESTvec, perl=TRUE)] <- "FUNNEL CLOUD"                  # run after |^WATER
-TESTvec[grepl("TORNADO", TESTvec, perl=TRUE)] <- "TORNADO"                      # run after |^WATER
-TESTvec[grepl("DUST", TESTvec, perl=TRUE)] <- "DUST STORM"                      # run after |^DUST D
-TESTvec[grepl("^HIGH WIN", TESTvec, perl=TRUE)] <- "HIGH WIND"                  # run after |DUST
-TESTvec[grepl("^FLOOD", TESTvec, perl=TRUE)] <- "FLOOD"                         # run after |^FLO.*FLA
+TESTvec[grepl("^ICE[ /S][A-EO-T]", TESTvec, perl=TRUE)] <- "ICE STORM"      # after |[VF]OG
+TESTvec[grepl("^FREEZING [DR]", TESTvec, perl=TRUE)] <- "SLEET"             # after |[VF]OG
+TESTvec[grepl("^WINT.* MIX", TESTvec, perl=TRUE)] <- "SLEET"                # after |^WINTER W
+TESTvec[grepl("SURGE", TESTvec, perl=TRUE)] <- "STORM SURGE"                # after |^COASTAL
+TESTvec[grepl("FUNNEL", TESTvec, perl=TRUE)] <- "FUNNEL CLOUD"              # after |^WATER
+TESTvec[grepl("TORNADO", TESTvec, perl=TRUE)] <- "TORNADO"                  # after |^WATER
+TESTvec[grepl("DUST", TESTvec, perl=TRUE)] <- "DUST STORM"                  # after |^DUST D
+TESTvec[grepl("^HIGH WIN", TESTvec, perl=TRUE)] <- "HIGH WIND"              # after |DUST
+TESTvec[grepl("^FLOOD", TESTvec, perl=TRUE)] <- "FLOOD"                     # after |^FLO.*FLA
 
-TESTvec[grepl("^COLD", TESTvec, perl=TRUE)] <- "COLD/WIND CHILL"                # run after |FUNNEL  , |TORNADO
-TESTvec[grepl("^THUNDERSTORM", TESTvec, perl=TRUE)] <- "THUNDERSTORM WIND"      # run after |FUNNEL
-TESTvec[grepl("^THU.*TOR.*WI", TESTvec, perl=TRUE)] <- "THUNDERSTORM WIND"      # run after |FUNNEL
+TESTvec[grepl("^COLD", TESTvec, perl=TRUE)] <- "COLD/WIND CHILL"            # after |FUNNEL  , |TORNADO
+TESTvec[grepl("^THUNDERSTORM", TESTvec, perl=TRUE)] <- "THUNDERSTORM WIND"  # after |FUNNEL
+TESTvec[grepl("^THU.*TOR.*WI", TESTvec, perl=TRUE)] <- "THUNDERSTORM WIND"  # after |FUNNEL
 
 cat("# Leaving 'evtype_regularization' script\n")
 
