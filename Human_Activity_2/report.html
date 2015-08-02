@@ -11,14 +11,16 @@
 <meta name="author" content="Giovanni Fossati" />
 
 
-<title>Machine-Learning-based Assessment of The Quality of Weight-lifting Exercises</title>
+<title>Assessment of The Quality of Weight-lifting Exercises</title>
 
-<script src="report_files/jquery-1.11.0/jquery.min.js"></script>
+<script src="common/libs/jquery-1.11.0/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<link href="report_files/bootstrap-3.3.1/css/cerulean.min.css" rel="stylesheet" />
-<script src="report_files/bootstrap-3.3.1/js/bootstrap.min.js"></script>
-<script src="report_files/bootstrap-3.3.1/shim/html5shiv.min.js"></script>
-<script src="report_files/bootstrap-3.3.1/shim/respond.min.js"></script>
+<link href="common/libs/bootstrap-3.3.1/css/cerulean.min.css" rel="stylesheet" />
+<script src="common/libs/bootstrap-3.3.1/js/bootstrap.min.js"></script>
+<script src="common/libs/bootstrap-3.3.1/shim/html5shiv.min.js"></script>
+<script src="common/libs/bootstrap-3.3.1/shim/respond.min.js"></script>
+
+<script src="common/js/toggle_GF.js"></script>
 
 
 <style type="text/css">code{white-space: pre;}</style>
@@ -49,7 +51,7 @@ code > span.er { font-weight: bold; }
 </style>
 
 
-<link rel="stylesheet" href="css/gf_small_touches.css" type="text/css" />
+<link rel="stylesheet" href="common/css/gf_xnew_nolines.css" type="text/css" />
 
 </head>
 
@@ -74,13 +76,13 @@ img {
 
 
 <div id="header">
-<h1 class="title">Machine-Learning-based Assessment of The Quality of Weight-lifting Exercises</h1>
+<h1 class="title">Assessment of The Quality of Weight-lifting Exercises</h1>
 <h4 class="author"><em>Giovanni Fossati</em></h4>
 </div>
 
 
 <div id="preamble" class="section level2">
-<h2>PREAMBLE</h2>
+<h2>Preamble</h2>
 <p>Report for the first assignment of the <a href="https://www.coursera.org/course/predmachlearn"><em>Practical Machine Learning</em></a> course of the <em>Coursera/JHSPH Data Science Specialization</em>.</p>
 <p>The source files are posted on <a href="https://github.com/pedrosan/DataScienceExamples/tree/master/Human_Activity_2">GitHub</a></p>
 </div>
@@ -88,7 +90,7 @@ img {
 <h1>INTRODUCTION</h1>
 <p>The rapid diffusion of sensors able to record physical parameters associated with motion (<em>e.g.</em> accelerometers), in dedicated devices and more importantly in general consumer electronics available/used by a broader population has sparked a great interest in developing applications taking advantage of these motion-related data. One area of particular interest concerns fitness-related activities.</p>
 <p>This report summarizes the results of the development, and testing, of a <em>Machine Learning</em> model able to recognize the <em>quality</em> of a simple weight lifting exercise, namely whether or not it was performed appropropriately (and hence safely and effectively).</p>
-<p>We used the dataset put together by the <a href="http://groupware.les.inf.puc-rio.br/har">research group on Human Activity Recognition</a> at the PUC of Rio de Janeiro.</p>
+<p>We used the dataset put together by the <a href="http://groupware.les.inf.puc-rio.br/har">research group on Human Activity Recognition</a> at the <em>PUC of Rio de Janeiro</em>.</p>
 <p><a name="SUMMARY"></a></p>
 </div>
 <div id="summary-of-results" class="section level1">
@@ -97,17 +99,22 @@ img {
 <p>The first two methods failed to yield high quality results. This may have been caused by less than ideal choice of parameters, although in most cases we run them with the default values from <code>caret</code>, which are expected to be reasonable for decent results.</p>
 <p><strong>Random forest</strong> models produced high quality results, with accuracies exceeding 99%, both in the built-in <em>Out Of the Bag</em> resampling, and on our separate <em>testing</em> subset.</p>
 <p>Beside its clearly better performance, the choice of a random forest as an ensemble method is supported by its ability to handle multi-class problems.</p>
-<p>We ran <em>random forest</em> models with <strong>three different <em>internal</em> cross-validation</strong> setups (implemented through the <code>trainControl()</code> function of <code>caret</code>): * 4-fold Cross-Validation, * bootstrap, and * <em>Leave Group Out Cross Validation</em>.</p>
-<p>As noted, the trained models achieved exceptional accuracy in the ability of predicting the <em>outcome</em> variable <code>classe</code>, not only when tested against the 20-entries project benchmark, but more importantly when tested against the portion (25%) of the full dataset that we set aside for __validation_.</p>
+<p>We ran <em>random forest</em> models with <strong>three different <em>internal</em> cross-validation</strong> setups (implemented through the <code>trainControl()</code> function of <code>caret</code>):</p>
+<ul>
+<li>4-fold Cross-Validation,</li>
+<li>bootstrap, and</li>
+<li><em>Leave Group Out Cross Validation</em>.</li>
+</ul>
+<p>As noted, the trained models achieved exceptional accuracy in the ability of predicting the <em>outcome</em> variable <code>classe</code>, not only when tested against the 20-entries project benchmark, but more importantly when tested against the portion (25%) of the full dataset that we set aside for <strong>validation</strong>.</p>
 <p>The results of a <em>random forest</em> model are not easily interpretable, even in presence of physically/motion based predictors. Nevertheless, as illustrated in some example plots, the data contain fairly clear pattern and differences between categories of exercise quality, that can be related to the slight differences in the motion of the body and weight dumbbell, and that are apparently very well picked out by the algorithm.</p>
 <div id="outline" class="section level2">
 <h2>Outline</h2>
 <ul>
-<li><a href="#THE_DATA_SET&quot;">THE DATA SET</a>
+<li><a href="#THE_DATA_SET">THE DATA SET</a>
 <ul>
 <li><a href="#sensor_data">The Sensor Data</a></li>
 </ul></li>
-<li><a href="#DATA_PREPARATION&quot;">DATA PREPARATION</a>
+<li><a href="#DATA_PREPARATION">DATA PREPARATION</a>
 <ul>
 <li><a href="#cleaning">Cleaning/Tidying</a>
 <ul>
@@ -125,18 +132,23 @@ img {
 <li><em>Collinearity</em> Between Predictors</li>
 </ul></li>
 </ul></li>
-<li><a href="#DATA_SPLITTING&quot;">DATA SPLITTING: “NEW” <em>TRAINING</em> AND <em>TESTING</em> SUBSETS</a>
+<li><a href="#DATA_SPLITTING">DATA SPLITTING: “NEW” <em>TRAINING</em> AND <em>TESTING</em> SUBSETS</a>
 <ul>
 <li>Feature selection on <em>training</em> / <em>testing</em> subsets</li>
 </ul></li>
-<li><a href="#MODELING&quot;">MODELING</a>
+<li><a href="#MODELING">MODELING</a>
 <ul>
 <li><a href="#model-summary">General Summary</a></li>
-<li><a href="#model-rf1"><em>Random Forest</em> case 1 : 4-fold <em>CV</em></a></li>
-<li><a href="#model-rf1"><em>Random Forest</em> case 2 : bootstrap, 25 reps</a></li>
-<li><a href="#model-rf1"><em>Random Forest</em> case 3 : LGOCV, 25 repeats, 75%/25% splits</a></li>
+<li><a href="#model-rf1"><em>Random Forest</em> #1 : 4-fold <em>CV</em></a></li>
+<li><a href="#model-rf1"><em>Random Forest</em> #2 : bootstrap, 25 reps</a></li>
+<li><a href="#model-rf1"><em>Random Forest</em> #3 : LGOCV, 25 repeats, 75%/25% splits</a></li>
 </ul></li>
-<li><a href="#APPENDIX&quot;">APPENDIX</a></li>
+<li><a href="#APPENDIX">APPENDIX</a>
+<ul>
+<li>Details on some properties of the variables</li>
+<li>User defined functions</li>
+<li><a href="#SessionInfo">R Session Info</a></li>
+</ul></li>
 </ul>
 <hr class="thin_separator">
 <p><a name="THE_DATA"></a></p>
@@ -146,7 +158,7 @@ img {
 <h1>THE DATA</h1>
 <p>The data for the project were made available from the Coursera ML course webpage. Two separate sets were posted:</p>
 <ul>
-<li><a href="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv">a <em>training</em> dataset</a>. This set comprises a little over 16,000 entries for 160 variables.</li>
+<li><a href="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv">a <em>training</em> dataset</a>: this set comprises a little over 16,000 entries for 160 variables.</li>
 <li><a href="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv">a <em>testing</em> dataset</a>, to be used as a final project benchmark, comprising 20 “anonymized” entries.</li>
 </ul>
 <p>Data files were downloaded and read-in from local copies:</p>
@@ -161,23 +173,28 @@ alt.TEST &lt;-<span class="st"> </span><span class="kw">tidy_df</span>(TEST)</co
 <p>The dataset comprises <strong>162 variables</strong>:</p>
 <ul>
 <li>152 actual <em>predictors</em>, <em>i.e.</em> the sensor data.</li>
-<li>1 is the quality <em>class</em> of the exercise (<code>classe</code>, taking values <em>A</em>, <em>B</em>, <em>C</em>, <em>D</em>, <em>E</em>).</li>
+<li>1 is the quality <em>class</em> of the exercise (<strong>classe</strong>, taking values <em>A</em>, <em>B</em>, <em>C</em>, <em>D</em>, <em>E</em>).</li>
 <li>7 are auxiliary variables:
 <ul>
-<li>the <em>user</em> name (<code>user_name</code>).</li>
-<li>3 time stamp related variables: <code>raw_timestamp_part_1</code>, <code>raw_timestamp_part_2</code>, <code>cvtd_timestamp</code>.</li>
-<li>2 <em>exercise window</em> markers/counters: <code>new_window</code>, <code>num_window</code>.</li>
+<li>the <em>user</em> name (<strong>user_name</strong>).</li>
+<li>3 time stamp related variables: <strong>raw_timestamp_part_1</strong>, <strong>raw_timestamp_part_2</strong>, <strong>cvtd_timestamp</strong>.</li>
+<li>2 <em>exercise window</em> markers/counters: <strong>new_window</strong>, <strong>num_window</strong>.</li>
 </ul></li>
 </ul>
 <p><a name="sensor_data"></a></p>
 </div>
 <div id="the-sensor-data" class="section level2">
 <h2>The Sensor Data</h2>
-<p>As described in the paper by <a href="http://groupware.les.inf.puc-rio.br/work.jsf?p1=11201">Velloso et al.</a>, four <em>inertial measurement units</em> (IMU) where setup, placed on <em>belt</em>, <em>arm</em>, <em>forearm</em>, <em>dumbbell</em>. Each sensor measured 3-axes acceleration, gyroscope and magnetometer data at high cadence (45 Hz). These data were processed to yield 13 timed variables for each sensor:</p>
+<p>As described in the paper by <a href="http://groupware.les.inf.puc-rio.br/work.jsf?p1=11201">Velloso et al.</a>,</p>
+<ul>
+<li>four <em>inertial measurement units</em> (IMU) where setup, placed on <em>belt</em>, <em>arm</em>, <em>forearm</em>, <em>dumbbell</em>.</li>
+<li>Each sensor measured 3-axes acceleration, gyroscope and magnetometer data at high cadence (45 Hz).</li>
+<li>These data were processed to yield 13 timed variables for each sensor:
 <ul>
 <li><em>total acceleration</em>.</li>
 <li><em>roll</em>, <em>pitch</em>, <em>yaw</em> angles.</li>
 <li><em>x</em>, <em>y</em>, <em>z</em> values for <em>gyroscope</em>, <em>acceleleration</em>, and <em>magnetometer</em>.</li>
+</ul></li>
 </ul>
 <p>For instance, for the <em>belt</em> sensor the <em>basic timed data</em> are: <code>total_accel_belt</code>, <code>roll_belt</code>, <code>pitch_belt</code>, <code>yaw_belt</code>, <code>gyros_belt_x</code>, <code>gyros_belt_y</code>, <code>gyros_belt_z</code>, <code>accel_belt_x</code>, <code>accel_belt_y</code>, <code>accel_belt_z</code>, <code>magnet_belt_x</code>, <code>magnet_belt_y</code>, <code>magnet_belt_z</code>.</p>
 <p>The dataset therefore comprises <span class="math">\(4 \times 13 = 52\)</span> <em>basic timed data</em>.</p>
@@ -226,18 +243,68 @@ alt.TEST.select &lt;-<span class="st"> </span>alt.TEST.good[, alt.tt]</code></pr
 </div>
 <div id="exploratory-analysis" class="section level1">
 <h1>EXPLORATORY ANALYSIS</h1>
-<div id="features-plotted-vs.sequence-index-and-color-coded-by-user_name-and-classe" class="section level2">
-<h2>Features plotted vs. sequence index, and color coded by <code>user_name</code> and <code>classe</code></h2>
+<div id="features-plotted-vs.sequence-index-and-color-coded-by-user_name-and-classe" class="section level3">
+<h3>Features plotted vs. sequence index, and color coded by <code>user_name</code> and <code>classe</code></h3>
 <p>These kind of plots shows that some of the features seem to correlated very strongly with the <em>user</em>, even more than with their <code>classe</code>, somewhat oddly.</p>
 <p>This suggest that the training to predict the quality parameter of the weight lifting exercise (<code>classe</code>) that we can achieve with this dataset may not be easily generalized.</p>
+<button class="toggle_plot_code">
+show plot code
+</button>
+<pre class="sourceCode r"><code class="sourceCode r">df &lt;-<span class="st"> </span>alt.full
+<span class="co">#   8 = roll_belt</span>
+<span class="co">#   9 = pitch_belt</span>
+<span class="co">#  10 = yaw_belt</span>
+<span class="co">#  46 = roll_arm</span>
+<span class="co"># 122 = roll_forearm</span>
+ii &lt;-<span class="st"> </span><span class="dv">46</span>
+
+title_string &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="kw">colnames</span>(df)[ii], <span class="st">&quot;by user and classe&quot;</span>, <span class="dt">sep=</span><span class="st">&quot; &quot;</span>)
+p1 &lt;-<span class="st"> </span><span class="kw">ggplot</span>(df, <span class="kw">aes</span>(<span class="dv">1</span>:<span class="kw">nrow</span>(df), df[, ii])) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span><span class="kw">geom_point</span>(<span class="kw">aes</span>(<span class="dt">col=</span>user_name)) +<span class="st"> </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">&quot;top&quot;</span>) 
+p1 &lt;-<span class="st"> </span>p1 +<span class="st"> </span><span class="kw">ylab</span>(<span class="kw">colnames</span>(df)[ii]) +<span class="st"> </span><span class="kw">ggtitle</span>(title_string)
+
+p2 &lt;-<span class="st"> </span><span class="kw">ggplot</span>(df, <span class="kw">aes</span>(<span class="dv">1</span>:<span class="kw">nrow</span>(df), df[, ii])) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span><span class="kw">geom_point</span>(<span class="kw">aes</span>(<span class="dt">col=</span>classe)) +<span class="st"> </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">&quot;bottom&quot;</span>) 
+p2 &lt;-<span class="st"> </span>p2 +<span class="st"> </span><span class="kw">ylab</span>(<span class="kw">colnames</span>(df)[ii]) 
+
+<span class="kw">grid.arrange</span>(p1, p2, <span class="dt">nrow=</span><span class="dv">2</span>)</code></pre>
 <p><img src="figures/plots-examine2b-1.png" title="" alt="" width="600" style="display: block; margin: auto;" /></p>
+<button class="toggle_plot_code">
+show plot code
+</button>
+<pre class="sourceCode r"><code class="sourceCode r">df &lt;-<span class="st"> </span>alt.full
+<span class="co">#   8 = roll_belt</span>
+<span class="co">#   9 = pitch_belt</span>
+<span class="co">#  10 = yaw_belt</span>
+<span class="co">#  46 = roll_arm</span>
+<span class="co"># 122 = roll_forearm</span>
+ii &lt;-<span class="st"> </span><span class="dv">9</span>
+
+title_string &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="kw">colnames</span>(df)[ii], <span class="st">&quot;by user and classe&quot;</span>, <span class="dt">sep=</span><span class="st">&quot; &quot;</span>)
+p1 &lt;-<span class="st"> </span><span class="kw">ggplot</span>(df, <span class="kw">aes</span>(<span class="dv">1</span>:<span class="kw">nrow</span>(df), df[, ii])) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span><span class="kw">geom_point</span>(<span class="kw">aes</span>(<span class="dt">col=</span>user_name)) +<span class="st"> </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">&quot;top&quot;</span>) 
+p1 &lt;-<span class="st"> </span>p1 +<span class="st"> </span><span class="kw">ylab</span>(<span class="kw">colnames</span>(df)[ii]) +<span class="st"> </span><span class="kw">ggtitle</span>(title_string)
+p2 &lt;-<span class="st"> </span><span class="kw">ggplot</span>(df, <span class="kw">aes</span>(<span class="dv">1</span>:<span class="kw">nrow</span>(df), df[, ii])) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span><span class="kw">geom_point</span>(<span class="kw">aes</span>(<span class="dt">col=</span>classe)) +<span class="st"> </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">&quot;bottom&quot;</span>) 
+p2 &lt;-<span class="st"> </span>p2 +<span class="st"> </span><span class="kw">ylab</span>(<span class="kw">colnames</span>(df)[ii]) 
+<span class="kw">grid.arrange</span>(p1, p2, <span class="dt">nrow=</span><span class="dv">2</span>)</code></pre>
 <p><img src="figures/plots-examine2c-1.png" title="" alt="" width="600" style="display: block; margin: auto;" /></p>
 </div>
-<div id="feature-vs.feature-plots-with-separate-panels-by-classe" class="section level2">
-<h2>Feature vs. Feature Plots with Separate Panels by <code>classe</code></h2>
+<div id="feature-vs.feature-plots-with-separate-panels-by-classe" class="section level3">
+<h3>Feature vs. Feature Plots with Separate Panels by <code>classe</code></h3>
 <p>This second set of example plots shows that there are indeed some reasonably recognizable patterns allowing to distinguish between different <code>classe</code> categories.</p>
 <p>The expectation is that the ML algorithm will be able to identify them and build on them a classification scheme.</p>
+<button class="toggle_plot_code">
+show plot code
+</button>
+<pre class="sourceCode r"><code class="sourceCode r">df &lt;-<span class="st"> </span>alt.full.select 
+p &lt;-<span class="st"> </span><span class="kw">ggplot</span>(df, <span class="kw">aes</span>(pitch_arm, roll_arm)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span><span class="kw">geom_point</span>(<span class="kw">aes</span>(<span class="dt">col=</span>classe)) +<span class="st"> </span>
+<span class="st">     </span><span class="kw">ggtitle</span>(<span class="st">&quot;pitch_arm vs. roll_arm by classe&quot;</span>)
+p +<span class="st"> </span><span class="kw">facet_grid</span>(classe ~<span class="st"> </span>.)</code></pre>
 <p><img src="figures/plots-more_1-1.png" title="" alt="" width="600" style="display: block; margin: auto;" /></p>
+<button class="toggle_plot_code">
+show plot code
+</button>
+<pre class="sourceCode r"><code class="sourceCode r">df &lt;-<span class="st"> </span>alt.full.select 
+p &lt;-<span class="st"> </span><span class="kw">ggplot</span>(df, <span class="kw">aes</span>(pitch_forearm, roll_forearm)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span><span class="kw">geom_point</span>(<span class="kw">aes</span>(<span class="dt">col=</span>classe)) +<span class="st"> </span>
+<span class="st">     </span><span class="kw">ggtitle</span>(<span class="st">&quot;pitch_forearm vs. roll_forearm by classe&quot;</span>)
+p +<span class="st"> </span><span class="kw">facet_grid</span>(classe ~<span class="st"> </span>.)</code></pre>
 <p><img src="figures/plots-more_2-1.png" title="" alt="" width="600" style="display: block; margin: auto;" /></p>
 <p><a name="feature_selection"></a></p>
 </div>
@@ -246,7 +313,7 @@ alt.TEST.select &lt;-<span class="st"> </span>alt.TEST.good[, alt.tt]</code></pr
 <div id="zerolow-variance-predictors" class="section level3">
 <h3>Zero/low Variance Predictors</h3>
 <p>We checked the dataset for <em>un-informative</em> predictors, namely variables taking (nearly) unique values or having very little variance in their values.<br />The <code>caret</code> package provides a very convenient function to perform this quality-check, <code>nearZeroVar()</code>.</p>
-<p>None of the 52 features meets the criteria for exclusion on the basis of <em>near Zero Variance</em>.<br />The full results of running it on our dataset (<code>nearZeroVar(alt.full.select, saveMetrics=TRUE)</code>) are reported in the <strong>Appendix</strong>.</p>
+<p>None of the 52 features meets the criteria for exclusion on the basis of <em>near Zero Variance</em>.<br />The full results of running it on our dataset (<code>nearZeroVar(alt.full.select, saveMetrics=TRUE)</code>) are reported in the <a href="#APPENDIX">Appendix</a>.</p>
 </div>
 <div id="collinearity-between-predictors" class="section level3">
 <h3><em>Collinearity</em> between predictors</h3>
@@ -281,12 +348,15 @@ alt.testing &lt;-<span class="st"> </span>alt.full.select[-i.train.alt, ]</code>
 alt.allCorr &lt;-<span class="st"> </span><span class="kw">cor</span>(alt.training[, -<span class="dv">1</span>])
 i.fC<span class="fl">.75</span>.alt &lt;-<span class="st"> </span><span class="kw">findCorrelation</span>(alt.allCorr, <span class="dt">cutoff=</span><span class="fl">0.75</span>)</code></pre>
 <p>The following plot shows the correlation matrix, with variables ordered on the basis of their <em>clustering</em>.</p>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">corrplot</span>(alt.allCorr, <span class="dt">order=</span><span class="st">&quot;hclust&quot;</span>, <span class="dt">method=</span><span class="st">&quot;color&quot;</span>, 
-         <span class="dt">col=</span><span class="kw">color1</span>(<span class="dv">20</span>), <span class="dt">cl.length=</span><span class="dv">21</span>, <span class="dt">tl.cex=</span><span class="fl">0.8</span>, <span class="dt">tl.col=</span><span class="st">&quot;black&quot;</span>, <span class="dt">mar=</span><span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">0</span>))</code></pre>
+<button class="toggle_plot_code">
+show plot code
+</button>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">corrplot</span>(alt.allCorr, <span class="dt">order=</span><span class="st">&quot;hclust&quot;</span>, <span class="dt">method =</span> <span class="st">&quot;color&quot;</span>, 
+         <span class="dt">col =</span> <span class="kw">color1</span>(<span class="dv">20</span>), <span class="dt">cl.length =</span> <span class="dv">21</span>, <span class="dt">tl.cex =</span> <span class="fl">0.8</span>, <span class="dt">tl.col =</span> <span class="st">&quot;black&quot;</span>, <span class="dt">mar =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">0</span>))</code></pre>
 <p><img src="figures/split_data-3-1.png" title="" alt="" width="800" style="display: block; margin: auto;" /></p>
 <p>On the basis of their correlation, with a threshold of 0.75, these are the variables that would be excluded.</p>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="co"># variables to be excluded</span>
-<span class="kw">colnames</span>(alt.training)[i.fC<span class="fl">.75</span>.alt<span class="dv">+1</span>]
+<span class="kw">colnames</span>(alt.training)[i.fC<span class="fl">.75</span>.alt +<span class="st"> </span><span class="dv">1</span>]
 <span class="co">#  [1] &quot;accel_belt_z&quot;      &quot;roll_belt&quot;         &quot;accel_belt_y&quot;      &quot;total_accel_belt&quot; </span>
 <span class="co">#  [5] &quot;accel_dumbbell_z&quot;  &quot;accel_belt_x&quot;      &quot;pitch_belt&quot;        &quot;magnet_dumbbell_x&quot;</span>
 <span class="co">#  [9] &quot;accel_dumbbell_y&quot;  &quot;magnet_dumbbell_y&quot; &quot;accel_dumbbell_x&quot;  &quot;accel_arm_x&quot;      </span>
@@ -294,8 +364,8 @@ i.fC<span class="fl">.75</span>.alt &lt;-<span class="st"> </span><span class="k
 <span class="co"># [17] &quot;gyros_arm_y&quot;       &quot;gyros_forearm_z&quot;   &quot;gyros_forearm_y&quot;   &quot;gyros_dumbbell_x&quot;</span>
 
 <span class="co"># variables selection</span>
-alt.training.cut75 &lt;-<span class="st"> </span>alt.training[, -(i.fC<span class="fl">.75</span>.alt<span class="dv">+1</span>)]
-alt.testing.cut75 &lt;-<span class="st"> </span>alt.testing[, -(i.fC<span class="fl">.75</span>.alt<span class="dv">+1</span>)]</code></pre>
+alt.training.cut75 &lt;-<span class="st"> </span>alt.training[, -(i.fC<span class="fl">.75</span>.alt +<span class="st"> </span><span class="dv">1</span>)]
+alt.testing.cut75 &lt;-<span class="st"> </span>alt.testing[, -(i.fC<span class="fl">.75</span>.alt +<span class="st"> </span><span class="dv">1</span>)]</code></pre>
 <hr class="thin_separator">
 <p><a name="MODELING"></a></p>
 </div>
@@ -323,8 +393,10 @@ alt.testing.cut75 &lt;-<span class="st"> </span>alt.testing[, -(i.fC<span class=
 <hr class="thin_separator">
 <p><a name="model-rf1"></a></p>
 </div>
-<div id="random-forest-case-1-4-fold-cv" class="section level2">
-<h2><em>Random Forest</em> case 1 : 4-fold <em>CV</em></h2>
+<div id="random-forest-1-4-fold-cv" class="section level2">
+<h2><em>Random Forest</em> #1 : 4-fold <em>CV</em></h2>
+<div id="model-fit" class="section level3">
+<h3>Model Fit</h3>
 <p>With <code>mtry = 2, 6, 10, 18, 26, 34</code>.</p>
 <pre class="sourceCode r"><code class="sourceCode r">mtry.values &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">6</span>, <span class="dv">10</span>, <span class="dv">18</span>, <span class="dv">26</span>, <span class="dv">34</span>)
 
@@ -338,6 +410,7 @@ mod.alt.rf1c &lt;-<span class="st"> </span><span class="kw">train</span>(<span c
                       <span class="dt">tuneGrid =</span> <span class="kw">data.frame</span>(<span class="dt">mtry =</span> mtry.values),
                       <span class="dt">importance =</span> <span class="ot">TRUE</span>, 
                       <span class="dt">proximity =</span> <span class="ot">TRUE</span>)</code></pre>
+</div>
 <div id="fit-summary" class="section level3">
 <h3>Fit Summary</h3>
 <pre class="sourceCode r"><code class="sourceCode r">mod.alt.rf1c
@@ -439,7 +512,10 @@ pred.rf1c.TEST ==<span class="st"> </span>answers
 </div>
 <div id="variable-importance" class="section level3">
 <h3>Variable Importance</h3>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">varImp</span>(mod.alt.rf1c, <span class="dt">useModel=</span><span class="ot">TRUE</span>, <span class="dt">scale=</span><span class="ot">FALSE</span>)
+<button class="toggle_code">
+show code
+</button>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">varImp</span>(mod.alt.rf1c, <span class="dt">useModel =</span> <span class="ot">TRUE</span>, <span class="dt">scale =</span> <span class="ot">FALSE</span>)
 <span class="co"># rf variable importance</span>
 <span class="co"># </span>
 <span class="co">#   variables are sorted by maximum importance across the classes</span>
@@ -466,14 +542,19 @@ pred.rf1c.TEST ==<span class="st"> </span>answers
 <span class="co"># accel_forearm_z      22.17 29.58 34.86 29.02 30.99</span>
 <span class="co"># magnet_arm_z         28.60 33.79 29.99 31.12 28.58</span>
 <span class="co"># accel_arm_y          23.60 32.74 29.25 29.51 27.12</span></code></pre>
+<button class="toggle_plot_code">
+show plot code
+</button>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="co"># plot(varImp(mod.alt.rf1c, useModel=TRUE, scale=FALSE), top=ncol(mod.alt.rf1c$trainingData)-1)</span>
-<span class="kw">dotPlot</span>(<span class="kw">varImp</span>(mod.alt.rf1c, <span class="dt">useModel=</span><span class="ot">TRUE</span>, <span class="dt">scale=</span><span class="ot">FALSE</span>), <span class="dt">top=</span><span class="kw">ncol</span>(mod.alt.rf1c$trainingData)-<span class="dv">1</span>)</code></pre>
+<span class="kw">dotPlot</span>(<span class="kw">varImp</span>(mod.alt.rf1c, <span class="dt">useModel =</span> <span class="ot">TRUE</span>, <span class="dt">scale =</span> <span class="ot">FALSE</span>), <span class="dt">top =</span> <span class="kw">ncol</span>(mod.alt.rf1c$trainingData)-<span class="dv">1</span>)</code></pre>
 <p><img src="figures/rf1c_post-plots-1.png" title="" alt="" width="700" style="display: block; margin: auto;" /></p>
 <p><a name="model-rf2"></a></p>
 </div>
 </div>
-<div id="random-forest-case-2-bootstrap-25-reps" class="section level2">
-<h2><em>Random Forest</em> case 2 : bootstrap, 25 reps</h2>
+<div id="random-forest-2-bootstrap-25-reps" class="section level2">
+<h2><em>Random Forest</em> #2 : bootstrap, 25 reps</h2>
+<div id="model-fit-1" class="section level3">
+<h3>Model Fit</h3>
 <p>With <code>mtry = 2, 6, 10, 18, 26, 34</code></p>
 <pre class="sourceCode r"><code class="sourceCode r">mtry.values &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">6</span>, <span class="dv">10</span>, <span class="dv">18</span>, <span class="dv">26</span>, <span class="dv">34</span>)
 
@@ -482,6 +563,7 @@ mod.rf1b &lt;-<span class="st"> </span><span class="kw">train</span>(<span class
                       <span class="dt">y =</span> training.cut75$classe, 
                       <span class="dt">method =</span> <span class="st">&quot;rf&quot;</span>, 
                       <span class="dt">tuneGrid =</span> <span class="kw">data.frame</span>(<span class="dt">mtry =</span> mtry.values))</code></pre>
+</div>
 <div id="fit-summary-1" class="section level3">
 <h3>Fit Summary</h3>
 <pre class="sourceCode r"><code class="sourceCode r">mod.rf1b
@@ -583,7 +665,10 @@ pred.rf1b.TEST ==<span class="st"> </span>answers
 </div>
 <div id="variable-importance-1" class="section level3">
 <h3>Variable Importance</h3>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">varImp</span>(mod.rf1b, <span class="dt">useModel=</span><span class="ot">TRUE</span>, <span class="dt">scale=</span><span class="ot">FALSE</span>)
+<button class="toggle_code">
+show code
+</button>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">varImp</span>(mod.rf1b, <span class="dt">useModel =</span> <span class="ot">TRUE</span>, <span class="dt">scale =</span> <span class="ot">FALSE</span>)
 <span class="co"># rf variable importance</span>
 <span class="co"># </span>
 <span class="co">#   only 20 most important variables shown (out of 34)</span>
@@ -609,14 +694,19 @@ pred.rf1b.TEST ==<span class="st"> </span>answers
 <span class="co"># yaw_arm                284.8</span>
 <span class="co"># magnet_forearm_y       271.6</span>
 <span class="co"># magnet_forearm_x       235.4</span></code></pre>
+<button class="toggle_plot_code">
+show plot code
+</button>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="co"># plot(varImp(mod.rf1b, useModel=TRUE, scale=FALSE), top=ncol(mod.rf1b$trainingData)-1)</span>
-<span class="kw">dotPlot</span>(<span class="kw">varImp</span>(mod.rf1b, <span class="dt">useModel=</span><span class="ot">TRUE</span>, <span class="dt">scale=</span><span class="ot">FALSE</span>), <span class="dt">top=</span><span class="kw">ncol</span>(mod.rf1b$trainingData)-<span class="dv">1</span>)</code></pre>
+<span class="kw">dotPlot</span>(<span class="kw">varImp</span>(mod.rf1b, <span class="dt">useModel =</span> <span class="ot">TRUE</span>, <span class="dt">scale =</span> <span class="ot">FALSE</span>), <span class="dt">top =</span> <span class="kw">ncol</span>(mod.rf1b$trainingData)-<span class="dv">1</span>)</code></pre>
 <p><img src="figures/rf1b_post-plots-1.png" title="" alt="" width="700" style="display: block; margin: auto;" /></p>
 <p><a name="model-rf3"></a></p>
 </div>
 </div>
-<div id="random-forest-case-3-lgocv-25-repeats-7525-splits" class="section level2">
-<h2><em>Random Forest</em> case 3 : LGOCV, 25 repeats, 75%/25% splits</h2>
+<div id="random-forest-3-lgocv-25-repeats-7525-splits" class="section level2">
+<h2><em>Random Forest</em> #3 : LGOCV, 25 repeats, 75%/25% splits</h2>
+<div id="model-fit-2" class="section level3">
+<h3>Model Fit</h3>
 <p>With <code>mtry = 2, 4, 6, 8, 10</code>.</p>
 <pre class="sourceCode r"><code class="sourceCode r">mtryValues &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">4</span>, <span class="dv">6</span>, <span class="dv">8</span>, <span class="dv">10</span>)
 
@@ -631,6 +721,7 @@ mod.alt.rf1e &lt;-<span class="st"> </span><span class="kw">train</span>(<span c
                   <span class="dt">trControl =</span> ctrl,
                   <span class="dt">importance =</span> <span class="ot">TRUE</span>, 
                   <span class="dt">proximity =</span> <span class="ot">TRUE</span>)</code></pre>
+</div>
 <div id="fit-summary-2" class="section level3">
 <h3>Fit Summary</h3>
 <pre class="sourceCode r"><code class="sourceCode r">mod.alt.rf1e
@@ -730,6 +821,39 @@ pred.rf1e.TEST ==<span class="st"> </span>answers
 </div>
 <div id="variable-importance-2" class="section level3">
 <h3>Variable Importance</h3>
+<button class="toggle_code">
+show code
+</button>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">varImp</span>(mod.alt.rf1e, <span class="dt">useModel =</span> <span class="ot">TRUE</span>, <span class="dt">scale =</span> <span class="ot">FALSE</span>)
+<span class="co"># rf variable importance</span>
+<span class="co"># </span>
+<span class="co">#   variables are sorted by maximum importance across the classes</span>
+<span class="co">#   only 20 most important variables shown (out of 32)</span>
+<span class="co"># </span>
+<span class="co">#                          A     B     C     D     E</span>
+<span class="co"># yaw_belt             61.92 62.61 49.84 65.87 48.24</span>
+<span class="co"># magnet_dumbbell_z    50.32 49.01 53.81 45.47 47.38</span>
+<span class="co"># roll_dumbbell        34.41 41.34 53.79 43.48 38.35</span>
+<span class="co"># magnet_belt_z        39.36 44.37 44.73 51.36 52.33</span>
+<span class="co"># roll_arm             31.57 45.80 38.48 44.16 37.25</span>
+<span class="co"># roll_forearm         33.46 33.67 43.72 31.29 32.06</span>
+<span class="co"># gyros_belt_z         31.51 42.24 37.59 40.76 42.46</span>
+<span class="co"># yaw_dumbbell         27.25 35.29 41.46 34.77 37.78</span>
+<span class="co"># pitch_forearm        35.36 39.12 37.46 38.82 39.25</span>
+<span class="co"># gyros_dumbbell_y     30.02 34.56 38.80 33.49 30.40</span>
+<span class="co"># magnet_belt_x        25.32 35.27 36.51 29.04 38.67</span>
+<span class="co"># yaw_arm              30.43 38.15 35.52 38.13 32.16</span>
+<span class="co"># magnet_forearm_z     33.32 37.62 33.22 35.94 37.39</span>
+<span class="co"># total_accel_dumbbell 31.10 35.27 33.96 35.58 37.27</span>
+<span class="co"># accel_forearm_x      23.55 32.29 32.01 37.17 29.49</span>
+<span class="co"># accel_forearm_z      23.88 32.80 35.69 29.69 35.34</span>
+<span class="co"># accel_arm_y          25.37 35.63 30.44 30.34 28.54</span>
+<span class="co"># total_accel_arm      15.60 35.56 29.58 27.77 30.78</span>
+<span class="co"># gyros_arm_x          21.46 34.68 29.98 35.56 27.83</span>
+<span class="co"># magnet_forearm_y     27.92 31.17 33.65 31.25 28.94</span></code></pre>
+<button class="toggle_plot_code">
+show plot code
+</button>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="co"># plot(varImp(mod.alt.rf1e, useModel=TRUE, scale=FALSE), top=ncol(mod.alt.rf1e$trainingData)-1)</span>
 <span class="kw">dotPlot</span>(<span class="kw">varImp</span>(mod.alt.rf1e, <span class="dt">useModel=</span><span class="ot">TRUE</span>, <span class="dt">scale=</span><span class="ot">FALSE</span>), <span class="dt">top=</span><span class="kw">ncol</span>(mod.alt.rf1e$trainingData)-<span class="dv">1</span>)</code></pre>
 <p><img src="figures/rf1e_post-plots-1.png" title="" alt="" width="700" style="display: block; margin: auto;" /></p>
@@ -740,10 +864,18 @@ pred.rf1e.TEST ==<span class="st"> </span>answers
 </div>
 <div id="appendix" class="section level1">
 <h1>APPENDIX</h1>
+<p>[<a href="#TOP">Back to the Top</a>]</p>
+<div id="details-on-some-properties-of-the-variables" class="section level2">
+<h2>Details on some properties of the variables</h2>
 <div id="timed-vs.-summary-data-entries" class="section level3">
 <h3><em>Timed</em> vs. <em>summary</em> data entries</h3>
-<pre class="sourceCode r"><code class="sourceCode r">alt.statsNA &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(<span class="kw">t</span>(<span class="kw">sapply</span>(alt.full.good, function(x){ <span class="kw">c</span>(<span class="dt">good =</span> <span class="kw">sum</span>(!<span class="kw">is.na</span>(x)), <span class="dt">bad =</span> <span class="kw">sum</span>(<span class="kw">is.na</span>(x)))})))
-<span class="kw">print</span>(alt.statsNA, <span class="dt">quote=</span><span class="ot">FALSE</span>, <span class="dt">print.gap=</span><span class="dv">5</span>)
+<button class="toggle_code">
+show code and output
+</button>
+<pre class="sourceCode r"><code class="sourceCode r">alt.statsNA &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(<span class="kw">t</span>(<span class="kw">sapply</span>(alt.full.good, 
+                                      function(x){ <span class="kw">c</span>(<span class="dt">good =</span> <span class="kw">sum</span>(!<span class="kw">is.na</span>(x)), <span class="dt">bad =</span> <span class="kw">sum</span>(<span class="kw">is.na</span>(x)))}
+                                     )))
+<span class="kw">print</span>(alt.statsNA, <span class="dt">quote =</span> <span class="ot">FALSE</span>, <span class="dt">print.gap =</span> <span class="dv">5</span>)
 <span class="co">#                               good       bad</span>
 <span class="co"># classe                       19216         0</span>
 <span class="co"># total_accel_belt             19216         0</span>
@@ -901,6 +1033,9 @@ pred.rf1e.TEST ==<span class="st"> </span>answers
 </div>
 <div id="checking-for-zerolow-variance-predictors." class="section level3">
 <h3>Checking for zero/low variance predictors.</h3>
+<button class="toggle_code">
+show code and output
+</button>
 <pre class="sourceCode r"><code class="sourceCode r">nzv &lt;-<span class="st"> </span><span class="kw">nearZeroVar</span>(alt.full.select, <span class="dt">saveMetrics=</span><span class="ot">TRUE</span>)
 nzv
 <span class="co">#                      freqRatio percentUnique zeroVar   nzv</span>
@@ -958,9 +1093,13 @@ nzv
 <span class="co"># magnet_dumbbell_y     1.188571    4.38176520   FALSE FALSE</span>
 <span class="co"># magnet_dumbbell_z     1.026596    3.51269775   FALSE FALSE</span></code></pre>
 </div>
-<div id="some-handy-functions" class="section level3">
-<h3>Some handy functions</h3>
-<p>Additional locally defined functions, sourced from the external file.</p>
+</div>
+<div id="user-defined-functions" class="section level2">
+<h2>User defined functions</h2>
+<p>Additional locally defined functions, sourced from an external file [<a href="https://github.com/pedrosan/DataScienceExamples/blob/master/Human_Activity_2/scripts/my_defs.R">source on GitHub</a>]</p>
+<button class="toggle_code">
+show code
+</button>
 <pre class="sourceCode r"><code class="sourceCode r">tidy_df &lt;-<span class="st"> </span>function( data ) {
     for(i in <span class="dv">8</span>:<span class="dv">159</span>) { 
         data[,i] &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(data[,i])
