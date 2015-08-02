@@ -1,8 +1,11 @@
+
+## ---- my_functions_modeling
+
 #===================================================================================================
 # MODELING 
-#---------------------------------------------------------------------------------------------------
+#=--------------------------------------------------------------------------------------------------
 
-#-----------------------------------------------------------
+#=----------------------------------------------------------
 # Returns a list of predictors in the model: (model is an 'earth' object)
 get_used_pred_names <- function(model = NULL) {
     any1 <- function(x) any(x != 0)
@@ -11,7 +14,7 @@ get_used_pred_names <- function(model = NULL) {
 }
 
 
-#-----------------------------------------------------------
+#=----------------------------------------------------------
 # given observed and predicted outcomes computes MSE and R^2
 #
 compute_metrics <- function(data = NULL, 
@@ -24,9 +27,9 @@ compute_metrics <- function(data = NULL,
 
 #===================================================================================================
 # IMPUTATION
-#---------------------------------------------------------------------------------------------------
+#=--------------------------------------------------------------------------------------------------
 
-#-----------------------------------------------------------
+#=----------------------------------------------------------
 # Inputs: 
 #  - full data frame 
 #  - correlation matrix, 
@@ -46,7 +49,7 @@ compute_metrics <- function(data = NULL,
 #        only keeps complete cases is not likely to have a significant impact.
 #     b) If not enough data are left, it calls 'impute_with_random_sampling()', that
 #        imputes the missing data by sampling the observed ones.
-# [4] In some cases NAs are still left, and a final call to 'impute_with_random_sampling()' to impute them.
+# [4] In some cases NAs are still left: final call to 'impute_with_random_sampling()' to impute them.
 #
 impute_with_lm <- function(data = NULL, 
                            corr_matrix = NULL, 
@@ -100,7 +103,7 @@ impute_with_lm <- function(data = NULL,
 
 }
 
-#-----------------------------------------------------------
+#=----------------------------------------------------------
 # Imputes missing data by random sampling from the existing ones.
 # Given that the fraction of missing data is at most a few percent,
 # assuming that they are randomly distributed, imputing them in
@@ -123,3 +126,6 @@ impute_with_random_sampling <- function(data = NULL) {
 }
 
 #===================================================================================================
+
+## ---- end-of-my_functions_modeling
+

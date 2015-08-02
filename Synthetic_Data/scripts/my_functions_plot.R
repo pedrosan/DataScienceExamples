@@ -1,8 +1,11 @@
+
+## ---- my_functions_plot
+
 #===================================================================================================
 # PLOTTING PREDICTIONS
-#---------------------------------------------------------------------------------------------------
+#=--------------------------------------------------------------------------------------------------
 
-#-----------------------------------------------------------
+#=----------------------------------------------------------
 # plots the difference between the distributions (histograms) 
 # of observed and predicted outcomes, as an histogram.
 #
@@ -27,7 +30,7 @@ plot_hist_difference <- function(data1 = NULL,
     abline(h = 0, lty = 2, col = "purple", lwd = 1)
 }
 
-#-----------------------------------------------------------
+#=----------------------------------------------------------
 # plots of observed and predicted outcome 
 #  - type = "d" : X-Y  scatter plot 
 #  - type = "r" : residuals
@@ -65,9 +68,9 @@ plot_data_vs_prediction <- function(data = NULL,
 
 #===================================================================================================
 # PLOTTING DATA
-#---------------------------------------------------------------------------------------------------
+#=--------------------------------------------------------------------------------------------------
 
-#-----------------------------------------------------------
+#=----------------------------------------------------------
 # X-Y scatter plot of predictors and outcome values
 # with contours at selected (z)levels.
 # USES:
@@ -145,7 +148,7 @@ plot_target_vs_variable <- function(data = NULL,
 
 }
 
-#-----------------------------------------------------------
+#=----------------------------------------------------------
 # given a density matrix ('zmat') it finds the z values corresponding to the
 # requested cumulative probability levels ('levels')
 # 
@@ -162,7 +165,7 @@ get_zlevels <- function(zmat = NULL,
     return( sapply(c(0.1, 0.25, 0.5, 0.75, 0.9), function(x) zdens[zdens$cumsum >= x, ][1, 1]) )
 }
 
-#-----------------------------------------------------------
+#=----------------------------------------------------------
 # Plots density curves of the values of the selected variable 
 #  in the training and testing data sets (overlayed)
 #
@@ -194,7 +197,7 @@ ggcompare_stats_distributions <- function(data = NULL,
     return(p) 
 }
 
-#-----------------------------------------------------------
+#=----------------------------------------------------------
 # Scatterplot of the summary statistics for a variable (var)
 # the training and testing data sets (data1, data2).
 #  - logic : expression that will be used to select points to highlight
@@ -250,7 +253,7 @@ plot_stats_vs_stats <- function(data1 = NULL,
     grid()
 }
 
-#-----------------------------------------------------------
+#=----------------------------------------------------------
 # Customized stripchart + boxplot function
 #
 boxplot_target_for_factor <- function(data = NULL, 
@@ -284,7 +287,7 @@ boxplot_target_for_factor <- function(data = NULL,
 
 #===================================================================================================
 # Miscellaneous graphics stuff
-#---------------------------------------------------------------------------------------------------
+#=--------------------------------------------------------------------------------------------------
 
 plot_filled_histogram <- function(x, y, 
                                   xlim = NULL, 
@@ -316,3 +319,6 @@ get_polygon <- function(x, y) {
 }
 
 #===================================================================================================
+
+## ---- end-of-my_functions_plot
+

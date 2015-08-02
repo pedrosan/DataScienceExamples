@@ -6,12 +6,6 @@ job     : null
 output  : 
   html_document:
     self_contained: false
-    css: css/gf_small_touches.css
-    theme: cerulean
-    highlight: tango
-    keep_md: no
-    mathjax: default
-    toc: no
 ---
 
 ```{r setup, cache = FALSE, echo = FALSE, message = FALSE, warning = FALSE, tidy = FALSE}
@@ -49,7 +43,8 @@ source("./scripts/my_functions_modeling.R")
 
 # SUMMARY
 
-I report on the analysis and modeling of the provided dataset.
+This is the analysis of a _synthetic dataset_ provided for a _data challenge_.
+
 Before focusing on model building, we had to tackle the issue of missing data, which,
 while not being in aggregate a large fraction of the data set, are distributed in such
 a way that ignoring incomplete observations was not an option. 
@@ -69,9 +64,11 @@ four different imputed _Testing_ data sets, and then averaged their predictions 
 prediction for submission.
 
 One reason of concern is that the statistical properties of the data seem to slightly differ
-between the _Training_ and the _Testing_ data sets.  
+between the _Training_ and the _Testing_ data sets.
 On the other hand, considering that the model is using only about a dozen variables, it is possible
 that its performance may not be so seriously affected by this apparent difference.
+
+Read also [these additional thoughts](#FINAL_THOUGHTS).
 
 
 ### Note on the Report _Reproducible_ Format
@@ -87,7 +84,7 @@ namely the model fitting.
 That said, the document includes the code to perform the entire analysis, and a few changes would
 allow to do so by compiling it.
 
-The source files are posted on [GitHub](https://github.com/pedrosan/DataScienceExamples/tree/master/Baby_Names/)
+The source files are posted on [GitHub](https://github.com/pedrosan/DataScienceExamples/tree/master/Synthetic_Data/)
 
 ### Outline
 
@@ -108,6 +105,7 @@ The source files are posted on [GitHub](https://github.com/pedrosan/DataScienceE
     * [Statistics of `NA`](#Appendix_NA)
     * [Linear Regression Model Summary (Fit #4)](#Appendix_LM)
     * [MARS Models Summary](#Appendix_MARS)
+    * [User defined functions](#APPENDIX_user_functions)
     * [R Session Info](#SessionInfo)
 
 
@@ -124,13 +122,14 @@ test  <- read.delim(file = "data/testing.txt.gz", stringsAsFactors = FALSE)
 
 Beside the `target` variable that is _`r class(train[, 1])`_, 
 the data sets comprise __`r ncol(test)`__ variables, with the following breakdown by type:
+
 ```{r check_variable_types}
 table(sapply(train[, -1], class))
 ```
 
 The non-numeric variables are: __` `r colnames(train)[!sapply(train, is.numeric)]` `__.
 They are all of  of _character_ type and look like _bona fide_ factor variables, non-ordered.   
-I will refer to them as factors or character variables interchangeably.
+I will refer to them as _factors_ or _character variables_ interchangeably.
 
 For convenience of processing I defined flags for character/non-character variables and vectors 
 of indices to be able to directly select them when necessary to handle numeric and character
@@ -168,7 +167,7 @@ sapply(test[, factor_cols_names], function(x) table(x, useNA = "always"))
 ```
 
 
-<hr class="separator">
+<hr class="thin_separator">
 <a name="EDA"></a>
 
 # EXPLORATORY ANALYSIS
@@ -184,7 +183,8 @@ __NOTE__: tables showing these statistics in more detail are included in the [AP
 
 ### _Training_ Data Set
 
-```{r stats_NA_in_train-compute, echo = FALSE, cache = TRUE}
+<button class="toggle_code">show code</button>
+```{r stats_NA_in_train-compute, echo = TRUE, cache = TRUE}
 train.NA_by_column <- sapply(train[, -1], function(x) {sum(is.na(x))})
 train.NA_by_row <- apply(train[, -1], 1, function(x) sum(is.na(x)))
 train.sum_NA <- sum(is.na(train[, -1]))
@@ -216,7 +216,8 @@ _i.e._ about __`r round(100*train.sum_NA/(nrow(train)*(ncol(train)-1)), 2)`%__ o
 
 ### _Testing_ Data Set
 
-```{r stats_NA_in_test-compute, echo = FALSE, cache = TRUE}
+<button class="toggle_code">show code</button>
+```{r stats_NA_in_test-compute, echo = TRUE, cache = TRUE}
 test.NA_by_column <- sapply(test, function(x) {sum(is.na(x))})
 test.NA_by_row <- apply(test, 1, function(x) sum(is.na(x)))
 test.sum_NA <- sum(is.na(test))
@@ -244,43 +245,51 @@ total data points, _i.e._ about __`r round(100*test.sum_NA/(nrow(test)*(ncol(tes
       (_i.e._ __`r round(100*test.avrg_NA_by_row/ncol(test), 2)`%__ of `r ncol(test)` variables).
 
 
-```{r NA_stats_table, echo = FALSE}
+<button class="toggle_code">show code</button>
+```{r NA_stats_table, echo = TRUE}
 train.NA_stats <- c(train.sum_NA, 
                     nrow(train), 
                     train.clean_columns, 
-                    train.clean_rows,
                     train.avrg_NA_by_column,
                     train.pct_NA_by_column,
+                    train.clean_rows,
                     train.avrg_NA_by_row,
                     train.pct_NA_by_row)
 
 test.NA_stats <- c(test.sum_NA, 
                    nrow(test), 
                    test.clean_columns, 
-                   test.clean_rows,
                    test.avrg_NA_by_column,
                    test.pct_NA_by_column,
+                   test.clean_rows,
                    test.avrg_NA_by_row,
                    test.pct_NA_by_row)
 
 df.NA_stats <- as.data.frame( matrix(c(train.NA_stats, test.NA_stats), nrow = 2, byrow = TRUE), 
                               row.names = c("Training", "Testing") )
 
-colnames(df.NA_stats) <- c("n_NA", "n_Obs", "compl_col", "compl_row", 
-                           "avrg_NA_by_col", "pct_NA_by_col", 
-                           "avrg_NA_by_row", "pct_NA_by_row")
+colnames(df.NA_stats) <- c("n_NA", "n_Obs", 
+                           "compl_col", "avrg_NA_by_col", "pct_NA_by_col", 
+                           "compl_row", "avrg_NA_by_row", "pct_NA_by_row")
+```
 
-kable(df.NA_stats, digits = 2, caption = "Summary of NA Statistics by Data Set, Variables, Observations", align = "c")
+```{r NA_stats_table-print, echo = FALSE}
+kable(df.NA_stats, digits = 2, align = "c", 
+      caption = "Summary of NA Statistics by Data Set, Variables, Observations", 
+      col.names = c("n_NA", "_Obs", 
+                    "compl cols", "NA/col (N)", "NA/col (%)", 
+                    "compl rows", "NA/row (N)", "NA/row (%)"))
 ```
 
 
-### Visual Comparison of `NA` Statistics
+### Visual comparison of `NA` statistics
 
 These plots show that on aggregate the _Training_ and _Testing_ sets are affected by `NA` in similar ways.   
 This does not imply that the detailed distribution of `NA` in rows and columns may not be biased
 by some trend that would not be revealed by this plots.    
 
-```{r plot_NA_stats-1, echo = FALSE, fig.width = 6, fig.height = 6}
+<button class="toggle_plot_code">show plot code</button>
+```{r plot_NA_stats-1, echo = TRUE, fig.width = 6, fig.height = 6}
 hstep <- 0.0025
 # par(mfrow = c(2, 2))
 # par(oma = c(0 ,0, 1, 0))
@@ -339,6 +348,7 @@ simple summary statistics for each variable.
 We prepare a data frame with the basic summary statistics for each numeric variable (from
 `summary()`), adding _interquartile range_ and _standard deviation_.
 
+<button class="toggle_code">show code</button>
 ```{r summary_stats-train-prepare}
 train.stats_by_column <- as.data.frame(t(sapply(train[, idx_numeric], summary)))
 colnames(train.stats_by_column) <- c("min", "q025", "median", "mean", "q075", "max", "nNA")
@@ -357,6 +367,8 @@ kable( train.stats_by_column[sort(sample(1:nrow(train.stats_by_column), 6)),], d
 ```
 
 Same preparation for the _Testing_ set:
+
+<button class="toggle_code">show code</button>
 ```{r summary_stats-test-prepare}
 test.stats_by_column <- as.data.frame(t(sapply(test[, idx_numeric-1], summary)))
 colnames(test.stats_by_column) <- c("min", "q025", "median", "mean", "q075", "max", "nNA")
@@ -365,6 +377,7 @@ test.stats_by_column$IQR <- (test.stats_by_column$q075 - test.stats_by_column$q0
 test.stats_by_column$sd <- sapply(test[, idx_numeric-1], function(x) sd(x, na.rm = TRUE))
 ```
 
+<button class="toggle_code">show code</button>
 ```{r summary_stats-combine_train_and_test}
 all.stats_by_column <- bind_rows(train.stats_by_column, test.stats_by_column)
 all.stats_by_column$set <- c(rep("train", 250), rep("test", 250))
@@ -378,7 +391,8 @@ The following figures show the density curves for median, 0.25 quantile, 0.75
 quantile and interquartile range, overlaying the curves for the _Training_ (orange/yellow) and the
 _Testing_ (blue) data sets.
 
-```{r plot_predictors_distributions_3x2-train_and_test, fig.width = 9, fig.height = 6, echo = FALSE}
+<button class="toggle_plot_code">show plot code</button>
+```{r plot_predictors_distributions_3x2-train_and_test, fig.width = 9, fig.height = 6, echo = TRUE}
 p1 <- ggcompare_stats_distributions(data = all.stats_by_column, var = "median", xlim = c(-0.25, 0.25))
 p2 <- ggcompare_stats_distributions(data = all.stats_by_column, var = "q025", xlim = c(-0.85, -0.35))
 p3 <- ggcompare_stats_distributions(data = all.stats_by_column, var = "q075", xlim = c(0.35, 0.85))
@@ -395,7 +409,8 @@ namely they are systematically broader in the _Testing_ set than they are in the
 The fact that the distributions of _medians_ and _quantiles_ are different raises some concern for the modeling
 To review this matter further we can look at scatter plots of the summary statistics, shown below.
 
-```{r plot_predictors_summary_stats_train_vs_test_v2, fig.width = 7, fig.height = 6, echo = FALSE}
+<button class="toggle_plot_code">show plot code</button>
+```{r plot_predictors_summary_stats_train_vs_test_v2, fig.width = 7, fig.height = 6, echo = TRUE}
 par(fig = c(0, 1, 0, 1))
 single_panel_mar <- c(2, 2, 2, 1)
 single_panel_oma <- c(0 ,0, 2, 0)
@@ -457,7 +472,8 @@ For instance, if a model considered important levels _A_ and _C_ of `f_121`, the
 _A_ is 10% less populated in the _Training_ set, and _C_ 15% more, will affect negatively the
 quality of the predictions on the _Testing_ set.
 
-```{r plot_distributions_of_factors_train_vs_test, fig.width = 6, fig.height = 6, echo = FALSE}
+<button class="toggle_plot_code">show plot code</button>
+```{r plot_distributions_of_factors_train_vs_test, fig.width = 6, fig.height = 6, echo = TRUE}
 factors_table_train <- sapply(train[, factor_cols_names], function(x) table(x, useNA = "always")/length(x))
 factors_table_test  <- sapply(test[, factor_cols_names], function(x) table(x, useNA = "always")/length(x))
 
@@ -489,9 +505,8 @@ abline(h=1.0, col = "red2", lty = 2, lwd = 3)
 abline(h=1.1, col = "red2", lty = 3, lwd = 2)
 abline(h=0.9, col = "red2", lty = 3, lwd = 2)
 
+par(fig = c(0, 1, 0, 1), mar = c(5, 4, 4, 1) + 0.1, cex.axis = 1.0)
 title("Ratio of Level Distributions of Training and Testing Sets", cex.main = 1.2, outer = TRUE, line = 0)
-
-par(fig = c(0, 1, 0, 1), mar = c(5, 4, 4, 1)+0.1, cex.axis = 1.0)
 ```
 
 <hr class="thin_separator">
@@ -504,7 +519,8 @@ par(fig = c(0, 1, 0, 1), mar = c(5, 4, 4, 1)+0.1, cex.axis = 1.0)
 (Please note that in order to increase the visibility of the low-count parts the
 vertical scale is logarithmic ($log10()$).)
 
-```{r plot_target_distribution_v2, fig.width = 5, fig.height = 3.5, echo = FALSE}
+<button class="toggle_plot_code">show plot code</button>
+```{r plot_target_distribution_v2, fig.width = 5, fig.height = 3.5, echo = TRUE}
 gr_par <- list( mar = single_panel_mar, oma = single_panel_oma, 
                 cex = 1.0, cex.axis = 0.8, cex.lab = 1.0, 
                 las = 0, mgp = c(1.0, 0.0, 0),
@@ -533,24 +549,27 @@ We compute the correlation matrix with the option dropping `NA` only on a _pair 
 to preserve as much as possible the integrity of the result, as in this case we want to
 know the strength of the correlation between each two variables independently on the others.
 
-```{r corr_matrix, cache = TRUE}
+<button class="toggle_code">show code</button>
+```{r corr_matrix, cache = TRUE, echo = TRUE}
 corr1_pcomp <- cor(train[, idx_numeric], use = "pairwise.complete.obs")
 corr2_pcomp <- cor(train[, c(1, idx_numeric)], use = "pairwise.complete.obs")
 corr1_pcomp_test <- cor(test[, idx_numeric-1], use = "pairwise.complete.obs")
-```
 
-```{r deduplicated_corr_matrix_as_vector, echo = FALSE, cache = TRUE}
+# deduplicated_corr_matrix_as_vector
 corr1_pcomp_dedup <- data.frame(corr = (corr1_pcomp[upper.tri(corr1_pcomp, diag = FALSE)]))
 corr1_pcomp_test_dedup <- data.frame(corr = (corr1_pcomp_test[upper.tri(corr1_pcomp_test, diag = FALSE)]))
 ```
 
-We summarize the unwiedly correlation matrices in following histograms plots: left to right
-predictor-`target` correlation in the _Training_ set, 
-predictor-predictor correlation in the _Training_ set,
-predictor-predictor correlation in the _Testing_ set.
+We summarize the unwiedly correlation matrices in following histograms plots: left to right:
+
+* predictor-`target` correlation in the _Training_ set, 
+* predictor-predictor correlation in the _Training_ set,
+* predictor-predictor correlation in the _Testing_ set.
+
 To highlight the low-frequency cases, the vertical scale is truncated.
 
-```{r plot_correlation_stats, fig.width = 8, fig.height = 3, echo = FALSE}
+<button class="toggle_plot_code">show plot code</button>
+```{r plot_correlation_stats, fig.width = 9, fig.height = 4, echo = TRUE}
 par(gr_par)
 
 mat.layout <- matrix(1:3, nrow = 1, byrow = TRUE)
@@ -562,7 +581,7 @@ hist(corr2_pcomp[1, -1], freq = TRUE, breaks = seq(-1.0, 1.0, by = 0.02),
      ylim = c(0, 10),
      col = col_hist, 
      xlab = "Correlation b/w 'target' and 'predictors'",
-     main = "Training - 'Zoomed' Distribution of\nCor(target, predictor)", cex.main = 0.9)
+     main = "Training - 'Zoomed' Distribution of\nCor(target, predictor)", cex.main = 1.2)
 
 col_hist <- "thistle3"
 hist(corr1_pcomp_dedup$corr, freq = TRUE, breaks = seq(-1.0, 1.0, by = 0.02), 
@@ -570,7 +589,7 @@ hist(corr1_pcomp_dedup$corr, freq = TRUE, breaks = seq(-1.0, 1.0, by = 0.02),
      ylim = c(0, 10),
      col = col_hist, 
      xlab = "Correlation b/w 'predictors'",
-     main = "Training - 'Zoomed' Distribution of\nCor(predictor, predictor)", cex.main = 0.9)
+     main = "Training - 'Zoomed' Distribution of\nCor(predictor, predictor)", cex.main = 1.2)
 
 col_hist <- "cadetblue"
 hist(corr1_pcomp_test_dedup$corr, freq = TRUE, breaks = seq(-1.0, 1.0, by = 0.02), 
@@ -578,25 +597,22 @@ hist(corr1_pcomp_test_dedup$corr, freq = TRUE, breaks = seq(-1.0, 1.0, by = 0.02
      ylim = c(0, 10),
      col = col_hist, 
      xlab = "Correlation b/w 'predictors'",
-     main = "Testing - 'Zoomed' Distribution of\nCor(target, predictor)", cex.main = 0.9)
+     main = "Testing - 'Zoomed' Distribution of\nCor(target, predictor)", cex.main = 1.2)
 
-title("Distributions of Correlation Strengths b/w Variables", cex.main = 1.2, outer = TRUE, line = 0)
 par(fig = c(0, 1, 0, 1), mar = c(5, 4, 4, 1)+0.1, cex.axis = 1.0)
+title("Distributions of Correlation Strengths b/w Variables", cex.main = 1.2, outer = TRUE, line = 0)
 ```
 
-```{r correlated_variables-training, echo = FALSE}
+<button class="toggle_code">show code</button>
+```{r correlated_variables, echo = TRUE}
 test_corr1_pcomp <- corr1_pcomp
 diag(test_corr1_pcomp) <- 0.0
 train.correlated_variables <- row.names(which(abs(test_corr1_pcomp) > 0.6, arr.ind = TRUE)) %>% unique(.)
-```
 
-```{r correlated_variables-testing, echo = FALSE}
 test_corr1_pcomp_test <- corr1_pcomp_test
 diag(test_corr1_pcomp_test) <- 0.0
 test.correlated_variables <- row.names(which(abs(test_corr1_pcomp_test) > 0.6, arr.ind = TRUE)) %>% unique(.)
-```
 
-```{r correlated_variables-with_target, echo = FALSE}
 train.correlated_with_target <- names(which(abs(corr2_pcomp[1, ]) > 0.1))[-1]
 ```
 
@@ -627,7 +643,8 @@ smooth clouds with a central density peak, with in a few cases some elongation o
 For illustrative purposes we would like to show a few examples of scatterplots for the `target`
 variable and predictors, for four different levels of correlation (see plot titles).    
 
-```{r scatterplot_target_vs_predictors_v2, fig.width = 8, fig.height = 6, echo = FALSE}
+<button class="toggle_plot_code">show plot code</button>
+```{r scatterplot_target_vs_predictors_v2, fig.width = 8, fig.height = 6, echo = TRUE}
 par(fig = c(0, 1, 0, 1))
 single_panel_mar <- c(2, 2, 2, 1)
 single_panel_oma <- c(0 ,0, 2, 0)
@@ -648,8 +665,8 @@ plot_target_vs_variable(data = train, var = "f_35")
 plot_target_vs_variable(data = train, var = "f_161")
 plot_target_vs_variable(data = train, var = "f_175")
 
-title("Examples of Scatterplots of 'target' vs. 'variable'", cex.main = 1.3, outer = TRUE, line = 1)
 par(fig = c(0, 1, 0, 1), mar = c(5, 4, 4, 1)+0.1, cex.axis = 1.0)
+title("Examples of Scatterplots of 'target' vs. 'variable'", cex.main = 1.3, outer = TRUE, line = 1)
 ```
 
 ### Distribution of `target` Values by Factor Levels
@@ -658,7 +675,8 @@ The last check concerns possible relationships between the `target` variable
 and levels of the four factor variables.
 Boxplots are well suited for this purpose and we show the four of them below.
 
-```{r outcome_vs_factors, echo = FALSE}
+<button class="toggle_code">show code</button>
+```{r outcome_vs_factors, echo = TRUE}
 df_outcome_and_factors <- train[, c(1, idx_factors)]
 for( s in factor_cols_names ) {
     tmp_names <- names(table(df_outcome_and_factors[, s]))
@@ -667,7 +685,8 @@ for( s in factor_cols_names ) {
 }
 ```
 
-```{r figure-boxplot_outcome_vs_factors, fig.width = 8, fig.height = 6, echo = FALSE}
+<button class="toggle_plot_code">show plot code</button>
+```{r figure-boxplot_outcome_vs_factors, fig.width = 8, fig.height = 6, echo = TRUE}
 par(fig = c(0, 1, 0, 1))
 single_panel_mar <- c(3, 4, 2, 1)
 single_panel_oma <- c(0 ,0, 2, 0)
@@ -685,8 +704,8 @@ boxplot_target_for_factor(data = df_outcome_and_factors, factor_name = "f_121")
 boxplot_target_for_factor(data = df_outcome_and_factors, factor_name = "f_215")
 boxplot_target_for_factor(data = df_outcome_and_factors, factor_name = "f_237")
 
-title("Boxplots of 'target' vs factor levels", cex.main = 1.3, outer = TRUE, line = 0)
 par(fig = c(0, 1, 0, 1), mar = c(5, 4, 4, 1)+0.1, cex.axis = 1.0)
+title("Boxplots of 'target' vs factor levels", cex.main = 1.3, outer = TRUE, line = 0)
 ```
 
 A quick look at the boxplots suggest that: 
@@ -697,7 +716,7 @@ A quick look at the boxplots suggest that:
   values from level to level, albeit not large.
 
 
-<hr class="separator">
+<hr class="thin_separator">
 <a name="IMPUTATION"></a>
 
 # DATA IMPUTATION 
@@ -758,12 +777,6 @@ _Non-numeric variables_ were imputed simply by random sampling of the observed v
 
 ### Doing the Imputation
 
-```{r impute_train-correlation_matrix, cache = TRUE, echo = FALSE}
-# First create correlation matrix and set its diagonal elements to $0.0$ to avoid picking them up
-# when filter for pairs with high correlation strength.
-corr_pcomp <- cor(train[, idx_numeric], use = "pairwise.complete.obs")
-diag(corr_pcomp) <- 0.0
-```
 Data are imputed one variable at a time, starting from the _numeric variables_.
 We know from the previous analysis that variables are really weakly correlated at best, and so we
 set a pretty low value to the threshold on correlation strength for considering variable for
@@ -777,6 +790,11 @@ imputed data sets for both _Training_ and _Testing_ set
 (for reproducibility we then set the seed before imputation.)
 
 ```{r impute_train_data_set, cache = TRUE}
+# First create correlation matrix and set its diagonal elements to 0.0 to avoid picking them up
+# when filter for pairs with high correlation strength.
+corr_pcomp <- cor(train[, idx_numeric], use = "pairwise.complete.obs")
+diag(corr_pcomp) <- 0.0
+
 threshold <- 0.05
 seeds.train_impute <- c(2931, 7777, 4853, 6464)
 
@@ -821,12 +839,11 @@ table(sapply(train_imputed, function(x) sum(is.na(x))), useNA = "always")
 
 The same procedure and functions were applied to the _Testing_ data set.
 
-```{r impute_test-correlation_matrix, cache = TRUE, echo = FALSE}
+<button class="toggle_code">show code</button>
+```{r impute_test_data_set, cache = TRUE}
 corr_pcomp_test <- cor(test[, (idx_numeric-1)], use = "pairwise.complete.obs")
 diag(corr_pcomp_test) <- 0.0
-```
 
-```{r impute_test_data_set, cache = TRUE}
 threshold <- 0.05
 seeds.test_impute <- c(9876, 6543, 3210, 1999)
 
@@ -863,8 +880,7 @@ for(s in seeds.test_impute) {
 table(sapply(test_imputed, function(x) sum(is.na(x))), useNA = "always")
 ```
 
-
-<hr class="separator">
+<hr class="thin_separator">
 <a name="MODELING"></a>
 
 # MODELING 
@@ -882,7 +898,7 @@ variable selection, while remaining fairly interpretable.
 The first step in any modeling is splitting the data into training and testing subsets, and
 we opted for a 80/20 split (and set the seed).
 
-```{r split_data}
+```{r split_data, echo = TRUE}
 # Set seeds for splitting programmatically from seeds used for imputation.
 seeds.train_split <- seeds.train_impute*10 + 1
 
@@ -947,7 +963,8 @@ predicted values.
 About these latter it is particularly clear from its _wavy_ shape that both in-sample and out-of-sample
 the model predicts a much narrower distribution of values than the observed ones.
 
-```{r LM-diagnostic_plots, fig.width = 9, fig.height = 6.5, echo = FALSE}
+<button class="toggle_plot_code">show plot code</button>
+```{r LM-diagnostic_plots, fig.width = 9, fig.height = 6.5, echo = TRUE}
 par(fig = c(0, 1, 0, 1))
 single_panel_mar <- c(3, 2, 2, 1)
 single_panel_oma <- c(1 ,0, 1, 0)
@@ -978,8 +995,8 @@ plot_data_vs_prediction(spTest$target, (spTest$target - lm4.predict_test), type 
 # Testing set : difference between histograms
 plot_hist_difference(spTest$target, lm4.predict_test, color = "green4")
 
-title("Diagnostic Plots for Linear Regression Model, In-Sample and Out-of-Sample", cex.main = 1.3, outer = TRUE, line = 0.0)
 par(fig = c(0, 1, 0, 1), mar = c(5, 4, 4, 1)+0.1, cex.axis = 1.0)
+title("Diagnostic Plots for Linear Regression Model, In-Sample and Out-of-Sample", cex.main = 1.3, outer = TRUE, line = 0.0)
 ```
 
 
@@ -987,7 +1004,6 @@ par(fig = c(0, 1, 0, 1), mar = c(5, 4, 4, 1)+0.1, cex.axis = 1.0)
 <a name="MARS"></a>
 
 ## _Multivariate Adaptive Regression Splines_ (MARS)
-
 
 For MARS we used the implementation part of the `earth` package.
 It can be run with built-in __K-Fold Cross Validation__ and in our run we set the number of _folds_ to 5 
@@ -1026,7 +1042,6 @@ for( k in 1:length(seeds.train_model_MARS) ) {
 
     set.seed(seeds.train_model_MARS[k])
     mars.model <- earth(target ~ ., data = allTrain, degree = 2, nfold = 5, ncross = 6, keepxy = TRUE)
-    # mars.model <- earth(target ~ ., data = allTrain, degree = 2, nfold = 5, ncross = 6, keepxy = TRUE, pmethod = "cv")
     assign(paste0("marsN", k, ".model"), mars.model)
 }
 ```
@@ -1055,16 +1070,24 @@ summary(marsN4.model)
 
 These are the important (_i.e._ selected/used) variables for this particular model:
 
-```{r MARS-variable_importance-N4}
-evimp(marsN4.model)
+<button class="toggle_code">show code</button>
+```{r MARS-variable_importance-N4, echo = TRUE}
+ev <- evimp(marsN4.model)
+tmp.df <- data.frame(nsubsets = ev[, 3], gcv = ev[, 4], rss = ev[, 6])
+row.names(tmp.df) <- sprintf('**%s**', row.names(tmp.df))
 ```
 
-```{r MARS-predict_train-N4, eval = FALSE, echo = FALSE}
-marsN4.predict_train <- predict(marsN4.model, allTrain[, -1])
-marsN4.metrics <- compute_metrics(data = allTrain$target, prediction = marsN4.predict_train)
+```{r MARS-variable_importance-N4_kable, echo = FALSE}
+kable(tmp.df, digits = 2, align = c("c", "r", "r"))
 ```
 
 ### Performance of MARS Models
+
+<button class="toggle_code">show example code</button>
+```{r MARS-predict_train-N4, eval = FALSE, echo = TRUE}
+marsN4.predict_train <- predict(marsN4.model, allTrain[, -1])
+marsN4.metrics <- compute_metrics(data = allTrain$target, prediction = marsN4.predict_train)
+```
 
 ```{r MARS-prepare_metrics_table, echo = FALSE}
 mars.perf.summary <- data.frame(MARS1 = unlist(marsN1.metrics), 
@@ -1079,22 +1102,25 @@ The _MSE_ and $R^2$ metrics for the four final MARS models are summarized in thi
 kable(mars.perf.summary, digits = 4, caption = "Summary of MARS Models Performance", align = "c")
 ```
 
-```{r MARS-get_used_predictors, echo = FALSE}
+<button class="toggle_code">show code</button>
+```{r MARS-get_used_predictors, echo = TRUE}
 marsN1.imp_var <- get_used_pred_names(model = marsN1.model) %>% gsub("(f_[0-9]+).*$", "\\1", ., perl = TRUE) %>% base::unique(.)
 marsN2.imp_var <- get_used_pred_names(model = marsN2.model) %>% gsub("(f_[0-9]+).*$", "\\1", ., perl = TRUE) %>% base::unique(.)
 marsN3.imp_var <- get_used_pred_names(model = marsN3.model) %>% gsub("(f_[0-9]+).*$", "\\1", ., perl = TRUE) %>% base::unique(.)
 marsN4.imp_var <- get_used_pred_names(model = marsN4.model) %>% gsub("(f_[0-9]+).*$", "\\1", ., perl = TRUE) %>% base::unique(.)
 marsNall.imp_var <- c(marsN1.imp_var, marsN2.imp_var, marsN3.imp_var, marsN4.imp_var) %>% base::unique(.) %>% 
-                        gsub("f_", "", .) %>% as.integer(.) %>% sort(.) %>% paste0("f_", .)
+                      gsub("f_", "", .) %>% as.integer(.) %>% sort(.) %>% paste0("f_", .)
 ```
 
 They are all equivalent, also from the point of view of _variable selection_ where the four
 models only differ on 1-2 of the lowest importance variables.   
 The combined list of important variables is:
+
 ```{r MARS-print_combined_important_variables}
 marsNall.imp_var
 ```
-Note that some of them are factors: ` `r marsNall.imp_var[sapply(marsNall.imp_var, function(x) is.character(train[, x]))]` `.
+
+Note that some of them are _factors_:  __`r marsNall.imp_var[sapply(marsNall.imp_var, function(x) is.character(train[, x]))]`__.
 
 
 ### Diagnostics Plots
@@ -1104,7 +1130,8 @@ and the difference between observed and predicted distributions of `target` (for
 There still remains a systematic slant to the residuals, but it is acceptable, and the difference
 between the distributions is more even than before.
 
-```{r MARS-diagnostic_plots-N4, fig.width = 9, fig.height = 3.5, echo = FALSE}
+<button class="toggle_plot_code">show plot code</button>
+```{r MARS-diagnostic_plots-N4, fig.width = 9, fig.height = 3.5, echo = TRUE}
 par(fig = c(0, 1, 0, 1))
 single_panel_mar <- c(3, 2, 2, 1)
 single_panel_oma <- c(1 ,0, 1, 0)
@@ -1126,8 +1153,8 @@ plot_data_vs_prediction(allTrain$target, residuals(marsN4.model), type = "r", xl
 # Training set : difference between histograms
 plot_hist_difference(allTrain$target, marsN4.predict_train, color = "blue2")
 
-title("Diagnostic Plots for MARS Model, In-Sample and Out-of-Sample", cex.main = 1.3, outer = TRUE, line = 0.0)
 par(fig = c(0, 1, 0, 1), mar = c(5, 4, 4, 1)+0.1, cex.axis = 1.0)
+title("Diagnostic Plots for MARS Model, In-Sample and Out-of-Sample", cex.main = 1.3, outer = TRUE, line = 0.0)
 ```
 
 
@@ -1136,7 +1163,8 @@ par(fig = c(0, 1, 0, 1), mar = c(5, 4, 4, 1)+0.1, cex.axis = 1.0)
 
 ## Predicting the _Testing_ Data Set
 
-```{r MARS-predict_test_set-ALL, cache = TRUE, echo = FALSE}
+<button class="toggle_code">show code</button>
+```{r MARS-predict_test_set-ALL, cache = TRUE, echo = TRUE}
 # For each model (i) predict each imputed data set (k).
 #  - NOTE: model 'i' was trained on data set 'k=i'.
 tmp_summary_list <- list()
@@ -1162,7 +1190,8 @@ colnames(summaryNall) <- c(paste0(rep(c("mean", "sd"), i_max), rep(1:i_max, each
 rm(tmp_summary_list, tmp_df)
 ```
 
-```{r MARS-merge_prediction_on_test_sets, cache = TRUE, echo = FALSE}
+<button class="toggle_code">show code</button>
+```{r MARS-merge_prediction_on_test_sets, cache = TRUE, echo = TRUE}
 # Adding more "diagnostic" variables 
 idx_col_mean <- (1:ncol(summaryNall))[grepl("^mean", colnames(summaryNall))]
 idx_col_sd <- (1:ncol(summaryNall))[grepl("^sd", colnames(summaryNall))]
@@ -1190,7 +1219,8 @@ We can look at the amount of variation from model to model, for instance by insp
 _max-min_ range of predicted values for each observation, or the _"MSE"_ by observation.
 We look at them in the next two plots.
 
-```{r MARS-plots-predicted_variables_minmax_and_MSE, fig.width = 10, fig.height = 3.5, echo = FALSE, cache = FALSE}
+<button class="toggle_plot_code">show plot code</button>
+```{r MARS-plots-predicted_variables_minmax_and_MSE, fig.width = 10, fig.height = 3.5, echo = TRUE, cache = FALSE}
 mat.layout <- matrix(1:2, nrow = 1, byrow = TRUE)
 layout(mat.layout)
 
@@ -1230,8 +1260,8 @@ axis(2, ticksat, labels = NA, tcl = 0.5, lwd = 0, lwd.ticks = 1, las = 1)
 abline(h = 0.01, lty = 2, col = "red2", lwd = 2)
 grid()
 
-# title("Some Check on Predicted Values", cex.main = 1.1, outer = TRUE, line = 0.5)
 par(fig = c(0, 1, 0, 1), mar = c(5, 4, 4, 1)+0.1, cex.axis = 1.0)
+title("Some Check on Predicted Values", cex.main = 1.1, outer = TRUE, line = 0.5)
 ```
 
 In both quantities there are only a few cases at large deviations; for instance, as a reference,
@@ -1252,10 +1282,14 @@ write.csv(summaryNall$target, file = "data/prediction.csv", row.names = FALSE, q
 ```
 
 
-<hr class="separator">
+<hr class="thin_separator">
 <a name="FINAL_THOUGHTS"></a>
 
 ## FINAL THOUGHTS
+
+[[Back to the Top](#TOP)]
+
+#### Imputation 
 
 The issue of missing data required to impute them before to proceed with modeling as they
 were scattered around the data set in such a way that most models would not have been applicable,
@@ -1267,6 +1301,8 @@ Given the small fraction of missingness for each variable (and observation), imp
 sampling from the existing data is likely good enough.  Nevertheless, for the few variables showing
 some degree of correlation with other, we included the possibility of imputing their missing
 values via linear regression on the correlated predictors.
+
+#### Best model
 
 The model we adopted is _Multivariate Adaptive Regression Splines_ (MARS), because it offers
 an attractive combination of light computational "cost", flexibility, built-in variable selection, 
@@ -1287,6 +1323,8 @@ between models (important variables, coefficients), and while it is comforting t
 we get consistent results, this may not translate in good performance on the actual `target` values 
 of the _Testing_ data set.
 
+#### Concerns 
+
 One reason of concern is that the statistical properties of the data seem to be slightly
 different between the _Training_ and the _Testing_ data set, in particular the apparent broader 
 range of values spanned by _quantiles_ (and in turn _IQR_).   
@@ -1300,7 +1338,9 @@ However, with respect to generalization of the model the truly ideal finding wou
 were clusted closely around the diagonal, _i.e._ with identical characteristics in the _Training_
 and _Testing_ data sets, at least as far as these summaries can go.
 
-```{r plot-predictors_summary_stats_train_vs_test_with_imp_vars, fig.width = 9, fig.height = 3.5, echo = FALSE}
+
+<button class="toggle_plot_code">show plot code</button>
+```{r plot-predictors_summary_stats_train_vs_test_with_imp_vars, fig.width = 9, fig.height = 3.5, echo = TRUE}
 par(fig = c(0, 1, 0, 1))
 single_panel_mar <- c(2, 2, 2, 1)
 single_panel_oma <- c(0 ,0, 2, 0)
@@ -1325,10 +1365,12 @@ title("(with Important Variables Highlighted)", cex.main = 1.1, outer = TRUE, li
 ```
 
 
-<hr class="separator">
+<hr class="thin_separator">
 <a name="APPENDIX"></a>
 
 # APPENDIX
+
+[[Back to the Top](#TOP)]
 
 <a name="Appendix_NA"></a>
 
@@ -1357,7 +1399,10 @@ kable_a_table(train.NA_by_row, caption = "Contingency Table of NA Counts in Rows
 #### By Variable
 
 ```{r stats_NA_in_test-columns, echo = FALSE}
-kable_a_table(test.NA_by_column, caption = "Contingency Table of NA Counts in Columns")
+# kable_a_table(test.NA_by_column, caption = "Contingency Table of NA Counts in Columns")
+tl <- kable_a_table_wrapped(test.NA_by_column, width = 12)
+kable(tl[[1]], caption = "Contingency Table of NA Counts in Columns")
+kable(tl[[2]])
 ```
 
 #### By Observation
@@ -1374,13 +1419,16 @@ kable_a_table(test.NA_by_row, caption = "Contingency Table of NA Counts in Rows"
 
 Setup of variables and model formula:
 ```{r LM4-setup}
-varnames_lm3_0005 <- c("(Intercept)", "f_35", "f_54", "f_61", "f_94", "f_175", "f_196", "f_205", "f_217", "f_218", "f_237")
+varnames_lm3_0005 <- c("(Intercept)", "f_35", "f_54", "f_61", "f_94", "f_175", 
+                                      "f_196", "f_205", "f_217", "f_218", "f_237")
 var_from_corr <- c("f_35", "f_47", "f_161", "f_175", "f_195", "f_205", "f_218")
 lm4.vars <- c(varnames_lm3_0005, var_from_corr) %>% base::unique(.)
 lm4.formula <- paste("target", paste0(lm4.vars[-1], collapse = " + "), sep = " ~ ")
 ```
 
 Model fit, and summary:
+
+<button class="toggle_code">show code and output</button>
 ```{r LM4-run_model}
 spTrain <- spTrain_6464
 lm4.model <- lm(as.formula(lm4.formula), data = spTrain)
@@ -1405,21 +1453,75 @@ lm4.test_metrics <- compute_metrics(data = spTest$target, prediction = lm4.predi
 
 ## MARS Models Summary
 
+#### Summaries
+
+<button class="toggle_code">show code and output</button>
 ```{r MARS-model_summary-ALL}
 for( i in 1:length(seeds.train_impute) ) {
     print( summary(get(paste0("marsN", i, ".model"))) )
-    cat("--------------------------------------------------------------------------------\n")
+    cat("\n--------------------------------------------------------------------------------\n\n")
 }
 ```
 
 #### Important Variables
 
-```{r MARS-variable_importance-ALL}
+Lists for each of the four _MARS_ fits.
+
+<button class="toggle_code">show code</button>
+```{r MARS-variable_importance-ALL, echo = TRUE, results='asis'}
 for( i in 1:length(seeds.train_impute) ) {
-    print( evimp(get(paste0("marsN", i, ".model"))) )
-    cat("--------------------------------------------------------------------------------\n")
+    ev <- evimp(marsN4.model)
+    tmp.df <- data.frame(nsubsets = ev[, 3], gcv = ev[, 4], rss = ev[, 6])
+    row.names(tmp.df) <- sprintf('**%s**', row.names(tmp.df))
+    cat("\n* __MARS Model ", i, "__\n")
+    print( kable(tmp.df, digits = 2, align = c("c", "r", "r"), 
+                 format = "markdown",
+                 caption = paste0("'MARS Model ", i, "'") )
+    )
 }
 ```
+
+<hr class="thin_separator">
+<a name="APPENDIX_user_functions"></a>
+
+## User defined functions
+
+[[Back to the Top](#TOP)]
+
+```{r echo = FALSE, cache = FALSE}
+read_chunk("./scripts/my_functions_miscellaneous.R")
+read_chunk("./scripts/my_functions_modeling.R")
+read_chunk("./scripts/my_functions_plot.R")
+```
+
+Additional locally defined functions, sourced from external files.
+
+<ul>
+<li>
+__Miscellaneous__ / [source on GitHub](https://github.com/pedrosan/DataScienceExamples/blob/master/Synthetic_Data/scripts/my_functions_miscellaneous.R) / 
+<button class="toggle_code">show code</button>
+```{r eval = FALSE, cache = FALSE, echo = TRUE}
+<<my_functions_misc>>
+```
+</li>
+
+<li>
+__Modeling__ / [source on GitHub](https://github.com/pedrosan/DataScienceExamples/blob/master/Synthetic_Data/scripts/my_functions_modeling.R) / 
+<button class="toggle_code">show code</button>
+```{r eval = FALSE, cache = FALSE, echo = TRUE}
+<<my_functions_modeling>>
+```
+</li>
+
+<li>
+__Plotting__ / [source on GitHub](https://github.com/pedrosan/DataScienceExamples/blob/master/Synthetic_Data/scripts/my_functions_plot.R) / 
+<button class="toggle_code">show code</button>
+```{r eval = FALSE, cache = FALSE, echo = TRUE}
+<<my_functions_plot>>
+```
+</li>
+</ul>
+
 
 <hr class="thin_separator">
 <a name="SessionInfo"></a>
