@@ -6,12 +6,6 @@ job      : null
 output   : 
   html_document:
     self_contained: false
-    css: css/gf_small_touches.css
-    theme: cerulean
-    highlight: tango
-    keep_md: no
-    mathjax: default
-    toc: no
 ---
 
 ```{r setup, cache = FALSE, echo = FALSE, message = FALSE, warning = FALSE, tidy = FALSE}
@@ -33,14 +27,15 @@ opts_chunk$set(message = FALSE,
                dev.args=list(type="cairo"))
 ```
 
-## PREAMBLE
+## Preamble
 
 Report for the first assignment of the [_Reproducible Research_](https://www.coursera.org/course/repdata) 
 course of the _Coursera/JHSPH Data Science Specialization_.
 
 The source files are posted on [GitHub](https://github.com/pedrosan/DataScienceExamples/Human_Activity_1/).   
 
-### PRELIMINARIES
+
+## Preliminaries
 
 Libraries needed for data processing and plotting:
 
@@ -66,10 +61,13 @@ behavior, or because they are tech geeks. But these data remain under-utilized b
 raw data are hard to obtain and there is a lack of statistical methods and software for
 processing and interpreting the data.
 
-This assignment makes use of data from a personal activity monitoring device. 
+## The Data
+
+This assignment makes use of data from a personal activity monitoring device.  
 This device collects data at 5 minute intervals through out the day. 
 The data consists of two months of data from an anonymous individual collected during the months
 of October and November, 2012 and include the number of steps taken in 5 minute intervals each day.
+
 
 ## Outline
 
@@ -83,7 +81,7 @@ of October and November, 2012 and include the number of steps taken in 5 minute 
         * Maximum average number of steps 
     * [IMPUTING MISSING VALUES](#IMPUTING)
         * Some thoughts about missing data
-        * What do the `NA` in this dataset _look like_?
+        * What do the `NA` in this dataset _look like_? How many are there and how are they distributed?
         * An _imputing_ strategy
         * Average activity pattern by day of the week
     * [DIFFERENCES IN ACTIVITY PATTERNS BETWEEN WEEKDAYS AND WEEKENDS](#DIFFERENCES)
@@ -165,38 +163,50 @@ daily.stats <- ddply(main, .(date), summarize,
 table(daily.stats$nNA)
 ```
 
-The table of the number of `NA` in each day reveals that all missing values are concentrated 
-in 8 days, for which in fact there are no data (_i.e._ 288 `NA`).  
-The other 53 days have complete data, 288 entries each, although the majority of them are zeros.  
+* The table of the number of `NA` in each day reveals that all missing values are concentrated 
+  in 8 days, for which in fact there are no data (_i.e._ 288 `NA`).  
+* The other 53 days have complete data, 288 entries each, although the majority of them are zeros.  
+
 The following plot illustrates this latter point: it show the distribution of the number of intervals 
 with `steps>0` in a day.  
 The red bin comprises the days without any valid value (8).
 The distribution is centered at around 80, which is about `r round(80*100/288)`% of the intervals 
 in each day (288).  
 
-```{r histogram-ngood, fig.height=4, fig.width=5}
+<button class="toggle_plot_code">show plot code</button>
+```{r histogram-ngood, fig.height=5, fig.width=6, echo = TRUE}
 hist(daily.stats$nGood.Not0, xlim=c(-10,160), breaks=seq(-10,305,by=10), 
      col=c("red",rep("forestgreen",20)), cex.main=0.85, 
-     main="Distribution of the daily number of\n'good values' of 'steps' (!NA & >0)", xlab="N_{good}")
+     main="Distribution of the daily number of 'good values' of 'steps' (!NA & >0)", 
+     xlab="Number of 'good' intervals")
 ```
 
 If we split each day in four time intervals (the `chunk` factor) the summary of _good_ and _non-zero_ 
 values not surprisingly shows a very low fraction for the night period and higher fractions for 
 the morning and afternoon period.
-```{r}
-ddply(main, .(chunk), summarize, Ndata.gt.0=sum(!is.na(steps) & steps>0),
-      Ntot = length(steps[!is.na(steps)]),
-      fraction = sprintf("%6.2f %%",sum(!is.na(steps) & steps>0)/length(steps[!is.na(steps)])*100.))
+
+<button class="toggle_code">show code</button>
+```{r table_of_number_of_good_intervals-prepare_data, echo = TRUE}
+tmp.df <- ddply(main, .(chunk), summarize, 
+                Ntot = length(steps[!is.na(steps)]), 
+                Ndata.gt.0 = sum(!is.na(steps) & steps>0), 
+                fraction = sprintf("%6.2f %%",sum(!is.na(steps) & steps>0)/length(steps[!is.na(steps)])*100.))
 ```
 
-```{r histogram-ngood-bychunk, fig.height=3, fig.width=7}
+```{r table_of_number_of_good_intervals-print, echo = FALSE}
+kable(tmp.df, align = "c", col.names = c("chunk", "N.tot", "N.good", "pct.good"))
+```
+
+<button class="toggle_plot_code">show plot code</button>
+```{r histogram-ngood-bychunk, fig.height = 3.5, fig.width = 8, echo = TRUE}
 byChunk <- subset(ddply(main, .(date, chunk), summarize, Ndata=sum(!is.na(steps) & steps>0)), Ndata>0)
 
 ggplot(byChunk, aes(x=Ndata)) + theme_bw() + theme(legend.position="none") + 
            geom_histogram(aes(fill=chunk), colour="grey50", breaks=seq(-4,54,by=4), right=TRUE) +
-           ggtitle("Distribution by 'day chunk' of the number of\n'good values' of steps (!NA & >0)") + 
-           xlab("N of 'good' data") + ylab("Number of days") + 
-           facet_wrap( ~chunk, nrow=1)
+           ggtitle("Distribution by 'day chunk' of the number of 'good values' of steps (!NA & >0)") + 
+           xlab("Number of 'good' intervals") + 
+           ylab("Number of days") + 
+           facet_wrap( ~ chunk, nrow = 1)
 ```
 
 
@@ -208,7 +218,7 @@ ggplot(byChunk, aes(x=Ndata)) + theme_bw() + theme(legend.position="none") +
 <hr class="thin_separator">
 <a name="MEAN_STEPS_PER_DAY"></a>
 
-## MEAN TOTAL NUMBER OF STEPS TAKEN PER DAY
+## Mean Total Number of Steps Taken per Day
 
 ```{r echo=FALSE, results='hide'}
 median <- sprintf("%d",summary(daily.stats$nSteps)["Median"])
@@ -226,36 +236,45 @@ Here is the full summary, followed by the distribution.
 summary(daily.stats$nSteps)
 ```
 
-```{r histogram, fig.height=5, fig.width=6}
-hist(daily.stats$nSteps, breaks=seq(0,30000,by=2500), col="orange", 
-     main="Distribution of Total Daily Steps", xlab="Total Daily Steps", ylab="N_{days}")
+<button class="toggle_plot_code">show plot code</button>
+```{r histogram, fig.height = 5, fig.width = 6, echo = TRUE}
+hist(daily.stats$nSteps, breaks = seq(0, 30000, by = 2500), col = "orange", 
+     main = "Distribution of Total Daily Steps", 
+     xlab = "Total Daily Steps", 
+     ylab = "N_{days}")
 ```
 
 
 <hr class="thin_separator">
 <a name="AVRG_DAILY_PATTERN"></a>
 
-## THE AVERAGE DAILY ACTIVITY PATTERN
+## The Average Daily Activity Pattern
 
 For convenience in further processing and to work with `ggplot` we reshape the data frame 
 to long format by melting it.   
 With the `na.rm=TRUE` option the `NA` are excluded (i.e. left implicit), which in this case is 
 acceptable because they can easily be reconstructed on the basis of the continuity of the 
 `date+interval` variable.
+
 ```{r}
-main.m2 <- melt(main[,c("steps","date","hour","dayFactor","dayFlag")], na.rm=TRUE, 
-                id=c("date","hour","dayFactor","dayFlag"), measured=c("steps"), value.name="steps")
+main.m2 <- melt(main[,c("steps","date","hour","dayFactor","dayFlag")], na.rm = TRUE, 
+                id = c("date","hour","dayFactor","dayFlag"), 
+                measured = c("steps"), 
+                value.name = "steps")
 ```
 
 To plot the number of steps as a function of time during the day, averaged over
 days, we prepare the data using the `ddply()` function to summarize the data frame by `hour`.  
-We decided to include in the summarizing `interval` entries with `steps=0`, assuming that the 
-device counting steps was accurate enough that all non-`NA` values are reliable.   
-Please note that `NA` are already excluded from the molten data frame used here.  
-For each `hour` we compute _mean_, _standard deviation_ and _number of data_ contributing to that bin 
-in the time-series.  
-The summarizing operation returns `NaN` for the _mean_ and _standard deviation_ if the number
-of contributions is `0` or `<2`, respectively.  We reset those values to `NA`.
+
+* We decided to include in the summarizing `interval` entries with `steps=0`, assuming that the 
+  device counting steps was accurate enough that all non-`NA` values are reliable.
+  Please note that `NA` are already excluded from the molten data frame used here.  
+
+* For each `hour` we compute _mean_, _standard deviation_ and _number of data_ contributing to that bin 
+  in the time-series.  
+* The summarizing operation returns `NaN` for the _mean_ and _standard deviation_ if the number
+  of contributions is `0` or `<2`, respectively.  We reset those values to `NA`.
+
 ```{r}
 ts.ByHour <- ddply(main.m2, .(hour), summarize, Avrg=mean(steps), Sd=sd(steps), N=length(steps))
 ts.ByHour$Avrg[ts.ByHour$N==0] <- NA
@@ -268,23 +287,28 @@ The next two plots show the _activity_ averaged over all days.
 The two plots are identical, except that on the second one we show 
 $\langle steps\rangle/\sqrt{N_{data}}$ errorbars.
 
-```{r all-averaged, fig.height=5, fig.width=7}
+<button class="toggle_plot_code">show plot code</button>
+```{r all-averaged, fig.height = 4.5, fig.width = 7, echo = TRUE}
 gm.v1 <- ggplot(ts.ByHour, aes(hour, Avrg)) + theme_bw() + 
-            geom_line(lty=1, col="red2") + 
-            labs(title="Activity (steps/5min) Averaged over all days") + 
-            labs(x="Time during the day") + labs(y="Mean number of steps") 
+            geom_line(lty = 1, col = "red2") + 
+            labs(title = "Activity (steps/5min) Averaged over all days") + 
+            labs(x = "Time during the day") + 
+            labs(y = "Mean number of steps") 
 
 gm.v1 
 ```    
-```{r all-averaged-with-errorbars, fig.height=5, fig.width=7}
-gm.v1 + geom_errorbar(aes(ymin=ts.ByHour$Avrg-ts.ByHour$Sd/sqrt(ts.ByHour$N),
-                          ymax=ts.ByHour$Avrg+ts.ByHour$Sd/sqrt(ts.ByHour$N)), 
-                      color="red2", alpha="0.5") 
+
+<button class="toggle_plot_code">show plot code</button>
+```{r all-averaged-with-errorbars, fig.height = 4.5, fig.width = 7, echo = TRUE}
+gm.v1 + geom_errorbar(aes(ymin = ts.ByHour$Avrg-ts.ByHour$Sd/sqrt(ts.ByHour$N),
+                          ymax = ts.ByHour$Avrg+ts.ByHour$Sd/sqrt(ts.ByHour$N)), 
+                      color = "red2", alpha = "0.5") 
 ```
 
 ### Maximum average number of steps 
 
-```{r max-time, echo=FALSE}    
+<button class="toggle_code">show code</button>
+```{r max-time, echo = TRUE}    
 maxHr <- format(ts.ByHour[which.max(x=ts.ByHour$Avrg),"hour"], "%H:%M")
 maxN  <- ts.ByHour[which.max(x=ts.ByHour$Avrg),"Avrg"]
 ```
@@ -299,7 +323,7 @@ ts.ByHour[which.max(x=ts.ByHour$Avrg),c("hour","Avrg")]
 <hr class="thin_separator">
 <a name="IMPUTING"></a>
 
-## IMPUTING MISSING VALUES
+## Imputing Missing Values
 
 ### Some thoughts about missing data
 
@@ -328,30 +352,40 @@ One of the few exceptions to this "rule" is the application of time-series analy
 do not work with gapped data.
 
 
-### What do the `NA` in this dataset _look like_?
+### What do the `NA` in this dataset _look like_? <br />How many are there and how are they distributed?
 
 First questions are how many there are and how they are distributed.
-```{r}
-Total.NA <- sum(daily.stats$nNA); Total.NA
-```
 
-The total number of `NA` values is `r Total.NA`, and as noted in the previous section 
-they are all concentrated in 8 days, for which in fact there are no valid values for `steps`,
-effectively making the issue of _missing data_ one of _missing days_.
-This is the list of these _bad days_:
-```{r}
+<button class="toggle_code">show code</button>
+```{r count_NA_and_find_bad_days, echo = TRUE}
+Total.NA <- sum(daily.stats$nNA)
+
 BadDays <- as.character(daily.stats$date[daily.stats$nNA > 0])
-print(cbind(BadDays,weekdays(as.Date(BadDays))), quote=FALSE, right=TRUE, print.gap=4)
-```
-They are fairly evenly distributed over weekdays considering the total number of occurrences 
-for each of the week:
-```{r}
+
 Ntot <- tapply(main$steps, main$dayFactor, function(x){length(x)/288}, simplify=TRUE)
 Nbad <- tapply(main$steps, main$dayFactor, function(x){length(x[is.na(x)])/288}, simplify=TRUE)
-rbind(Ntot,Nbad)
 ```
 
-```{r goodbad-days-matrix}
+The total number of `NA` values is __`r Total.NA`__, and as noted in the previous section 
+__they are all concentrated in 8 days__ for which in fact there are no valid values for `steps`,
+effectively making the issue of _missing data_ one of _missing days_.
+
+This is the list of these _bad days_:
+
+```{r table-the_bad_days, echo = FALSE}
+# print(cbind(BadDays,weekdays(as.Date(BadDays))), quote=FALSE, right=TRUE, print.gap=4)
+kable(cbind(BadDays, weekdays(as.Date(BadDays))), align = "c")
+```
+
+They are fairly evenly distributed over weekdays considering the total number of occurrences 
+for each of the week:
+
+```{r table-bad_days_distribution, echo = FALSE}
+kable(rbind(Ntot,Nbad), align = "c")
+```
+
+<button class="toggle_code">show code</button>
+```{r goodbad-days-matrix, echo = TRUE}
 df <- data.frame(daily.stats[,c(1,2)], flag = ifelse(daily.stats$nNA == 0,1,0), 
                  dayF = factor(weekdays(as.Date(daily.stats$date)), 
                  levels = day.names, 
@@ -359,20 +393,22 @@ df <- data.frame(daily.stats[,c(1,2)], flag = ifelse(daily.stats$nNA == 0,1,0),
 mat <- matrix(c(df$flag,-1,-1),nrow=7)
 ```
 
-```{r goodbad-days-matrix-plot, fig.width=6, fig.height=5}
+<button class="toggle_plot_code">show plot code</button>
+```{r goodbad-days-matrix-plot, fig.width = 6, fig.height = 5, echo = TRUE}
 image(x=1:7, y=1:9, mat[,ncol(mat):1],
-      col=c("grey80","#DD4444","#55CC55"), 
+      col=c("grey80", "#DD4444", "#55CC55"), 
       xaxt = "n", yaxt = "n", ylab = "", xlab = "", 
-      main = "matrix plot of 'good' and 'bad' days", cex.main = 0.9)
+      main = "Matrix plot of 'good' and 'bad' days", cex.main = 0.9)
 
-grid(nx=7,ny=9, col="white")
-axis( 1, at=1:7, labels=c("m","tu","w","th","f","s","su"), las= 1, padj=-1, tcl=0 )
-axis( 2, at=1:9, labels=paste("wk",9:1,sep=" "), las=1, tcl=0, hadj=0.7 )
+grid(nx = 7, ny = 9, col = "white")
+axis( 1, at = 1:7, labels=c("M","Tu","W","Th","F","S","Su"), las=1, padj=-1, tcl=0 )
+axis( 2, at = 1:9, labels=paste("wk",9:1,sep=" "), las=1, tcl=0, hadj=0.7 )
 ```
 
 ### An _imputing_ strategy
 
 Because the missing data
+
 * are concentrated in a few days, 
 * constitute the totality of the entries for those days, and
 * these _missing days_ are evenly distributed over the days of the week, 
@@ -395,11 +431,13 @@ week (at most 9).
 Because it would seem _lazy_ to adopt the first approach, let's take a slightly closer look at the 
 properties of the _activity_ to formulate a plausible plan to implement the second strategy.
 
-### Average activity pattern by day of the week
+
+#### Average activity pattern by day of the week
 
 The first thing we can do is to look at the _activity_ data split up by day of the week, 
 making time-series plot averaged by day. 
 First step is summarizing the data set by `dayFactor` and `hour` and then plot the seven time-series.
+
 ```{r summarizing-day-hour}
 # summarizing by weekday and hour
 ts.ByDay.ByHour <- ddply(main.m2, .(dayFactor, hour), summarize, 
@@ -410,35 +448,43 @@ ts.ByDay.ByHour <- ddply(main.m2, .(dayFactor, hour), summarize,
 str(ts.ByDay.ByHour)
 ```
 
-```{r plot-seven, fig.width=6, fig.height=9}
+<button class="toggle_plot_code">show plot code</button>
+```{r plot-seven, fig.width = 6, fig.height = 9}
 gm.ByDay.ByHour <- ggplot(ts.ByDay.ByHour, aes(hour, Avrg))
-gm.ByDay.ByHour + theme_bw() + theme(legend.position="none") +
-    geom_line(aes(color=dayFactor),lty=1) +
-    labs(title="activity averaged over time, by day") + 
-    labs(x="hour of the day") + labs(y="number of steps / 5 minutes") + 
-    facet_wrap( ~ dayFactor, ncol=1) 
+gm.ByDay.ByHour + theme_bw() + theme(legend.position = "none") +
+                geom_line(aes(color = dayFactor), lty = 1) +
+                labs(title = "activity averaged over time, by day") + 
+                labs(x = "hour of the day") + 
+                labs(y = "number of steps / 5 minutes") + 
+                facet_wrap( ~ dayFactor, ncol = 1) 
 ```
 
-Visual "inspection" seems to suggest that 
-**week days (Monday through Friday) may actually be split in two groups** 
+Visual "inspection" seems to suggest that __week days may actually be split in two groups__ 
 `Monday/Tuesday/Wednesday` and `Thursday/Friday` instead of being combined all together.
 The averaged `Saturday` is fairly similar to `Friday`, sort of in between that and `Sunday`.
 
 Let's see the average activity for the three groups 
-`G1 = Monday/Tuesday/Wednesday`,  `G2 = Thursday/Friday` and `G3 = Saturday/Sunday`.
-```{r}
+
+* `G1 = Monday/Tuesday/Wednesday` 
+* `G2 = Thursday/Friday` and 
+* `G3 = Saturday/Sunday`.
+
+<button class="toggle_code">show code</button>
+```{r plot-bygroup_prepare_data, echo = TRUE}
 main$dayGroup <- main$dayFactor
 levels(main$dayGroup) <- c("G1","G1","G1","G2","G2","G3","G3")
-main.m2 <- melt(main[,c("steps","date","hour","dayFactor","dayFlag","dayGroup")],
-                id=c("date","hour","dayFactor","dayFlag","dayGroup"), 
-                measured=c("steps"), value.name="steps", na.rm=TRUE)
+main.m2 <- melt(main[, c("steps","date","hour","dayFactor","dayFlag","dayGroup")],
+                id = c("date","hour","dayFactor","dayFlag","dayGroup"), 
+                measured = c("steps"), value.name="steps", na.rm=TRUE)
 
 ts.ByGroup.ByHour <- ddply(main.m2, .(dayGroup, hour), summarize, 
-                           Avrg=mean(steps), 
-                           Sd=sd(steps), 
-                           N=length(steps))
+                           Avrg = mean(steps), 
+                           Sd = sd(steps), 
+                           N = length(steps))
 ```
-```{r plot-bygroup, fig.width=6, fig.height=6}
+
+<button class="toggle_plot_code">show plot code</button>
+```{r plot-bygroup, fig.width = 6, fig.height = 6}
 ggplot(ts.ByGroup.ByHour, aes(hour, Avrg)) + theme_bw() + theme(legend.position="none") +
     geom_line(aes(color=dayGroup),lty=1) +
     labs(title="activity averaged over time, by type of day") + 
@@ -446,26 +492,31 @@ ggplot(ts.ByGroup.ByHour, aes(hour, Avrg)) + theme_bw() + theme(legend.position=
     facet_wrap( ~ dayGroup, ncol=1) 
 ```
 
+#### Imputation by _group_
+
 The plan is then to fill-in the _missing days_ with the average of _activity_ (_i.e._ `steps`) 
 of the days of the same group `G1|G2|G3`.  
 First we create a vector with the sequence of `dayGroup` strings for the _missing days_.
 
 ```{r}
 bd <- subset(main, date %in% BadDays, select=c("date","hour","dayGroup"))
-bd.sequence <- as.character(ddply(bd, .(date, dayGroup), summarize, l=length(dayGroup))$dayGroup)
+bd.sequence <- as.character(ddply(bd, .(date, dayGroup), summarize, l = length(dayGroup))$dayGroup)
 bd.sequence
 ```
 
 We prepare templates of the _activity_ for each `dayGroup`, as numeric vectors, and define a 
 function to get them by string.
+
 ```{r}
 template.G1 <- as.vector(subset(ts.ByGroup.ByHour, dayGroup=="G1", select=c("Avrg"))$Avrg)
 template.G2 <- as.vector(subset(ts.ByGroup.ByHour, dayGroup=="G2", select=c("Avrg"))$Avrg)
 template.G3 <- as.vector(subset(ts.ByGroup.ByHour, dayGroup=="G3", select=c("Avrg"))$Avrg)
 
-get.template <- function(x) { name<-paste("template",x,sep="."); v <- get(name); return(v)}
+get.template <- function(x) { name <- paste("template", x, sep = "."); v <- get(name); return(v)}
 ```
+
 Next we fill a new vector with a sequence of "imputed values":
+
 ```{r}
 newvec <- vector(mode="numeric", length=Total.NA)
 for(i in 1:length(bd.sequence)) { 
@@ -475,14 +526,17 @@ for(i in 1:length(bd.sequence)) {
 length(newvec)
 summary(newvec[newvec>0])
 ```
+
 Finally we duplicate the `steps` data in the data frame and replace the subset of `NA` with
 values from the the newly vector:
+
 ```{r}
 main$stepsNew <- main$steps
 main$stepsNew[is.na(main$steps)] <- newvec
 ```
 
 Let's put together daily stats for the new `stepsNew` variable:
+
 ```{r}
 daily.stats.new <- ddply(main, .(date), summarize, 
                      nNA = sum(is.na(stepsNew)), 
@@ -490,17 +544,24 @@ daily.stats.new <- ddply(main, .(date), summarize,
                      nGood.Not0 = sum(!is.na(stepsNew) & steps>0), 
                      nSteps = sum(stepsNew))
 ```
+
 And compare summaries with the original dataset:
+
 ```{r}
 summary(daily.stats$nSteps)
+
 summary(daily.stats.new$nSteps)
 ```
 
-```{r histogram-both, fig.height=4, fig.width=8}
+<button class="toggle_plot_code">show plot code</button>
+```{r histogram-both, fig.height = 4, fig.width = 8}
 par(mfrow=c(1,2))
 hist(daily.stats.new$nSteps, breaks=seq(0,30000,by=2500), col="orange", 
-     xlim=c(0,25000), ylim=c(0,25),
-     main="New Distribution of Total Daily Steps", xlab="Total Daily Steps", ylab="N_{days}")
+     xlim = c(0, 25000), 
+     ylim = c(0, 25),
+     main = "New Distribution of Total Daily Steps", 
+     xlab = "Total Daily Steps", 
+     ylab = "N_{days}")
 
 hist(daily.stats$nSteps, breaks=seq(0,30000,by=2500), col="orange", 
      xlim=c(0,25000), ylim=c(0,25),
@@ -510,7 +571,7 @@ par(mfrow=c(1,1))
  
 There distributions exhibit a modest difference but they are in line with what one would
 have expected with this approach for imputing missing values, namely that the distribution
-of total daily steps has become more ``concentrated`` because we added _average days_ values
+of total daily steps has become more "concentrated" because we added _average days_ values
 for the 8 _missing days_.  The same effect is noticeable in the summaries, with the 1st and 3rd
 quantiles shifted slightly towards the mean.
 
@@ -518,7 +579,7 @@ quantiles shifted slightly towards the mean.
 <hr class="thin_separator">
 <a name="DIFFERENCES"></a>
 
-## DIFFERENCES IN ACTIVITY PATTERNS BETWEEN WEEKDAYS AND WEEKENDS
+## Differences in Activity Patterns Between Weekdays and Weekends
 
 ### Average activity by day type (weekday vs. weekend)
 
@@ -531,17 +592,21 @@ are more marked between Monday/Tuesday/Wednesday and weekend days (see plot abov
 Here we show the _activity_ time-series for the averaged 5 week days and the weekend days.
 
 ```{r summarizing-flag-hour}
-ts.ByFlag.ByHour <- ddply(main.m2, .(dayFlag, hour), summarize, Avrg=mean(steps), Sd=sd(steps), N=length(steps))
-str(ts.ByFlag.ByHour)
+ts.ByFlag.ByHour <- ddply(main.m2, .(dayFlag, hour), summarize, 
+                          Avrg = mean(steps), 
+                          Sd = sd(steps), 
+                          N = length(steps))
 ```
 
-```{r plot-two, fig.width=6, fig.height=5}
+<button class="toggle_plot_code">show plot code</button>
+```{r plot-two, fig.width = 6, fig.height = 5, echo = TRUE}
 gm.ByFlag.ByHour <- ggplot(ts.ByFlag.ByHour, aes(hour, Avrg))
-gm.ByFlag.ByHour + theme_bw() + theme(legend.position="none") +
-    geom_line(aes(color=dayFlag),lty=1) +
+gm.ByFlag.ByHour + theme_bw() + theme(legend.position = "none") +
+    geom_line(aes(color = dayFlag), lty = 1) +
     labs(title="Activity averaged over time, by type of day") + 
-    labs(x="Hour of the day") + labs(y="Number of steps / 5 minutes") + 
-    facet_wrap( ~ dayFlag, ncol=1) 
+    labs(x = "Hour of the day") + 
+    labs(y = "Number of steps / 5 minutes") + 
+    facet_wrap( ~ dayFlag, ncol = 1) 
 ```
 
 
@@ -549,6 +614,8 @@ gm.ByFlag.ByHour + theme_bw() + theme(legend.position="none") +
 <a name="APPENDIX"></a>
 
 # APPENDIX
+
+[[Back to the Top](#TOP)]
 
 <a name="SessionInfo"></a>
 

@@ -13,12 +13,14 @@
 
 <title>Analysis of Human Activity Data</title>
 
-<script src="report_files/jquery-1.11.0/jquery.min.js"></script>
+<script src="common/libs/jquery-1.11.0/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<link href="report_files/bootstrap-3.3.1/css/cerulean.min.css" rel="stylesheet" />
-<script src="report_files/bootstrap-3.3.1/js/bootstrap.min.js"></script>
-<script src="report_files/bootstrap-3.3.1/shim/html5shiv.min.js"></script>
-<script src="report_files/bootstrap-3.3.1/shim/respond.min.js"></script>
+<link href="common/libs/bootstrap-3.3.1/css/cerulean.min.css" rel="stylesheet" />
+<script src="common/libs/bootstrap-3.3.1/js/bootstrap.min.js"></script>
+<script src="common/libs/bootstrap-3.3.1/shim/html5shiv.min.js"></script>
+<script src="common/libs/bootstrap-3.3.1/shim/respond.min.js"></script>
+
+<script src="common/js/toggle_GF.js"></script>
 
 
 <style type="text/css">code{white-space: pre;}</style>
@@ -49,7 +51,7 @@ code > span.er { font-weight: bold; }
 </style>
 
 
-<link rel="stylesheet" href="css/gf_small_touches.css" type="text/css" />
+<link rel="stylesheet" href="common/css/gf_xnew_nolines.css" type="text/css" />
 
 </head>
 
@@ -80,11 +82,12 @@ img {
 
 
 <div id="preamble" class="section level2">
-<h2>PREAMBLE</h2>
+<h2>Preamble</h2>
 <p>Report for the first assignment of the <a href="https://www.coursera.org/course/repdata"><em>Reproducible Research</em></a> course of the <em>Coursera/JHSPH Data Science Specialization</em>.</p>
 <p>The source files are posted on <a href="https://github.com/pedrosan/DataScienceExamples/Human_Activity_1/">GitHub</a>.</p>
-<div id="preliminaries" class="section level3">
-<h3>PRELIMINARIES</h3>
+</div>
+<div id="preliminaries" class="section level2">
+<h2>Preliminaries</h2>
 <p>Libraries needed for data processing and plotting:</p>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(<span class="st">&quot;ggplot2&quot;</span>)
 <span class="kw">library</span>(<span class="st">&quot;plyr&quot;</span>)
@@ -93,12 +96,14 @@ img {
 <hr class="thin_separator">
 <p><a name="INTRODUCTION"></a></p>
 </div>
-</div>
 <div id="introduction" class="section level1">
 <h1>INTRODUCTION</h1>
 <p>It is now possible to collect a large amount of data about personal movement using activity monitoring devices such as a <a href="http://www.fitbit.com">Fitbit</a>, <a href="http://www.nike.com/us/en_us/c/nikeplus-fuelband">Nike Fuelband</a>, or <a href="https://jawbone.com/up">Jawbone Up</a>.</p>
 <p>These type of devices are part of the “quantified self” movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. But these data remain under-utilized both because the raw data are hard to obtain and there is a lack of statistical methods and software for processing and interpreting the data.</p>
-<p>This assignment makes use of data from a personal activity monitoring device. This device collects data at 5 minute intervals through out the day. The data consists of two months of data from an anonymous individual collected during the months of October and November, 2012 and include the number of steps taken in 5 minute intervals each day.</p>
+<div id="the-data" class="section level2">
+<h2>The Data</h2>
+<p>This assignment makes use of data from a personal activity monitoring device.<br />This device collects data at 5 minute intervals through out the day. The data consists of two months of data from an anonymous individual collected during the months of October and November, 2012 and include the number of steps taken in 5 minute intervals each day.</p>
+</div>
 <div id="outline" class="section level2">
 <h2>Outline</h2>
 <ul>
@@ -118,7 +123,7 @@ img {
 <li><a href="#IMPUTING">IMPUTING MISSING VALUES</a>
 <ul>
 <li>Some thoughts about missing data</li>
-<li>What do the <code>NA</code> in this dataset <em>look like</em>?</li>
+<li>What do the <code>NA</code> in this dataset <em>look like</em>? <br />How many are there and how are they distributed?</li>
 <li>An <em>imputing</em> strategy</li>
 <li>Average activity pattern by day of the week</li>
 </ul></li>
@@ -177,7 +182,7 @@ main$chunk &lt;-<span class="st"> </span><span class="kw">cut</span>(main$hour, 
 <span class="co">#  $ date     : Factor w/ 61 levels &quot;2012-10-01&quot;,&quot;2012-10-02&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...</span>
 <span class="co">#  $ interval : int  0 5 10 15 20 25 30 35 40 45 ...</span>
 <span class="co">#  $ fullTime : POSIXlt, format: &quot;2012-10-01 00:00:00&quot; &quot;2012-10-01 00:05:00&quot; &quot;2012-10-01 00:10:00&quot; ...</span>
-<span class="co">#  $ hour     : POSIXct, format: &quot;2015-07-05 00:00:00&quot; &quot;2015-07-05 00:05:00&quot; &quot;2015-07-05 00:10:00&quot; ...</span>
+<span class="co">#  $ hour     : POSIXct, format: &quot;2015-08-01 00:00:00&quot; &quot;2015-08-01 00:05:00&quot; &quot;2015-08-01 00:10:00&quot; ...</span>
 <span class="co">#  $ dayName  : chr  &quot;Monday&quot; &quot;Monday&quot; &quot;Monday&quot; &quot;Monday&quot; ...</span>
 <span class="co">#  $ dayFactor: Ord.factor w/ 7 levels &quot;Monday&quot;&lt;&quot;Tuesday&quot;&lt;..: 1 1 1 1 1 1 1 1 1 1 ...</span>
 <span class="co">#  $ dayFlag  : Factor w/ 2 levels &quot;weekday&quot;,&quot;weekend&quot;: 1 1 1 1 1 1 1 1 1 1 ...</span>
@@ -204,28 +209,75 @@ main$chunk &lt;-<span class="st"> </span><span class="kw">cut</span>(main$hour, 
 <span class="co"># </span>
 <span class="co">#   0 288 </span>
 <span class="co">#  53   8</span></code></pre>
-<p>The table of the number of <code>NA</code> in each day reveals that all missing values are concentrated in 8 days, for which in fact there are no data (<em>i.e.</em> 288 <code>NA</code>).<br />The other 53 days have complete data, 288 entries each, although the majority of them are zeros.<br />The following plot illustrates this latter point: it show the distribution of the number of intervals with <code>steps&gt;0</code> in a day.<br />The red bin comprises the days without any valid value (8). The distribution is centered at around 80, which is about 28% of the intervals in each day (288).</p>
+<ul>
+<li>The table of the number of <code>NA</code> in each day reveals that all missing values are concentrated in 8 days, for which in fact there are no data (<em>i.e.</em> 288 <code>NA</code>).<br /></li>
+<li>The other 53 days have complete data, 288 entries each, although the majority of them are zeros.</li>
+</ul>
+<p>The following plot illustrates this latter point: it show the distribution of the number of intervals with <code>steps&gt;0</code> in a day.<br />The red bin comprises the days without any valid value (8). The distribution is centered at around 80, which is about 28% of the intervals in each day (288).</p>
+<button class="toggle_plot_code">
+show plot code
+</button>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="kw">hist</span>(daily.stats$nGood.Not0, <span class="dt">xlim=</span><span class="kw">c</span>(-<span class="dv">10</span>,<span class="dv">160</span>), <span class="dt">breaks=</span><span class="kw">seq</span>(-<span class="dv">10</span>,<span class="dv">305</span>,<span class="dt">by=</span><span class="dv">10</span>), 
      <span class="dt">col=</span><span class="kw">c</span>(<span class="st">&quot;red&quot;</span>,<span class="kw">rep</span>(<span class="st">&quot;forestgreen&quot;</span>,<span class="dv">20</span>)), <span class="dt">cex.main=</span><span class="fl">0.85</span>, 
-     <span class="dt">main=</span><span class="st">&quot;Distribution of the daily number of</span><span class="ch">\n</span><span class="st">&#39;good values&#39; of &#39;steps&#39; (!NA &amp; &gt;0)&quot;</span>, <span class="dt">xlab=</span><span class="st">&quot;N_{good}&quot;</span>)</code></pre>
-<p><img src="figures/histogram-ngood-1.png" title="" alt="" width="500" style="display: block; margin: auto;" /></p>
+     <span class="dt">main=</span><span class="st">&quot;Distribution of the daily number of &#39;good values&#39; of &#39;steps&#39; (!NA &amp; &gt;0)&quot;</span>, 
+     <span class="dt">xlab=</span><span class="st">&quot;Number of &#39;good&#39; intervals&quot;</span>)</code></pre>
+<p><img src="figures/histogram-ngood-1.png" title="" alt="" width="600" style="display: block; margin: auto;" /></p>
 <p>If we split each day in four time intervals (the <code>chunk</code> factor) the summary of <em>good</em> and <em>non-zero</em> values not surprisingly shows a very low fraction for the night period and higher fractions for the morning and afternoon period.</p>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">ddply</span>(main, .(chunk), summarize, <span class="dt">Ndata.gt.0=</span><span class="kw">sum</span>(!<span class="kw">is.na</span>(steps) &amp;<span class="st"> </span>steps&gt;<span class="dv">0</span>),
-      <span class="dt">Ntot =</span> <span class="kw">length</span>(steps[!<span class="kw">is.na</span>(steps)]),
-      <span class="dt">fraction =</span> <span class="kw">sprintf</span>(<span class="st">&quot;%6.2f %%&quot;</span>,<span class="kw">sum</span>(!<span class="kw">is.na</span>(steps) &amp;<span class="st"> </span>steps&gt;<span class="dv">0</span>)/<span class="kw">length</span>(steps[!<span class="kw">is.na</span>(steps)])*<span class="dv">100</span>.))
-<span class="co">#    chunk Ndata.gt.0 Ntot fraction</span>
-<span class="co"># 1 00to06        148 3816   3.88 %</span>
-<span class="co"># 2 06to12       1642 3816  43.03 %</span>
-<span class="co"># 3 12to18       1377 3816  36.08 %</span>
-<span class="co"># 4 18to24       1083 3816  28.38 %</span></code></pre>
+<button class="toggle_code">
+show code
+</button>
+<pre class="sourceCode r"><code class="sourceCode r">tmp.df &lt;-<span class="st"> </span><span class="kw">ddply</span>(main, .(chunk), summarize, 
+                <span class="dt">Ntot =</span> <span class="kw">length</span>(steps[!<span class="kw">is.na</span>(steps)]), 
+                <span class="dt">Ndata.gt.0 =</span> <span class="kw">sum</span>(!<span class="kw">is.na</span>(steps) &amp;<span class="st"> </span>steps&gt;<span class="dv">0</span>), 
+                <span class="dt">fraction =</span> <span class="kw">sprintf</span>(<span class="st">&quot;%6.2f %%&quot;</span>,<span class="kw">sum</span>(!<span class="kw">is.na</span>(steps) &amp;<span class="st"> </span>steps&gt;<span class="dv">0</span>)/<span class="kw">length</span>(steps[!<span class="kw">is.na</span>(steps)])*<span class="dv">100</span>.))</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="center">chunk</th>
+<th align="center">N.tot</th>
+<th align="center">N.good</th>
+<th align="center">pct.good</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">00to06</td>
+<td align="center">3816</td>
+<td align="center">148</td>
+<td align="center">3.88 %</td>
+</tr>
+<tr class="even">
+<td align="center">06to12</td>
+<td align="center">3816</td>
+<td align="center">1642</td>
+<td align="center">43.03 %</td>
+</tr>
+<tr class="odd">
+<td align="center">12to18</td>
+<td align="center">3816</td>
+<td align="center">1377</td>
+<td align="center">36.08 %</td>
+</tr>
+<tr class="even">
+<td align="center">18to24</td>
+<td align="center">3816</td>
+<td align="center">1083</td>
+<td align="center">28.38 %</td>
+</tr>
+</tbody>
+</table>
+<button class="toggle_plot_code">
+show plot code
+</button>
 <pre class="sourceCode r"><code class="sourceCode r">byChunk &lt;-<span class="st"> </span><span class="kw">subset</span>(<span class="kw">ddply</span>(main, .(date, chunk), summarize, <span class="dt">Ndata=</span><span class="kw">sum</span>(!<span class="kw">is.na</span>(steps) &amp;<span class="st"> </span>steps&gt;<span class="dv">0</span>)), Ndata&gt;<span class="dv">0</span>)
 
 <span class="kw">ggplot</span>(byChunk, <span class="kw">aes</span>(<span class="dt">x=</span>Ndata)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span><span class="kw">theme</span>(<span class="dt">legend.position=</span><span class="st">&quot;none&quot;</span>) +<span class="st"> </span>
 <span class="st">           </span><span class="kw">geom_histogram</span>(<span class="kw">aes</span>(<span class="dt">fill=</span>chunk), <span class="dt">colour=</span><span class="st">&quot;grey50&quot;</span>, <span class="dt">breaks=</span><span class="kw">seq</span>(-<span class="dv">4</span>,<span class="dv">54</span>,<span class="dt">by=</span><span class="dv">4</span>), <span class="dt">right=</span><span class="ot">TRUE</span>) +
-<span class="st">           </span><span class="kw">ggtitle</span>(<span class="st">&quot;Distribution by &#39;day chunk&#39; of the number of</span><span class="ch">\n</span><span class="st">&#39;good values&#39; of steps (!NA &amp; &gt;0)&quot;</span>) +<span class="st"> </span>
-<span class="st">           </span><span class="kw">xlab</span>(<span class="st">&quot;N of &#39;good&#39; data&quot;</span>) +<span class="st"> </span><span class="kw">ylab</span>(<span class="st">&quot;Number of days&quot;</span>) +<span class="st"> </span>
-<span class="st">           </span><span class="kw">facet_wrap</span>( ~chunk, <span class="dt">nrow=</span><span class="dv">1</span>)</code></pre>
-<p><img src="figures/histogram-ngood-bychunk-1.png" title="" alt="" width="700" style="display: block; margin: auto;" /></p>
+<span class="st">           </span><span class="kw">ggtitle</span>(<span class="st">&quot;Distribution by &#39;day chunk&#39; of the number of &#39;good values&#39; of steps (!NA &amp; &gt;0)&quot;</span>) +<span class="st"> </span>
+<span class="st">           </span><span class="kw">xlab</span>(<span class="st">&quot;Number of &#39;good&#39; intervals&quot;</span>) +<span class="st"> </span>
+<span class="st">           </span><span class="kw">ylab</span>(<span class="st">&quot;Number of days&quot;</span>) +<span class="st"> </span>
+<span class="st">           </span><span class="kw">facet_wrap</span>( ~<span class="st"> </span>chunk, <span class="dt">nrow =</span> <span class="dv">1</span>)</code></pre>
+<p><img src="figures/histogram-ngood-bychunk-1.png" title="" alt="" width="800" style="display: block; margin: auto;" /></p>
 <hr class="separator">
 <p><a name="QUESTIONS"></a></p>
 </div>
@@ -235,53 +287,77 @@ main$chunk &lt;-<span class="st"> </span><span class="kw">cut</span>(main$hour, 
 <hr class="thin_separator">
 <p><a name="MEAN_STEPS_PER_DAY"></a></p>
 <div id="mean-total-number-of-steps-taken-per-day" class="section level2">
-<h2>MEAN TOTAL NUMBER OF STEPS TAKEN PER DAY</h2>
+<h2>Mean Total Number of Steps Taken per Day</h2>
 <p>The <code>daily.stats</code> data frame contains all the pieces of information needed to address this question.<br />The values in the <code>nSteps</code> column are the number of steps summed over each day, and we can get the statistics with the <code>summary()</code> command.<br />The <strong>mean</strong> and <strong>median</strong> are <strong>10770</strong> and <strong>10760</strong> respectively.<br />Here is the full summary, followed by the distribution.</p>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="kw">summary</span>(daily.stats$nSteps)
 <span class="co">#    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA&#39;s </span>
 <span class="co">#      41    8841   10760   10770   13290   21190       8</span></code></pre>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">hist</span>(daily.stats$nSteps, <span class="dt">breaks=</span><span class="kw">seq</span>(<span class="dv">0</span>,<span class="dv">30000</span>,<span class="dt">by=</span><span class="dv">2500</span>), <span class="dt">col=</span><span class="st">&quot;orange&quot;</span>, 
-     <span class="dt">main=</span><span class="st">&quot;Distribution of Total Daily Steps&quot;</span>, <span class="dt">xlab=</span><span class="st">&quot;Total Daily Steps&quot;</span>, <span class="dt">ylab=</span><span class="st">&quot;N_{days}&quot;</span>)</code></pre>
+<button class="toggle_plot_code">
+show plot code
+</button>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">hist</span>(daily.stats$nSteps, <span class="dt">breaks =</span> <span class="kw">seq</span>(<span class="dv">0</span>, <span class="dv">30000</span>, <span class="dt">by =</span> <span class="dv">2500</span>), <span class="dt">col =</span> <span class="st">&quot;orange&quot;</span>, 
+     <span class="dt">main =</span> <span class="st">&quot;Distribution of Total Daily Steps&quot;</span>, 
+     <span class="dt">xlab =</span> <span class="st">&quot;Total Daily Steps&quot;</span>, 
+     <span class="dt">ylab =</span> <span class="st">&quot;N_{days}&quot;</span>)</code></pre>
 <p><img src="figures/histogram-1.png" title="" alt="" width="600" style="display: block; margin: auto;" /></p>
 <hr class="thin_separator">
 <p><a name="AVRG_DAILY_PATTERN"></a></p>
 </div>
 <div id="the-average-daily-activity-pattern" class="section level2">
-<h2>THE AVERAGE DAILY ACTIVITY PATTERN</h2>
+<h2>The Average Daily Activity Pattern</h2>
 <p>For convenience in further processing and to work with <code>ggplot</code> we reshape the data frame to long format by melting it.<br />With the <code>na.rm=TRUE</code> option the <code>NA</code> are excluded (i.e. left implicit), which in this case is acceptable because they can easily be reconstructed on the basis of the continuity of the <code>date+interval</code> variable.</p>
-<pre class="sourceCode r"><code class="sourceCode r">main.m2 &lt;-<span class="st"> </span><span class="kw">melt</span>(main[,<span class="kw">c</span>(<span class="st">&quot;steps&quot;</span>,<span class="st">&quot;date&quot;</span>,<span class="st">&quot;hour&quot;</span>,<span class="st">&quot;dayFactor&quot;</span>,<span class="st">&quot;dayFlag&quot;</span>)], <span class="dt">na.rm=</span><span class="ot">TRUE</span>, 
-                <span class="dt">id=</span><span class="kw">c</span>(<span class="st">&quot;date&quot;</span>,<span class="st">&quot;hour&quot;</span>,<span class="st">&quot;dayFactor&quot;</span>,<span class="st">&quot;dayFlag&quot;</span>), <span class="dt">measured=</span><span class="kw">c</span>(<span class="st">&quot;steps&quot;</span>), <span class="dt">value.name=</span><span class="st">&quot;steps&quot;</span>)</code></pre>
-<p>To plot the number of steps as a function of time during the day, averaged over days, we prepare the data using the <code>ddply()</code> function to summarize the data frame by <code>hour</code>.<br />We decided to include in the summarizing <code>interval</code> entries with <code>steps=0</code>, assuming that the device counting steps was accurate enough that all non-<code>NA</code> values are reliable.<br />Please note that <code>NA</code> are already excluded from the molten data frame used here.<br />For each <code>hour</code> we compute <em>mean</em>, <em>standard deviation</em> and <em>number of data</em> contributing to that bin in the time-series.<br />The summarizing operation returns <code>NaN</code> for the <em>mean</em> and <em>standard deviation</em> if the number of contributions is <code>0</code> or <code>&lt;2</code>, respectively. We reset those values to <code>NA</code>.</p>
+<pre class="sourceCode r"><code class="sourceCode r">main.m2 &lt;-<span class="st"> </span><span class="kw">melt</span>(main[,<span class="kw">c</span>(<span class="st">&quot;steps&quot;</span>,<span class="st">&quot;date&quot;</span>,<span class="st">&quot;hour&quot;</span>,<span class="st">&quot;dayFactor&quot;</span>,<span class="st">&quot;dayFlag&quot;</span>)], <span class="dt">na.rm =</span> <span class="ot">TRUE</span>, 
+                <span class="dt">id =</span> <span class="kw">c</span>(<span class="st">&quot;date&quot;</span>,<span class="st">&quot;hour&quot;</span>,<span class="st">&quot;dayFactor&quot;</span>,<span class="st">&quot;dayFlag&quot;</span>), 
+                <span class="dt">measured =</span> <span class="kw">c</span>(<span class="st">&quot;steps&quot;</span>), 
+                <span class="dt">value.name =</span> <span class="st">&quot;steps&quot;</span>)</code></pre>
+<p>To plot the number of steps as a function of time during the day, averaged over days, we prepare the data using the <code>ddply()</code> function to summarize the data frame by <code>hour</code>.</p>
+<ul>
+<li><p>We decided to include in the summarizing <code>interval</code> entries with <code>steps=0</code>, assuming that the device counting steps was accurate enough that all non-<code>NA</code> values are reliable. Please note that <code>NA</code> are already excluded from the molten data frame used here.</p></li>
+<li>For each <code>hour</code> we compute <em>mean</em>, <em>standard deviation</em> and <em>number of data</em> contributing to that bin in the time-series.<br /></li>
+<li><p>The summarizing operation returns <code>NaN</code> for the <em>mean</em> and <em>standard deviation</em> if the number of contributions is <code>0</code> or <code>&lt;2</code>, respectively. We reset those values to <code>NA</code>.</p></li>
+</ul>
 <pre class="sourceCode r"><code class="sourceCode r">ts.ByHour &lt;-<span class="st"> </span><span class="kw">ddply</span>(main.m2, .(hour), summarize, <span class="dt">Avrg=</span><span class="kw">mean</span>(steps), <span class="dt">Sd=</span><span class="kw">sd</span>(steps), <span class="dt">N=</span><span class="kw">length</span>(steps))
 ts.ByHour$Avrg[ts.ByHour$N==<span class="dv">0</span>] &lt;-<span class="st"> </span><span class="ot">NA</span>
 ts.ByHour$Sd[ts.ByHour$N&lt;<span class="dv">2</span>] &lt;-<span class="st"> </span><span class="ot">NA</span></code></pre>
 <div id="time-series-plot-of-average-activity" class="section level3">
 <h3>Time-series plot of average activity</h3>
 <p>The next two plots show the <em>activity</em> averaged over all days.<br />The two plots are identical, except that on the second one we show <span class="math">\(\langle steps\rangle/\sqrt{N_{data}}\)</span> errorbars.</p>
+<button class="toggle_plot_code">
+show plot code
+</button>
 <pre class="sourceCode r"><code class="sourceCode r">gm.v1 &lt;-<span class="st"> </span><span class="kw">ggplot</span>(ts.ByHour, <span class="kw">aes</span>(hour, Avrg)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span>
-<span class="st">            </span><span class="kw">geom_line</span>(<span class="dt">lty=</span><span class="dv">1</span>, <span class="dt">col=</span><span class="st">&quot;red2&quot;</span>) +<span class="st"> </span>
-<span class="st">            </span><span class="kw">labs</span>(<span class="dt">title=</span><span class="st">&quot;Activity (steps/5min) Averaged over all days&quot;</span>) +<span class="st"> </span>
-<span class="st">            </span><span class="kw">labs</span>(<span class="dt">x=</span><span class="st">&quot;Time during the day&quot;</span>) +<span class="st"> </span><span class="kw">labs</span>(<span class="dt">y=</span><span class="st">&quot;Mean number of steps&quot;</span>) 
+<span class="st">            </span><span class="kw">geom_line</span>(<span class="dt">lty =</span> <span class="dv">1</span>, <span class="dt">col =</span> <span class="st">&quot;red2&quot;</span>) +<span class="st"> </span>
+<span class="st">            </span><span class="kw">labs</span>(<span class="dt">title =</span> <span class="st">&quot;Activity (steps/5min) Averaged over all days&quot;</span>) +<span class="st"> </span>
+<span class="st">            </span><span class="kw">labs</span>(<span class="dt">x =</span> <span class="st">&quot;Time during the day&quot;</span>) +<span class="st"> </span>
+<span class="st">            </span><span class="kw">labs</span>(<span class="dt">y =</span> <span class="st">&quot;Mean number of steps&quot;</span>) 
 
 gm.v1 </code></pre>
 <p><img src="figures/all-averaged-1.png" title="" alt="" width="700" style="display: block; margin: auto;" /></p>
-<pre class="sourceCode r"><code class="sourceCode r">gm.v1 +<span class="st"> </span><span class="kw">geom_errorbar</span>(<span class="kw">aes</span>(<span class="dt">ymin=</span>ts.ByHour$Avrg-ts.ByHour$Sd/<span class="kw">sqrt</span>(ts.ByHour$N),
-                          <span class="dt">ymax=</span>ts.ByHour$Avrg+ts.ByHour$Sd/<span class="kw">sqrt</span>(ts.ByHour$N)), 
-                      <span class="dt">color=</span><span class="st">&quot;red2&quot;</span>, <span class="dt">alpha=</span><span class="st">&quot;0.5&quot;</span>) </code></pre>
+<button class="toggle_plot_code">
+show plot code
+</button>
+<pre class="sourceCode r"><code class="sourceCode r">gm.v1 +<span class="st"> </span><span class="kw">geom_errorbar</span>(<span class="kw">aes</span>(<span class="dt">ymin =</span> ts.ByHour$Avrg-ts.ByHour$Sd/<span class="kw">sqrt</span>(ts.ByHour$N),
+                          <span class="dt">ymax =</span> ts.ByHour$Avrg+ts.ByHour$Sd/<span class="kw">sqrt</span>(ts.ByHour$N)), 
+                      <span class="dt">color =</span> <span class="st">&quot;red2&quot;</span>, <span class="dt">alpha =</span> <span class="st">&quot;0.5&quot;</span>) </code></pre>
 <p><img src="figures/all-averaged-with-errorbars-1.png" title="" alt="" width="700" style="display: block; margin: auto;" /></p>
 </div>
 <div id="maximum-average-number-of-steps" class="section level3">
 <h3>Maximum average number of steps</h3>
+<button class="toggle_code">
+show code
+</button>
+<pre class="sourceCode r"><code class="sourceCode r">maxHr &lt;-<span class="st"> </span><span class="kw">format</span>(ts.ByHour[<span class="kw">which.max</span>(<span class="dt">x=</span>ts.ByHour$Avrg),<span class="st">&quot;hour&quot;</span>], <span class="st">&quot;%H:%M&quot;</span>)
+maxN  &lt;-<span class="st"> </span>ts.ByHour[<span class="kw">which.max</span>(<span class="dt">x=</span>ts.ByHour$Avrg),<span class="st">&quot;Avrg&quot;</span>]</code></pre>
 <p>The <strong>maximum value</strong> of the number of steps per interval averaged over the full period is 206.17, occurring at 08:35:</p>
 <pre class="sourceCode r"><code class="sourceCode r">ts.ByHour[<span class="kw">which.max</span>(<span class="dt">x=</span>ts.ByHour$Avrg),<span class="kw">c</span>(<span class="st">&quot;hour&quot;</span>,<span class="st">&quot;Avrg&quot;</span>)]
 <span class="co">#                    hour     Avrg</span>
-<span class="co"># 104 2015-07-05 08:35:00 206.1698</span></code></pre>
+<span class="co"># 104 2015-08-01 08:35:00 206.1698</span></code></pre>
 <hr class="thin_separator">
 <p><a name="IMPUTING"></a></p>
 </div>
 </div>
 <div id="imputing-missing-values" class="section level2">
-<h2>IMPUTING MISSING VALUES</h2>
+<h2>Imputing Missing Values</h2>
 <div id="some-thoughts-about-missing-data" class="section level3">
 <h3>Some thoughts about missing data</h3>
 <p>Two important points to address when deciding how to handle missing data are to understand why they are missing, what is the goal of the analysis, and what would be the impact of the missing data in that context.</p>
@@ -289,48 +365,128 @@ gm.v1 </code></pre>
 <p>It is also worth considering that imputing data may introduce a bias in the dataset, and in turn bias the results of the analysis.</p>
 <p>I do not have much experience with imputing data, as in my field of research this is rarely (if ever) done, and broadly speaking an important reason for this is that in the end by imputing data we are not adding any new information to the dataset (although naively this may sometimes seem to be the case), and it may be preferable and more robust to deal with missing data by other means/methods. One of the few exceptions to this “rule” is the application of time-series analysis that simply do not work with gapped data.</p>
 </div>
-<div id="what-do-the-na-in-this-dataset-look-like" class="section level3">
-<h3>What do the <code>NA</code> in this dataset <em>look like</em>?</h3>
+<div id="what-do-the-na-in-this-dataset-look-like-how-many-are-there-and-how-are-they-distributed" class="section level3">
+<h3>What do the <code>NA</code> in this dataset <em>look like</em>? <br />How many are there and how are they distributed?</h3>
 <p>First questions are how many there are and how they are distributed.</p>
-<pre class="sourceCode r"><code class="sourceCode r">Total.NA &lt;-<span class="st"> </span><span class="kw">sum</span>(daily.stats$nNA); Total.NA
-<span class="co"># [1] 2304</span></code></pre>
-<p>The total number of <code>NA</code> values is 2304, and as noted in the previous section they are all concentrated in 8 days, for which in fact there are no valid values for <code>steps</code>, effectively making the issue of <em>missing data</em> one of <em>missing days</em>. This is the list of these <em>bad days</em>:</p>
-<pre class="sourceCode r"><code class="sourceCode r">BadDays &lt;-<span class="st"> </span><span class="kw">as.character</span>(daily.stats$date[daily.stats$nNA &gt;<span class="st"> </span><span class="dv">0</span>])
-<span class="kw">print</span>(<span class="kw">cbind</span>(BadDays,<span class="kw">weekdays</span>(<span class="kw">as.Date</span>(BadDays))), <span class="dt">quote=</span><span class="ot">FALSE</span>, <span class="dt">right=</span><span class="ot">TRUE</span>, <span class="dt">print.gap=</span><span class="dv">4</span>)
-<span class="co">#            BadDays             </span>
-<span class="co"># [1,]    2012-10-01       Monday</span>
-<span class="co"># [2,]    2012-10-08       Monday</span>
-<span class="co"># [3,]    2012-11-01     Thursday</span>
-<span class="co"># [4,]    2012-11-04       Sunday</span>
-<span class="co"># [5,]    2012-11-09       Friday</span>
-<span class="co"># [6,]    2012-11-10     Saturday</span>
-<span class="co"># [7,]    2012-11-14    Wednesday</span>
-<span class="co"># [8,]    2012-11-30       Friday</span></code></pre>
+<button class="toggle_code">
+show code
+</button>
+<pre class="sourceCode r"><code class="sourceCode r">Total.NA &lt;-<span class="st"> </span><span class="kw">sum</span>(daily.stats$nNA)
+
+BadDays &lt;-<span class="st"> </span><span class="kw">as.character</span>(daily.stats$date[daily.stats$nNA &gt;<span class="st"> </span><span class="dv">0</span>])
+
+Ntot &lt;-<span class="st"> </span><span class="kw">tapply</span>(main$steps, main$dayFactor, function(x){<span class="kw">length</span>(x)/<span class="dv">288</span>}, <span class="dt">simplify=</span><span class="ot">TRUE</span>)
+Nbad &lt;-<span class="st"> </span><span class="kw">tapply</span>(main$steps, main$dayFactor, function(x){<span class="kw">length</span>(x[<span class="kw">is.na</span>(x)])/<span class="dv">288</span>}, <span class="dt">simplify=</span><span class="ot">TRUE</span>)</code></pre>
+<p>The total number of <code>NA</code> values is <strong>2304</strong>, and as noted in the previous section <strong>they are all concentrated in 8 days</strong> for which in fact there are no valid values for <code>steps</code>, effectively making the issue of <em>missing data</em> one of <em>missing days</em>.</p>
+<p>This is the list of these <em>bad days</em>:</p>
+<table>
+<thead>
+<tr class="header">
+<th align="center">BadDays</th>
+<th align="left"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">2012-10-01</td>
+<td align="left">Monday</td>
+</tr>
+<tr class="even">
+<td align="center">2012-10-08</td>
+<td align="left">Monday</td>
+</tr>
+<tr class="odd">
+<td align="center">2012-11-01</td>
+<td align="left">Thursday</td>
+</tr>
+<tr class="even">
+<td align="center">2012-11-04</td>
+<td align="left">Sunday</td>
+</tr>
+<tr class="odd">
+<td align="center">2012-11-09</td>
+<td align="left">Friday</td>
+</tr>
+<tr class="even">
+<td align="center">2012-11-10</td>
+<td align="left">Saturday</td>
+</tr>
+<tr class="odd">
+<td align="center">2012-11-14</td>
+<td align="left">Wednesday</td>
+</tr>
+<tr class="even">
+<td align="center">2012-11-30</td>
+<td align="left">Friday</td>
+</tr>
+</tbody>
+</table>
 <p>They are fairly evenly distributed over weekdays considering the total number of occurrences for each of the week:</p>
-<pre class="sourceCode r"><code class="sourceCode r">Ntot &lt;-<span class="st"> </span><span class="kw">tapply</span>(main$steps, main$dayFactor, function(x){<span class="kw">length</span>(x)/<span class="dv">288</span>}, <span class="dt">simplify=</span><span class="ot">TRUE</span>)
-Nbad &lt;-<span class="st"> </span><span class="kw">tapply</span>(main$steps, main$dayFactor, function(x){<span class="kw">length</span>(x[<span class="kw">is.na</span>(x)])/<span class="dv">288</span>}, <span class="dt">simplify=</span><span class="ot">TRUE</span>)
-<span class="kw">rbind</span>(Ntot,Nbad)
-<span class="co">#      Monday Tuesday Wednesday Thursday Friday Saturday Sunday</span>
-<span class="co"># Ntot      9       9         9        9      9        8      8</span>
-<span class="co"># Nbad      2       0         1        1      2        1      1</span></code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="center">Monday</th>
+<th align="center">Tuesday</th>
+<th align="center">Wednesday</th>
+<th align="center">Thursday</th>
+<th align="center">Friday</th>
+<th align="center">Saturday</th>
+<th align="center">Sunday</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Ntot</td>
+<td align="center">9</td>
+<td align="center">9</td>
+<td align="center">9</td>
+<td align="center">9</td>
+<td align="center">9</td>
+<td align="center">8</td>
+<td align="center">8</td>
+</tr>
+<tr class="even">
+<td align="left">Nbad</td>
+<td align="center">2</td>
+<td align="center">0</td>
+<td align="center">1</td>
+<td align="center">1</td>
+<td align="center">2</td>
+<td align="center">1</td>
+<td align="center">1</td>
+</tr>
+</tbody>
+</table>
+<button class="toggle_code">
+show code
+</button>
 <pre class="sourceCode r"><code class="sourceCode r">df &lt;-<span class="st"> </span><span class="kw">data.frame</span>(daily.stats[,<span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">2</span>)], <span class="dt">flag =</span> <span class="kw">ifelse</span>(daily.stats$nNA ==<span class="st"> </span><span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">0</span>), 
                  <span class="dt">dayF =</span> <span class="kw">factor</span>(<span class="kw">weekdays</span>(<span class="kw">as.Date</span>(daily.stats$date)), 
                  <span class="dt">levels =</span> day.names, 
                  <span class="dt">ordered =</span> <span class="ot">TRUE</span>))
 mat &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">c</span>(df$flag,-<span class="dv">1</span>,-<span class="dv">1</span>),<span class="dt">nrow=</span><span class="dv">7</span>)</code></pre>
+<button class="toggle_plot_code">
+show plot code
+</button>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="kw">image</span>(<span class="dt">x=</span><span class="dv">1</span>:<span class="dv">7</span>, <span class="dt">y=</span><span class="dv">1</span>:<span class="dv">9</span>, mat[,<span class="kw">ncol</span>(mat):<span class="dv">1</span>],
-      <span class="dt">col=</span><span class="kw">c</span>(<span class="st">&quot;grey80&quot;</span>,<span class="st">&quot;#DD4444&quot;</span>,<span class="st">&quot;#55CC55&quot;</span>), 
+      <span class="dt">col=</span><span class="kw">c</span>(<span class="st">&quot;grey80&quot;</span>, <span class="st">&quot;#DD4444&quot;</span>, <span class="st">&quot;#55CC55&quot;</span>), 
       <span class="dt">xaxt =</span> <span class="st">&quot;n&quot;</span>, <span class="dt">yaxt =</span> <span class="st">&quot;n&quot;</span>, <span class="dt">ylab =</span> <span class="st">&quot;&quot;</span>, <span class="dt">xlab =</span> <span class="st">&quot;&quot;</span>, 
-      <span class="dt">main =</span> <span class="st">&quot;matrix plot of &#39;good&#39; and &#39;bad&#39; days&quot;</span>, <span class="dt">cex.main =</span> <span class="fl">0.9</span>)
+      <span class="dt">main =</span> <span class="st">&quot;Matrix plot of &#39;good&#39; and &#39;bad&#39; days&quot;</span>, <span class="dt">cex.main =</span> <span class="fl">0.9</span>)
 
-<span class="kw">grid</span>(<span class="dt">nx=</span><span class="dv">7</span>,<span class="dt">ny=</span><span class="dv">9</span>, <span class="dt">col=</span><span class="st">&quot;white&quot;</span>)
-<span class="kw">axis</span>( <span class="dv">1</span>, <span class="dt">at=</span><span class="dv">1</span>:<span class="dv">7</span>, <span class="dt">labels=</span><span class="kw">c</span>(<span class="st">&quot;m&quot;</span>,<span class="st">&quot;tu&quot;</span>,<span class="st">&quot;w&quot;</span>,<span class="st">&quot;th&quot;</span>,<span class="st">&quot;f&quot;</span>,<span class="st">&quot;s&quot;</span>,<span class="st">&quot;su&quot;</span>), <span class="dt">las=</span> <span class="dv">1</span>, <span class="dt">padj=</span>-<span class="dv">1</span>, <span class="dt">tcl=</span><span class="dv">0</span> )
-<span class="kw">axis</span>( <span class="dv">2</span>, <span class="dt">at=</span><span class="dv">1</span>:<span class="dv">9</span>, <span class="dt">labels=</span><span class="kw">paste</span>(<span class="st">&quot;wk&quot;</span>,<span class="dv">9</span>:<span class="dv">1</span>,<span class="dt">sep=</span><span class="st">&quot; &quot;</span>), <span class="dt">las=</span><span class="dv">1</span>, <span class="dt">tcl=</span><span class="dv">0</span>, <span class="dt">hadj=</span><span class="fl">0.7</span> )</code></pre>
+<span class="kw">grid</span>(<span class="dt">nx =</span> <span class="dv">7</span>, <span class="dt">ny =</span> <span class="dv">9</span>, <span class="dt">col =</span> <span class="st">&quot;white&quot;</span>)
+<span class="kw">axis</span>( <span class="dv">1</span>, <span class="dt">at =</span> <span class="dv">1</span>:<span class="dv">7</span>, <span class="dt">labels=</span><span class="kw">c</span>(<span class="st">&quot;M&quot;</span>,<span class="st">&quot;Tu&quot;</span>,<span class="st">&quot;W&quot;</span>,<span class="st">&quot;Th&quot;</span>,<span class="st">&quot;F&quot;</span>,<span class="st">&quot;S&quot;</span>,<span class="st">&quot;Su&quot;</span>), <span class="dt">las=</span><span class="dv">1</span>, <span class="dt">padj=</span>-<span class="dv">1</span>, <span class="dt">tcl=</span><span class="dv">0</span> )
+<span class="kw">axis</span>( <span class="dv">2</span>, <span class="dt">at =</span> <span class="dv">1</span>:<span class="dv">9</span>, <span class="dt">labels=</span><span class="kw">paste</span>(<span class="st">&quot;wk&quot;</span>,<span class="dv">9</span>:<span class="dv">1</span>,<span class="dt">sep=</span><span class="st">&quot; &quot;</span>), <span class="dt">las=</span><span class="dv">1</span>, <span class="dt">tcl=</span><span class="dv">0</span>, <span class="dt">hadj=</span><span class="fl">0.7</span> )</code></pre>
 <p><img src="figures/goodbad-days-matrix-plot-1.png" title="" alt="" width="600" style="display: block; margin: auto;" /></p>
 </div>
 <div id="an-imputing-strategy" class="section level3">
 <h3>An <em>imputing</em> strategy</h3>
-<p>Because the missing data * are concentrated in a few days, * constitute the totality of the entries for those days, and * these <em>missing days</em> are evenly distributed over the days of the week,</p>
+<p>Because the missing data</p>
+<ul>
+<li>are concentrated in a few days,</li>
+<li>constitute the totality of the entries for those days, and</li>
+<li>these <em>missing days</em> are evenly distributed over the days of the week,</li>
+</ul>
 <p>and because of the limited scope of the analysis, it would seem reasonable to consider a very conservative approach towards <em>imputing</em> missing data, such as the three following choices:</p>
 <ol style="list-style-type: decimal">
 <li><p><em>Not</em> impute the missing values, simply exclude the <em>missing days</em> from the analysis.</p></li>
@@ -339,9 +495,8 @@ mat &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="kw
 </ol>
 <p>One important caveat with the latter option is that while it is certainly doable, our sampling is not particularly robust given that we have only a few values for each <code>hour</code> for each day of the week (at most 9).</p>
 <p>Because it would seem <em>lazy</em> to adopt the first approach, let’s take a slightly closer look at the properties of the <em>activity</em> to formulate a plausible plan to implement the second strategy.</p>
-</div>
-<div id="average-activity-pattern-by-day-of-the-week" class="section level3">
-<h3>Average activity pattern by day of the week</h3>
+<div id="average-activity-pattern-by-day-of-the-week" class="section level4">
+<h4>Average activity pattern by day of the week</h4>
 <p>The first thing we can do is to look at the <em>activity</em> data split up by day of the week, making time-series plot averaged by day. First step is summarizing the data set by <code>dayFactor</code> and <code>hour</code> and then plot the seven time-series.</p>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="co"># summarizing by weekday and hour</span>
 ts.ByDay.ByHour &lt;-<span class="st"> </span><span class="kw">ddply</span>(main.m2, .(dayFactor, hour), summarize, 
@@ -352,38 +507,56 @@ ts.ByDay.ByHour &lt;-<span class="st"> </span><span class="kw">ddply</span>(main
 <span class="kw">str</span>(ts.ByDay.ByHour)
 <span class="co"># &#39;data.frame&#39;: 2016 obs. of  5 variables:</span>
 <span class="co">#  $ dayFactor: Ord.factor w/ 7 levels &quot;Monday&quot;&lt;&quot;Tuesday&quot;&lt;..: 1 1 1 1 1 1 1 1 1 1 ...</span>
-<span class="co">#  $ hour     : POSIXct, format: &quot;2015-07-05 00:00:00&quot; &quot;2015-07-05 00:05:00&quot; &quot;2015-07-05 00:10:00&quot; ...</span>
+<span class="co">#  $ hour     : POSIXct, format: &quot;2015-08-01 00:00:00&quot; &quot;2015-08-01 00:05:00&quot; &quot;2015-08-01 00:10:00&quot; ...</span>
 <span class="co">#  $ Avrg     : num  1.43 0 0 0 0 ...</span>
 <span class="co">#  $ Sd       : num  3.78 0 0 0 0 ...</span>
 <span class="co">#  $ N        : int  7 7 7 7 7 7 7 7 7 7 ...</span></code></pre>
+<button class="toggle_plot_code">
+show plot code
+</button>
 <pre class="sourceCode r"><code class="sourceCode r">gm.ByDay.ByHour &lt;-<span class="st"> </span><span class="kw">ggplot</span>(ts.ByDay.ByHour, <span class="kw">aes</span>(hour, Avrg))
-gm.ByDay.ByHour +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span><span class="kw">theme</span>(<span class="dt">legend.position=</span><span class="st">&quot;none&quot;</span>) +
-<span class="st">    </span><span class="kw">geom_line</span>(<span class="kw">aes</span>(<span class="dt">color=</span>dayFactor),<span class="dt">lty=</span><span class="dv">1</span>) +
-<span class="st">    </span><span class="kw">labs</span>(<span class="dt">title=</span><span class="st">&quot;activity averaged over time, by day&quot;</span>) +<span class="st"> </span>
-<span class="st">    </span><span class="kw">labs</span>(<span class="dt">x=</span><span class="st">&quot;hour of the day&quot;</span>) +<span class="st"> </span><span class="kw">labs</span>(<span class="dt">y=</span><span class="st">&quot;number of steps / 5 minutes&quot;</span>) +<span class="st"> </span>
-<span class="st">    </span><span class="kw">facet_wrap</span>( ~<span class="st"> </span>dayFactor, <span class="dt">ncol=</span><span class="dv">1</span>) </code></pre>
+gm.ByDay.ByHour +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">&quot;none&quot;</span>) +
+<span class="st">                </span><span class="kw">geom_line</span>(<span class="kw">aes</span>(<span class="dt">color =</span> dayFactor), <span class="dt">lty =</span> <span class="dv">1</span>) +
+<span class="st">                </span><span class="kw">labs</span>(<span class="dt">title =</span> <span class="st">&quot;activity averaged over time, by day&quot;</span>) +<span class="st"> </span>
+<span class="st">                </span><span class="kw">labs</span>(<span class="dt">x =</span> <span class="st">&quot;hour of the day&quot;</span>) +<span class="st"> </span>
+<span class="st">                </span><span class="kw">labs</span>(<span class="dt">y =</span> <span class="st">&quot;number of steps / 5 minutes&quot;</span>) +<span class="st"> </span>
+<span class="st">                </span><span class="kw">facet_wrap</span>( ~<span class="st"> </span>dayFactor, <span class="dt">ncol =</span> <span class="dv">1</span>) </code></pre>
 <p><img src="figures/plot-seven-1.png" title="" alt="" width="600" style="display: block; margin: auto;" /></p>
-<p>Visual “inspection” seems to suggest that <strong>week days (Monday through Friday) may actually be split in two groups</strong> <code>Monday/Tuesday/Wednesday</code> and <code>Thursday/Friday</code> instead of being combined all together. The averaged <code>Saturday</code> is fairly similar to <code>Friday</code>, sort of in between that and <code>Sunday</code>.</p>
-<p>Let’s see the average activity for the three groups <code>G1 = Monday/Tuesday/Wednesday</code>, <code>G2 = Thursday/Friday</code> and <code>G3 = Saturday/Sunday</code>.</p>
+<p>Visual “inspection” seems to suggest that <strong>week days may actually be split in two groups</strong> <code>Monday/Tuesday/Wednesday</code> and <code>Thursday/Friday</code> instead of being combined all together. The averaged <code>Saturday</code> is fairly similar to <code>Friday</code>, sort of in between that and <code>Sunday</code>.</p>
+<p>Let’s see the average activity for the three groups</p>
+<ul>
+<li><code>G1 = Monday/Tuesday/Wednesday</code></li>
+<li><code>G2 = Thursday/Friday</code> and</li>
+<li><code>G3 = Saturday/Sunday</code>.</li>
+</ul>
+<button class="toggle_code">
+show code
+</button>
 <pre class="sourceCode r"><code class="sourceCode r">main$dayGroup &lt;-<span class="st"> </span>main$dayFactor
 <span class="kw">levels</span>(main$dayGroup) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;G1&quot;</span>,<span class="st">&quot;G1&quot;</span>,<span class="st">&quot;G1&quot;</span>,<span class="st">&quot;G2&quot;</span>,<span class="st">&quot;G2&quot;</span>,<span class="st">&quot;G3&quot;</span>,<span class="st">&quot;G3&quot;</span>)
-main.m2 &lt;-<span class="st"> </span><span class="kw">melt</span>(main[,<span class="kw">c</span>(<span class="st">&quot;steps&quot;</span>,<span class="st">&quot;date&quot;</span>,<span class="st">&quot;hour&quot;</span>,<span class="st">&quot;dayFactor&quot;</span>,<span class="st">&quot;dayFlag&quot;</span>,<span class="st">&quot;dayGroup&quot;</span>)],
-                <span class="dt">id=</span><span class="kw">c</span>(<span class="st">&quot;date&quot;</span>,<span class="st">&quot;hour&quot;</span>,<span class="st">&quot;dayFactor&quot;</span>,<span class="st">&quot;dayFlag&quot;</span>,<span class="st">&quot;dayGroup&quot;</span>), 
-                <span class="dt">measured=</span><span class="kw">c</span>(<span class="st">&quot;steps&quot;</span>), <span class="dt">value.name=</span><span class="st">&quot;steps&quot;</span>, <span class="dt">na.rm=</span><span class="ot">TRUE</span>)
+main.m2 &lt;-<span class="st"> </span><span class="kw">melt</span>(main[, <span class="kw">c</span>(<span class="st">&quot;steps&quot;</span>,<span class="st">&quot;date&quot;</span>,<span class="st">&quot;hour&quot;</span>,<span class="st">&quot;dayFactor&quot;</span>,<span class="st">&quot;dayFlag&quot;</span>,<span class="st">&quot;dayGroup&quot;</span>)],
+                <span class="dt">id =</span> <span class="kw">c</span>(<span class="st">&quot;date&quot;</span>,<span class="st">&quot;hour&quot;</span>,<span class="st">&quot;dayFactor&quot;</span>,<span class="st">&quot;dayFlag&quot;</span>,<span class="st">&quot;dayGroup&quot;</span>), 
+                <span class="dt">measured =</span> <span class="kw">c</span>(<span class="st">&quot;steps&quot;</span>), <span class="dt">value.name=</span><span class="st">&quot;steps&quot;</span>, <span class="dt">na.rm=</span><span class="ot">TRUE</span>)
 
 ts.ByGroup.ByHour &lt;-<span class="st"> </span><span class="kw">ddply</span>(main.m2, .(dayGroup, hour), summarize, 
-                           <span class="dt">Avrg=</span><span class="kw">mean</span>(steps), 
-                           <span class="dt">Sd=</span><span class="kw">sd</span>(steps), 
-                           <span class="dt">N=</span><span class="kw">length</span>(steps))</code></pre>
+                           <span class="dt">Avrg =</span> <span class="kw">mean</span>(steps), 
+                           <span class="dt">Sd =</span> <span class="kw">sd</span>(steps), 
+                           <span class="dt">N =</span> <span class="kw">length</span>(steps))</code></pre>
+<button class="toggle_plot_code">
+show plot code
+</button>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="kw">ggplot</span>(ts.ByGroup.ByHour, <span class="kw">aes</span>(hour, Avrg)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span><span class="kw">theme</span>(<span class="dt">legend.position=</span><span class="st">&quot;none&quot;</span>) +
 <span class="st">    </span><span class="kw">geom_line</span>(<span class="kw">aes</span>(<span class="dt">color=</span>dayGroup),<span class="dt">lty=</span><span class="dv">1</span>) +
 <span class="st">    </span><span class="kw">labs</span>(<span class="dt">title=</span><span class="st">&quot;activity averaged over time, by type of day&quot;</span>) +<span class="st"> </span>
 <span class="st">    </span><span class="kw">labs</span>(<span class="dt">x=</span><span class="st">&quot;hour of the day&quot;</span>) +<span class="st"> </span><span class="kw">labs</span>(<span class="dt">y=</span><span class="st">&quot;number of steps / 5 minutes&quot;</span>) +<span class="st"> </span>
 <span class="st">    </span><span class="kw">facet_wrap</span>( ~<span class="st"> </span>dayGroup, <span class="dt">ncol=</span><span class="dv">1</span>) </code></pre>
 <p><img src="figures/plot-bygroup-1.png" title="" alt="" width="600" style="display: block; margin: auto;" /></p>
+</div>
+<div id="imputation-by-group" class="section level4">
+<h4>Imputation by <em>group</em></h4>
 <p>The plan is then to fill-in the <em>missing days</em> with the average of <em>activity</em> (<em>i.e.</em> <code>steps</code>) of the days of the same group <code>G1|G2|G3</code>.<br />First we create a vector with the sequence of <code>dayGroup</code> strings for the <em>missing days</em>.</p>
 <pre class="sourceCode r"><code class="sourceCode r">bd &lt;-<span class="st"> </span><span class="kw">subset</span>(main, date %in%<span class="st"> </span>BadDays, <span class="dt">select=</span><span class="kw">c</span>(<span class="st">&quot;date&quot;</span>,<span class="st">&quot;hour&quot;</span>,<span class="st">&quot;dayGroup&quot;</span>))
-bd.sequence &lt;-<span class="st"> </span><span class="kw">as.character</span>(<span class="kw">ddply</span>(bd, .(date, dayGroup), summarize, <span class="dt">l=</span><span class="kw">length</span>(dayGroup))$dayGroup)
+bd.sequence &lt;-<span class="st"> </span><span class="kw">as.character</span>(<span class="kw">ddply</span>(bd, .(date, dayGroup), summarize, <span class="dt">l =</span> <span class="kw">length</span>(dayGroup))$dayGroup)
 bd.sequence
 <span class="co"># [1] &quot;G1&quot; &quot;G1&quot; &quot;G2&quot; &quot;G3&quot; &quot;G2&quot; &quot;G3&quot; &quot;G1&quot; &quot;G2&quot;</span></code></pre>
 <p>We prepare templates of the <em>activity</em> for each <code>dayGroup</code>, as numeric vectors, and define a function to get them by string.</p>
@@ -391,7 +564,7 @@ bd.sequence
 template.G2 &lt;-<span class="st"> </span><span class="kw">as.vector</span>(<span class="kw">subset</span>(ts.ByGroup.ByHour, dayGroup==<span class="st">&quot;G2&quot;</span>, <span class="dt">select=</span><span class="kw">c</span>(<span class="st">&quot;Avrg&quot;</span>))$Avrg)
 template.G3 &lt;-<span class="st"> </span><span class="kw">as.vector</span>(<span class="kw">subset</span>(ts.ByGroup.ByHour, dayGroup==<span class="st">&quot;G3&quot;</span>, <span class="dt">select=</span><span class="kw">c</span>(<span class="st">&quot;Avrg&quot;</span>))$Avrg)
 
-get.template &lt;-<span class="st"> </span>function(x) { name&lt;-<span class="kw">paste</span>(<span class="st">&quot;template&quot;</span>,x,<span class="dt">sep=</span><span class="st">&quot;.&quot;</span>); v &lt;-<span class="st"> </span><span class="kw">get</span>(name); <span class="kw">return</span>(v)}</code></pre>
+get.template &lt;-<span class="st"> </span>function(x) { name &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&quot;template&quot;</span>, x, <span class="dt">sep =</span> <span class="st">&quot;.&quot;</span>); v &lt;-<span class="st"> </span><span class="kw">get</span>(name); <span class="kw">return</span>(v)}</code></pre>
 <p>Next we fill a new vector with a sequence of “imputed values”:</p>
 <pre class="sourceCode r"><code class="sourceCode r">newvec &lt;-<span class="st"> </span><span class="kw">vector</span>(<span class="dt">mode=</span><span class="st">&quot;numeric&quot;</span>, <span class="dt">length=</span>Total.NA)
 for(i in <span class="dv">1</span>:<span class="kw">length</span>(bd.sequence)) { 
@@ -416,45 +589,53 @@ main$stepsNew[<span class="kw">is.na</span>(main$steps)] &lt;-<span class="st"> 
 <pre class="sourceCode r"><code class="sourceCode r"><span class="kw">summary</span>(daily.stats$nSteps)
 <span class="co">#    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA&#39;s </span>
 <span class="co">#      41    8841   10760   10770   13290   21190       8</span>
+
 <span class="kw">summary</span>(daily.stats.new$nSteps)
 <span class="co">#    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span>
 <span class="co">#      41    9819   10570   10760   12810   21190</span></code></pre>
+<button class="toggle_plot_code">
+show plot code
+</button>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="kw">par</span>(<span class="dt">mfrow=</span><span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">2</span>))
 <span class="kw">hist</span>(daily.stats.new$nSteps, <span class="dt">breaks=</span><span class="kw">seq</span>(<span class="dv">0</span>,<span class="dv">30000</span>,<span class="dt">by=</span><span class="dv">2500</span>), <span class="dt">col=</span><span class="st">&quot;orange&quot;</span>, 
-     <span class="dt">xlim=</span><span class="kw">c</span>(<span class="dv">0</span>,<span class="dv">25000</span>), <span class="dt">ylim=</span><span class="kw">c</span>(<span class="dv">0</span>,<span class="dv">25</span>),
-     <span class="dt">main=</span><span class="st">&quot;New Distribution of Total Daily Steps&quot;</span>, <span class="dt">xlab=</span><span class="st">&quot;Total Daily Steps&quot;</span>, <span class="dt">ylab=</span><span class="st">&quot;N_{days}&quot;</span>)
+     <span class="dt">xlim =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">25000</span>), 
+     <span class="dt">ylim =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">25</span>),
+     <span class="dt">main =</span> <span class="st">&quot;New Distribution of Total Daily Steps&quot;</span>, 
+     <span class="dt">xlab =</span> <span class="st">&quot;Total Daily Steps&quot;</span>, 
+     <span class="dt">ylab =</span> <span class="st">&quot;N_{days}&quot;</span>)
 
 <span class="kw">hist</span>(daily.stats$nSteps, <span class="dt">breaks=</span><span class="kw">seq</span>(<span class="dv">0</span>,<span class="dv">30000</span>,<span class="dt">by=</span><span class="dv">2500</span>), <span class="dt">col=</span><span class="st">&quot;orange&quot;</span>, 
      <span class="dt">xlim=</span><span class="kw">c</span>(<span class="dv">0</span>,<span class="dv">25000</span>), <span class="dt">ylim=</span><span class="kw">c</span>(<span class="dv">0</span>,<span class="dv">25</span>),
      <span class="dt">main=</span><span class="st">&quot;Distribution of Total Daily Steps&quot;</span>, <span class="dt">xlab=</span><span class="st">&quot;Total Daily Steps&quot;</span>, <span class="dt">ylab=</span><span class="st">&quot;N_{days}&quot;</span>)</code></pre>
 <p><img src="figures/histogram-both-1.png" title="" alt="" width="800" style="display: block; margin: auto;" /></p>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="kw">par</span>(<span class="dt">mfrow=</span><span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">1</span>))</code></pre>
-<p>There distributions exhibit a modest difference but they are in line with what one would have expected with this approach for imputing missing values, namely that the distribution of total daily steps has become more <code>concentrated</code> because we added <em>average days</em> values for the 8 <em>missing days</em>. The same effect is noticeable in the summaries, with the 1st and 3rd quantiles shifted slightly towards the mean.</p>
+<p>There distributions exhibit a modest difference but they are in line with what one would have expected with this approach for imputing missing values, namely that the distribution of total daily steps has become more “concentrated” because we added <em>average days</em> values for the 8 <em>missing days</em>. The same effect is noticeable in the summaries, with the 1st and 3rd quantiles shifted slightly towards the mean.</p>
 <hr class="thin_separator">
 <p><a name="DIFFERENCES"></a></p>
 </div>
 </div>
+</div>
 <div id="differences-in-activity-patterns-between-weekdays-and-weekends" class="section level2">
-<h2>DIFFERENCES IN ACTIVITY PATTERNS BETWEEN WEEKDAYS AND WEEKENDS</h2>
+<h2>Differences in Activity Patterns Between Weekdays and Weekends</h2>
 <div id="average-activity-by-day-type-weekday-vs.weekend" class="section level3">
 <h3>Average activity by day type (weekday vs. weekend)</h3>
 <p>We commented above about a possible dichotomy in the <em>activity</em> patterns of week days, that seem to exhibit two kinds of behaviors.</p>
 <p>Beside that, there exist noticeable differences between week and weekend days, although they are more marked between Monday/Tuesday/Wednesday and weekend days (see plot above).</p>
 <p>Here we show the <em>activity</em> time-series for the averaged 5 week days and the weekend days.</p>
-<pre class="sourceCode r"><code class="sourceCode r">ts.ByFlag.ByHour &lt;-<span class="st"> </span><span class="kw">ddply</span>(main.m2, .(dayFlag, hour), summarize, <span class="dt">Avrg=</span><span class="kw">mean</span>(steps), <span class="dt">Sd=</span><span class="kw">sd</span>(steps), <span class="dt">N=</span><span class="kw">length</span>(steps))
-<span class="kw">str</span>(ts.ByFlag.ByHour)
-<span class="co"># &#39;data.frame&#39;: 576 obs. of  5 variables:</span>
-<span class="co">#  $ dayFlag: Factor w/ 2 levels &quot;weekday&quot;,&quot;weekend&quot;: 1 1 1 1 1 1 1 1 1 1 ...</span>
-<span class="co">#  $ hour   : POSIXct, format: &quot;2015-07-05 00:00:00&quot; &quot;2015-07-05 00:05:00&quot; &quot;2015-07-05 00:10:00&quot; ...</span>
-<span class="co">#  $ Avrg   : num  2.333 0.462 0.179 0.205 0.103 ...</span>
-<span class="co">#  $ Sd     : num  9.252 2.882 1.121 1.281 0.641 ...</span>
-<span class="co">#  $ N      : int  39 39 39 39 39 39 39 39 39 39 ...</span></code></pre>
+<pre class="sourceCode r"><code class="sourceCode r">ts.ByFlag.ByHour &lt;-<span class="st"> </span><span class="kw">ddply</span>(main.m2, .(dayFlag, hour), summarize, 
+                          <span class="dt">Avrg =</span> <span class="kw">mean</span>(steps), 
+                          <span class="dt">Sd =</span> <span class="kw">sd</span>(steps), 
+                          <span class="dt">N =</span> <span class="kw">length</span>(steps))</code></pre>
+<button class="toggle_plot_code">
+show plot code
+</button>
 <pre class="sourceCode r"><code class="sourceCode r">gm.ByFlag.ByHour &lt;-<span class="st"> </span><span class="kw">ggplot</span>(ts.ByFlag.ByHour, <span class="kw">aes</span>(hour, Avrg))
-gm.ByFlag.ByHour +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span><span class="kw">theme</span>(<span class="dt">legend.position=</span><span class="st">&quot;none&quot;</span>) +
-<span class="st">    </span><span class="kw">geom_line</span>(<span class="kw">aes</span>(<span class="dt">color=</span>dayFlag),<span class="dt">lty=</span><span class="dv">1</span>) +
+gm.ByFlag.ByHour +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">&quot;none&quot;</span>) +
+<span class="st">    </span><span class="kw">geom_line</span>(<span class="kw">aes</span>(<span class="dt">color =</span> dayFlag), <span class="dt">lty =</span> <span class="dv">1</span>) +
 <span class="st">    </span><span class="kw">labs</span>(<span class="dt">title=</span><span class="st">&quot;Activity averaged over time, by type of day&quot;</span>) +<span class="st"> </span>
-<span class="st">    </span><span class="kw">labs</span>(<span class="dt">x=</span><span class="st">&quot;Hour of the day&quot;</span>) +<span class="st"> </span><span class="kw">labs</span>(<span class="dt">y=</span><span class="st">&quot;Number of steps / 5 minutes&quot;</span>) +<span class="st"> </span>
-<span class="st">    </span><span class="kw">facet_wrap</span>( ~<span class="st"> </span>dayFlag, <span class="dt">ncol=</span><span class="dv">1</span>) </code></pre>
+<span class="st">    </span><span class="kw">labs</span>(<span class="dt">x =</span> <span class="st">&quot;Hour of the day&quot;</span>) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">labs</span>(<span class="dt">y =</span> <span class="st">&quot;Number of steps / 5 minutes&quot;</span>) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">facet_wrap</span>( ~<span class="st"> </span>dayFlag, <span class="dt">ncol =</span> <span class="dv">1</span>) </code></pre>
 <p><img src="figures/plot-two-1.png" title="" alt="" width="600" style="display: block; margin: auto;" /></p>
 <hr class="separator">
 <p><a name="APPENDIX"></a></p>
@@ -463,6 +644,7 @@ gm.ByFlag.ByHour +<span class="st"> </span><span class="kw">theme_bw</span>() +<
 </div>
 <div id="appendix" class="section level1">
 <h1>APPENDIX</h1>
+<p>[<a href="#TOP">Back to the Top</a>]</p>
 <p><a name="SessionInfo"></a></p>
 <div id="r-session-info" class="section level2">
 <h2>R Session Info</h2>
@@ -485,9 +667,9 @@ gm.ByFlag.ByHour +<span class="st"> </span><span class="kw">theme_bw</span>() +<
 <span class="co"># </span>
 <span class="co"># loaded via a namespace (and not attached):</span>
 <span class="co">#  [1] MASS_7.3-41      Rcpp_0.11.6      colorspace_1.2-6 digest_0.6.8     evaluate_0.7    </span>
-<span class="co">#  [6] formatR_1.2      grid_3.1.3       gtable_0.1.2     htmltools_0.2.6  labeling_0.3    </span>
-<span class="co"># [11] magrittr_1.5     munsell_0.4.2    proto_0.3-10     rmarkdown_0.7    scales_0.2.4    </span>
-<span class="co"># [16] stringi_0.5-5    stringr_1.0.0    tools_3.1.3      yaml_2.1.13</span></code></pre>
+<span class="co">#  [6] formatR_1.2      grid_3.1.3       gtable_0.1.2     highr_0.5        htmltools_0.2.6 </span>
+<span class="co"># [11] labeling_0.3     magrittr_1.5     munsell_0.4.2    proto_0.3-10     rmarkdown_0.7   </span>
+<span class="co"># [16] scales_0.2.4     stringi_0.5-5    stringr_1.0.0    tools_3.1.3      yaml_2.1.13</span></code></pre>
 <hr />
 </div>
 </div>
