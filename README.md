@@ -4,15 +4,21 @@ Mix of projects showcasing some of data science work
 
 A __report__ is available for some of them, hosted under pedrosan.github.io using the _pages_ feature.
 
-* Bike Sharing "Data Challenge":
+* Rent vs. Buy (simulation-based) Calculator
+  * [Introduction and general information](http://pedrosan.github.io/DataScience/Rent_vs_Buy/intro.html)
+  * [Analysis of stock market returns](http://pedrosan.github.io/DataScience/Rent_vs_Buy/returns.html) 
+    (indices) to get a handle on how to include them in the _calculator_.
+  * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Rent_vs_Buy)
+
+* Bike Sharing Data: 
   * [REPORT](http://pedrosan.github.io/DataScienceExamples/Bike_Sharing/)
   * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Bike_Sharing)
 
-* Baby Names "Data Challenge":
+* Baby Names Data:
   * [REPORT](http://pedrosan.github.io/DataScienceExamples/Baby_Names/)
   * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Baby_Names)
 
-* "Data Challenge" on Synthetic Data Set:
+* Synthetic Data Set (challenge):
   * [REPORT](http://pedrosan.github.io/DataScienceExamples/Synthetic_Data/)
   * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Synthetic_Data)
 
@@ -27,11 +33,6 @@ A __report__ is available for some of them, hosted under pedrosan.github.io usin
 * Human and Economic Cost of Major Storm Events: An Analysis of the NOAA/NCDC Database:
   * [REPORT](http://pedrosan.github.io/DataScienceExamples/Impact_of_Major_Storm_Events/)
   * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Impact_of_Major_Storm_Events)
-
-* Rent vs. Buy (simulation-based) calculator
-  * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Rent_vs_Buy)
-  * [Analysis](http://pedrosan.github.io/DataScienceExamples/Rent_vs_Buy/Returns/) of stock market returns 
-    (indices) to get a handle on how to include them in the _calculator_.
 
 * Text Prediction Application
   * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Text_Prediction)
