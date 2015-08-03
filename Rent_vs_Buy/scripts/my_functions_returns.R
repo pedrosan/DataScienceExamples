@@ -1,5 +1,5 @@
 
-## ---- my_functions
+## ---- my_functions_returns
 
 #===================================================================================================
 
@@ -20,8 +20,6 @@ prepare_data <- function(data = NULL, xlin = NULL, xlog = NULL) {
     rr_mean <- mean(returns_rel)
     rr_fit_norm1 <- fitdistr(returns_rel[abs(returns_rel - rr_mean) <= 5.0], "normal")
     rr_fit_norm2 <- fitdistr(returns_rel[abs(returns_rel - rr_mean) <= 2.0], "normal")
-    # rr_fit_norm1 <- fitdistr(returns_rel[abs(returns_rel) <= 5.0], "normal")
-    # rr_fit_norm2 <- fitdistr(returns_rel[abs(returns_rel) <= 2.0], "normal")
 
     rr_fit_norm1_y <- dnorm(xlin, mean = rr_fit_norm1$estimate[1], sd = rr_fit_norm1$estimate[2])
     rr_fit_norm2_y <- dnorm(xlin, mean = rr_fit_norm2$estimate[1], sd = rr_fit_norm2$estimate[2])
@@ -46,8 +44,6 @@ prepare_data <- function(data = NULL, xlin = NULL, xlog = NULL) {
     rl_mean <- mean(returns_log)
     rl_fit_norm1 <- fitdistr(returns_log[abs(returns_log - rl_mean) <= 0.05], "normal")
     rl_fit_norm2 <- fitdistr(returns_log[abs(returns_log - rl_mean) <= 0.02], "normal")
-    # rl_fit_norm1 <- fitdistr(returns_log[abs(returns_log) <= 0.05], "normal")
-    # rl_fit_norm2 <- fitdistr(returns_log[abs(returns_log) <= 0.02], "normal")
 
     rl_fit_norm1_y <- dnorm(xlog, mean = rl_fit_norm1$estimate[1], sd = rl_fit_norm1$estimate[2])
     rl_fit_norm2_y <- dnorm(xlog, mean = rl_fit_norm2$estimate[1], sd = rl_fit_norm2$estimate[2])
@@ -86,8 +82,8 @@ mylog_trans <- function(base = exp(1), from = 0) {
 
 #===================================================================================================
 
-# plot_return_distributions <- function(data = NULL, fits = NULL) {
-plot_distr_rel_returns <- function(data = NULL, fits = NULL) {
+plot_distr_rel_returns <- function(data = NULL, 
+                                   fits = NULL) {
     
     df <- data.frame(returns = data, stringsAsFactors = FALSE)
 
@@ -113,9 +109,9 @@ plot_distr_rel_returns <- function(data = NULL, fits = NULL) {
 }
 
 #===================================================================================================
-# plot_return_distributions_ALT <- function(data = NULL, fits = NULL, xlim = NULL, binwidth = NULL) {
-# plot_return_distributions_ALT <- function(data = NULL, fits = NULL) {
-plot_distr_log_returns <- function(data = NULL, fits = NULL) {
+
+plot_distr_log_returns <- function(data = NULL, 
+                                   fits = NULL) {
     
     df <- data.frame(returns = data, stringsAsFactors = FALSE)
     hh <- hist(data, breaks = seq(-2.5, 2.5, by =0.0025), plot = FALSE)
@@ -145,5 +141,5 @@ plot_distr_log_returns <- function(data = NULL, fits = NULL) {
 
 #===================================================================================================
 
-## ---- end-of-my_functions
+## ---- end-of-my_functions_returns
 

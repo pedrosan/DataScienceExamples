@@ -82,66 +82,96 @@ img {
 
 
 <div id="preliminaries" class="section level2">
-<h2>PRELIMINARIES</h2>
-<p>Libraries needed for data processing and plotting:</p>
+<h2>Preliminaries</h2>
+<ul>
+<li>
+Libraries for data processing —
+<button class="toggle_code">
+show code
+</button>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(<span class="st">&quot;dplyr&quot;</span>)
-<span class="kw">library</span>(<span class="st">&quot;tidyr&quot;</span>)
-<span class="kw">library</span>(<span class="st">&quot;ggplot2&quot;</span>)
-<span class="kw">library</span>(<span class="st">&quot;gridExtra&quot;</span>)</code></pre>
+<span class="kw">library</span>(<span class="st">&quot;tidyr&quot;</span>)</code></pre>
+</li>
+<li>
+Libraries for plotting —
+<button class="toggle_code">
+show code
+</button>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(<span class="st">&quot;ggplot2&quot;</span>)
+<span class="kw">library</span>(<span class="st">&quot;gridExtra&quot;</span>)
+<span class="kw">library</span>(<span class="st">&quot;scales&quot;</span>)</code></pre>
+</li>
+<li>
+Libraries for financial data —
+<button class="toggle_code">
+show code
+</button>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(<span class="st">&quot;quantmod&quot;</span>)
+<span class="kw">library</span>(<span class="st">&quot;GLDEX&quot;</span>)
+<span class="kw">library</span>(<span class="st">&quot;MASS&quot;</span>)</code></pre>
+</li>
+<li>
+User defined functions —
+<button class="toggle_code">
+show code
+</button>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">source</span>(<span class="st">&quot;./scripts/my_functions_returns.R&quot;</span>)</code></pre>
+</li>
+</ul>
 </div>
-<div id="introduction" class="section level2">
-<h2>Introduction</h2>
-<p>Two interesting, blog posts:</p>
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>We will look at data of three broad market indices to get an idea of the movements of the market as a whole and obtain distributions/statistics to use in the <em>Rent vs. Buy</em> application as the basis of the simulated market returns.</p>
+<p>This analysis was motivated by two interesting blog posts:</p>
 <ul>
 <li><a href="http://www.r-bloggers.com/the-generalized-lambda-distribution-and-gldex-package-fitting-financial-return-data/">The Generalized Lambda Distribution and GLDEX Package: Fitting Financial Return Data</a></li>
 <li><a href="http://www.r-bloggers.com/the-generalized-lambda-distribution-and-gldex-package-for-fitting-financial-return-data-part-2/">The Generalized Lambda Distribution and GLDEX Package for Fitting Financial Return Data – Part 2</a></li>
 </ul>
-<p>The GLDEX package is available on <a href="http://cran.r-project.org/web/packages/GLDEX/index.html">CRAN</a></p>
-<p><a name="THE_DATA"></a></p>
-</div>
-<div id="libraries-and-other-setup" class="section level2">
-<h2>Libraries and Other Setup</h2>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(<span class="st">&quot;quantmod&quot;</span>)
-<span class="kw">library</span>(<span class="st">&quot;GLDEX&quot;</span>)
-<span class="kw">library</span>(<span class="st">&quot;MASS&quot;</span>)</code></pre>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(<span class="st">&quot;scales&quot;</span>)
-<span class="kw">source</span>(<span class="st">&quot;./scripts/my_functions.R&quot;</span>)</code></pre>
-<pre class="sourceCode r"><code class="sourceCode r">start.date &lt;-<span class="st"> &quot;1986-01-01&quot;</span>
-end.date &lt;-<span class="st"> &quot;2014-12-31&quot;</span>
-
-xxlin &lt;-<span class="st"> </span><span class="kw">seq</span>(-<span class="fl">25.0</span>, <span class="fl">25.0</span>, <span class="dt">by =</span> <span class="fl">0.1</span>)
-xxlog &lt;-<span class="st"> </span><span class="kw">seq</span>(-<span class="fl">2.0</span>, <span class="fl">2.0</span>, <span class="dt">by =</span> <span class="fl">0.001</span>)</code></pre>
+<p>The GLDEX package is available on <a href="http://cran.r-project.org/web/packages/GLDEX/index.html">CRAN</a>.</p>
 <hr class="thin_separator">
 </div>
 <div id="three-broad-market-indices-daily-returns" class="section level1">
 <h1>Three Broad Market Indices : Daily Returns</h1>
-<p>We will look at data of three broad market indices to get an idea of the movements of the market as a whole and obtain distributions/statistics to use in the <em>Rent vs. Buy</em> application as the basis of the simulated market returns.</p>
-<div id="returns" class="section level2">
-<h2>Returns</h2>
+<p>The three indices we study are:</p>
+<ul>
+<li>Vanguard Total Stock Market Index (<a href="http://finance.yahoo.com/echarts?s=VTSMX+Interactive#{%22range%22:%2210y%22,%22allowChartStacking%22:true}">VTSMX</a>),</li>
+<li>S&amp;P 500 (<a href="http://finance.yahoo.com/echarts?s=\^GSPC+Interactive#{%22range%22:%2210y%22,%22allowChartStacking%22:true}">^GSPC</a>)</li>
+<li>NASDAQ 100 (<a href="http://finance.yahoo.com/echarts?s=^NDX+Interactive#{%22range%22:%2210y%22,%22allowChartStacking%22:true}">^NDX</a>)</li>
+</ul>
+<div id="returns" class="section level3">
+<h3>Returns</h3>
 <p>We consider two (obviously related) quantities expressing the return of an asset described by an ordered set of values <span class="math">\({x_i}\)</span>:</p>
 <ul>
 <li><p><em>log return</em>: <span class="math">\[ {rl}_i = \log\left(\frac{x_i}{x_{i-1}}\right) \]</span></p></li>
 <li><p><em>relative return</em>: <span class="math">\[ {rr}_i = e^{rl_i} - 1 = \frac{x_i - x_{i-1}}{x_{i-1}} \]</span></p></li>
 </ul>
 </div>
-<div id="wilshire-5000" class="section level2">
-<h2>Wilshire 5000</h2>
+<div id="setup" class="section level2">
+<h2>Setup</h2>
+<pre class="sourceCode r"><code class="sourceCode r">start.date &lt;-<span class="st"> &quot;1986-01-01&quot;</span>
+end.date &lt;-<span class="st"> &quot;2014-12-31&quot;</span>
+
+xxlin &lt;-<span class="st"> </span><span class="kw">seq</span>(-<span class="fl">25.0</span>, <span class="fl">25.0</span>, <span class="dt">by =</span> <span class="fl">0.1</span>)
+xxlog &lt;-<span class="st"> </span><span class="kw">seq</span>(-<span class="fl">2.0</span>, <span class="fl">2.0</span>, <span class="dt">by =</span> <span class="fl">0.001</span>)</code></pre>
+</div>
+<div id="vanguard-total-stock-market-index" class="section level2">
+<h2>Vanguard Total Stock Market Index</h2>
 <p>Fetch the data with <code>quantmod</code>:</p>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="co"># getSymbols(&quot;VTSMX&quot;, from = &quot;1994-01-01&quot;)</span>
 <span class="kw">getSymbols</span>(<span class="st">&quot;VTSMX&quot;</span>, <span class="dt">from =</span> start.date, <span class="dt">to =</span> end.date)
 <span class="co"># [1] &quot;VTSMX&quot;</span>
 VTSMX.vec &lt;-<span class="st"> </span><span class="kw">as.vector</span>(VTSMX[, <span class="dv">4</span>])</code></pre>
 <p>Prepare returns:</p>
-<pre class="sourceCode r"><code class="sourceCode r">WW &lt;-<span class="st"> </span><span class="kw">prepare_data</span>(<span class="dt">data =</span> VTSMX.vec, <span class="dt">xlin =</span> xxlin, <span class="dt">xlog =</span> xxlog)
+<pre class="sourceCode r"><code class="sourceCode r">VT &lt;-<span class="st"> </span><span class="kw">prepare_data</span>(<span class="dt">data =</span> VTSMX.vec, <span class="dt">xlin =</span> xxlin, <span class="dt">xlog =</span> xxlog)
 
-WW$dates &lt;-<span class="st"> </span><span class="kw">index</span>(VTSMX)
-WW$year &lt;-<span class="st"> </span><span class="kw">substr</span>(<span class="kw">index</span>(VTSMX), <span class="dv">1</span>, <span class="dv">4</span>)</code></pre>
+VT$dates &lt;-<span class="st"> </span><span class="kw">index</span>(VTSMX)
+VT$year &lt;-<span class="st"> </span><span class="kw">substr</span>(<span class="kw">index</span>(VTSMX), <span class="dv">1</span>, <span class="dv">4</span>)</code></pre>
 <p>The function <code>prepare_data()</code> returns a list with (for each <em>rr</em> and <em>rl</em>): the data themselves, parameters of the best fit with the generalized Gamma distribution, distributions for this latter and two Gaussians fit to the data in two narrow (less than <span class="math">\(\sigma\)</span> wide) ranges around the mean.<br />We add to this list dates from the timeseries <em>index</em> and year:</p>
 <p>This is the structure of the resulting list:</p>
 <button class="toggle_code">
 show output
 </button>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">str</span>(WW)
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">str</span>(VT)
 <span class="co"># List of 12</span>
 <span class="co">#  $ rr_data  : num [1:5714] -0.299 0 1.8 0 0.688 ...</span>
 <span class="co">#  $ rr_fit_gl: num [1:4] 0.077 2.552 -0.279 -0.218</span>
@@ -178,12 +208,12 @@ show output
 <button class="toggle_plot_code">
 show plot code
 </button>
-<p><img src="figures/wilshire5000-plot_distributions_ggplot_3-1.png" title="" alt="" width="1000" style="display: block; margin: auto;" /></p>
+<p><img src="figures/VTSMX-plot_distributions_ggplot_3-1.png" title="" alt="" width="1000" style="display: block; margin: auto;" /></p>
 <hr class="thin_separator">
 </div>
 <div id="sp-500" class="section level3">
 <h3>S&amp;P 500</h3>
-<p>Some treatment as the <em>Wilshire 5000</em> data.</p>
+<p>Some treatment as the <em>VTSMX</em> data.</p>
 <p>Fetch the data with <code>quantmod</code>:</p>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="kw">getSymbols</span>(<span class="st">&quot;^GSPC&quot;</span>, <span class="dt">from =</span> start.date, <span class="dt">to =</span> end.date)
 <span class="co"># [1] &quot;GSPC&quot;</span>
@@ -305,10 +335,10 @@ ndays &lt;-<span class="st"> </span><span class="dv">252</span>
 <span class="co"># N &lt;- 1e6</span>
 
 <span class="kw">set.seed</span>(<span class="dv">1212</span>)
-test_rr.W5000 &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="dv">0</span>, N)
+test_rr.VTSMX &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="dv">0</span>, N)
 for(j in <span class="dv">1</span>:N) {
-    dummy &lt;-<span class="st"> </span><span class="kw">rgl</span>(ndays, WW$rr_fit_gl)
-    test_rr.W5000[j] &lt;-<span class="st"> </span>(<span class="kw">cumprod</span>(<span class="dv">1</span> +<span class="st"> </span>dummy/<span class="dv">100</span>)[ndays] -<span class="st"> </span><span class="fl">1.0</span>)*<span class="dv">100</span>
+    dummy &lt;-<span class="st"> </span><span class="kw">rgl</span>(ndays, VT$rr_fit_gl)
+    test_rr.VTSMX[j] &lt;-<span class="st"> </span>(<span class="kw">cumprod</span>(<span class="dv">1</span> +<span class="st"> </span>dummy/<span class="dv">100</span>)[ndays] -<span class="st"> </span><span class="fl">1.0</span>)*<span class="dv">100</span>
 }
 
 test_rr.SP500 &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="dv">0</span>, N)
@@ -322,6 +352,7 @@ for(j in <span class="dv">1</span>:N) {
     dummy &lt;-<span class="st"> </span><span class="kw">rgl</span>(ndays, NN$rr_fit_gl)
     test_rr.N100[j] &lt;-<span class="st"> </span>(<span class="kw">cumprod</span>(<span class="dv">1</span> +<span class="st"> </span>dummy/<span class="dv">100</span>)[ndays] -<span class="st"> </span><span class="fl">1.0</span>)*<span class="dv">100</span>
 }</code></pre>
+<p>… and from the <em>Gaussian</em> best fit to the “core” of the returns distribution.</p>
 <button class="toggle_code">
 show code
 </button>
@@ -333,17 +364,17 @@ ndays &lt;-<span class="st"> </span><span class="dv">252</span>
 <span class="co"># N &lt;- 1e6</span>
 
 <span class="kw">set.seed</span>(<span class="dv">1414</span>)
-test_rr_n1.W5000 &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="dv">0</span>, N)
+test_rr_n1.VTSMX &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="dv">0</span>, N)
 
 <span class="kw">print</span>(ndays)
 <span class="co"># [1] 252</span>
-<span class="kw">print</span>(WW$rr_fit_n1)
+<span class="kw">print</span>(VT$rr_fit_n1)
 <span class="co">#      mean        sd </span>
 <span class="co"># 0.0402238 1.0624322</span>
 
 for(j in <span class="dv">1</span>:N) {
-    dummy &lt;-<span class="st"> </span><span class="kw">rnorm</span>(ndays, WW$rr_fit_n1)
-    test_rr_n1.W5000[j] &lt;-<span class="st"> </span>(<span class="kw">cumprod</span>(<span class="dv">1</span> +<span class="st"> </span>dummy/<span class="dv">100</span>)[ndays] -<span class="st"> </span><span class="fl">1.0</span>)*<span class="dv">100</span>
+    dummy &lt;-<span class="st"> </span><span class="kw">rnorm</span>(ndays, VT$rr_fit_n1)
+    test_rr_n1.VTSMX[j] &lt;-<span class="st"> </span>(<span class="kw">cumprod</span>(<span class="dv">1</span> +<span class="st"> </span>dummy/<span class="dv">100</span>)[ndays] -<span class="st"> </span><span class="fl">1.0</span>)*<span class="dv">100</span>
 }
 
 test_rr_n1.SP500 &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="dv">0</span>, N)
@@ -357,11 +388,12 @@ for(j in <span class="dv">1</span>:N) {
     dummy &lt;-<span class="st"> </span><span class="kw">rnorm</span>(ndays, NN$rr_fit_n1)
     test_rr_n1.N100[j] &lt;-<span class="st"> </span>(<span class="kw">cumprod</span>(<span class="dv">1</span> +<span class="st"> </span>dummy/<span class="dv">100</span>)[ndays] -<span class="st"> </span><span class="fl">1.0</span>)*<span class="dv">100</span>
 }</code></pre>
+<br />
 <button class="toggle_plot_code">
 show plot code
 </button>
 <pre class="sourceCode r"><code class="sourceCode r">xx2 &lt;-<span class="st"> </span><span class="kw">seq</span>(-<span class="dv">200</span>, <span class="dv">200</span>, <span class="dt">by =</span> <span class="fl">1.0</span>)
-yy.W5000.n &lt;-<span class="st"> </span><span class="kw">dnorm</span>(xx2, <span class="dt">mean =</span> <span class="kw">mean</span>(test_rr.W5000), <span class="dt">sd =</span> <span class="kw">sd</span>(test_rr.W5000))
+yy.VTSMX.n &lt;-<span class="st"> </span><span class="kw">dnorm</span>(xx2, <span class="dt">mean =</span> <span class="kw">mean</span>(test_rr.VTSMX), <span class="dt">sd =</span> <span class="kw">sd</span>(test_rr.VTSMX))
 yy.SP500.n &lt;-<span class="st"> </span><span class="kw">dnorm</span>(xx2, <span class="dt">mean =</span> <span class="kw">mean</span>(test_rr.SP500), <span class="dt">sd =</span> <span class="kw">sd</span>(test_rr.SP500))
 yy.N100.n  &lt;-<span class="st"> </span><span class="kw">dnorm</span>(xx2, <span class="dt">mean =</span> <span class="kw">mean</span>(test_rr.N100), <span class="dt">sd =</span> <span class="kw">sd</span>(test_rr.N100))
 
@@ -369,16 +401,16 @@ yy.N100.n  &lt;-<span class="st"> </span><span class="kw">dnorm</span>(xx2, <spa
      <span class="dt">xlim =</span> <span class="kw">c</span>(-<span class="fl">100.0</span>, <span class="fl">200.0</span>), 
      <span class="dt">ylim =</span> <span class="kw">c</span>(<span class="fl">0.0</span>, <span class="fl">0.037</span>), 
      <span class="dt">xlab =</span> <span class="st">&quot;annual return [%]&quot;</span>, 
-     <span class="dt">main =</span> <span class="st">&quot;Wilshire5000, S&amp;P500, NASDAQ100&quot;</span>)
+     <span class="dt">main =</span> <span class="st">&quot;VTSMX, S&amp;P500, NASDAQ100&quot;</span>)
 <span class="kw">grid</span>()
 <span class="kw">lines</span>(xx2, yy.N100.n,         <span class="dt">col =</span> <span class="st">&quot;red2&quot;</span>,   <span class="dt">lwd =</span> <span class="dv">3</span>, <span class="dt">lty =</span> <span class="dv">3</span>)
 <span class="kw">lines</span>(xx2, yy.SP500.n,        <span class="dt">col =</span> <span class="st">&quot;blue2&quot;</span>,  <span class="dt">lwd =</span> <span class="dv">3</span>, <span class="dt">lty =</span> <span class="dv">3</span>)
-<span class="kw">lines</span>(xx2, yy.W5000.n,        <span class="dt">col =</span> <span class="st">&quot;green3&quot;</span>, <span class="dt">lwd =</span> <span class="dv">3</span>, <span class="dt">lty =</span> <span class="dv">3</span>)
+<span class="kw">lines</span>(xx2, yy.VTSMX.n,        <span class="dt">col =</span> <span class="st">&quot;green3&quot;</span>, <span class="dt">lwd =</span> <span class="dv">3</span>, <span class="dt">lty =</span> <span class="dv">3</span>)
 <span class="kw">lines</span>(<span class="kw">density</span>(test_rr.N100),  <span class="dt">col =</span> <span class="st">&quot;red2&quot;</span>,   <span class="dt">lwd =</span> <span class="dv">3</span>)
 <span class="kw">lines</span>(<span class="kw">density</span>(test_rr.SP500), <span class="dt">col =</span> <span class="st">&quot;blue2&quot;</span>,  <span class="dt">lwd =</span> <span class="dv">3</span>)
-<span class="kw">lines</span>(<span class="kw">density</span>(test_rr.W5000), <span class="dt">col =</span> <span class="st">&quot;green3&quot;</span>, <span class="dt">lwd =</span> <span class="dv">3</span>)
+<span class="kw">lines</span>(<span class="kw">density</span>(test_rr.VTSMX), <span class="dt">col =</span> <span class="st">&quot;green3&quot;</span>, <span class="dt">lwd =</span> <span class="dv">3</span>)
 <span class="kw">legend</span>(<span class="st">&quot;topleft&quot;</span>, <span class="dt">bty =</span> <span class="st">&quot;y&quot;</span>, <span class="dt">bg =</span> <span class="st">&quot;grey95&quot;</span>, <span class="dt">x.intersp =</span> <span class="fl">0.7</span>, <span class="dt">y.intersp =</span> <span class="fl">0.8</span>, 
-       <span class="dt">legend =</span> <span class="kw">c</span>(<span class="st">&quot;Nasdaq100&quot;</span>, <span class="st">&quot;S&amp;P 500&quot;</span>, <span class="st">&quot;Wilshire5000&quot;</span>), 
+       <span class="dt">legend =</span> <span class="kw">c</span>(<span class="st">&quot;Nasdaq100&quot;</span>, <span class="st">&quot;S&amp;P 500&quot;</span>, <span class="st">&quot;VTSMX&quot;</span>), 
        <span class="dt">lty =</span> <span class="dv">1</span>, <span class="dt">lwd =</span> <span class="dv">3</span>,
        <span class="dt">col =</span> <span class="kw">c</span>(<span class="st">&quot;red2&quot;</span>, <span class="st">&quot;blue2&quot;</span>, <span class="st">&quot;green3&quot;</span>),
        <span class="dt">cex =</span> <span class="fl">1.0</span>)
@@ -388,9 +420,6 @@ yy.N100.n  &lt;-<span class="st"> </span><span class="kw">dnorm</span>(xx2, <spa
        <span class="dt">col =</span> <span class="kw">c</span>(<span class="st">&quot;grey10&quot;</span>, <span class="st">&quot;grey10&quot;</span>),
        <span class="dt">cex =</span> <span class="fl">1.0</span>)</code></pre>
 <p><img src="figures/plot-annual_returns_distr_1_rr-1.png" title="" alt="" width="800" style="display: block; margin: auto;" /></p>
-<button class="toggle_plot_code">
-show plot code
-</button>
 </div>
 <div id="annual-straight-from-data" class="section level2">
 <h2>Annual straight from data</h2>
@@ -399,15 +428,15 @@ show plot code
 <button class="toggle_code">
 show code
 </button>
-<pre class="sourceCode r"><code class="sourceCode r">WWb &lt;-<span class="st"> </span>VTSMX.vec[WW$year &gt;=<span class="st"> </span><span class="dv">1994</span>]
+<pre class="sourceCode r"><code class="sourceCode r">VTb &lt;-<span class="st"> </span>VTSMX.vec[VT$year &gt;=<span class="st"> </span><span class="dv">1994</span>]
 SPb &lt;-<span class="st"> </span>GSPC.vec[SP$year &gt;=<span class="st"> </span><span class="dv">1994</span>]
 NNb &lt;-<span class="st"> </span>NDX.vec[NN$year &gt;=<span class="st"> </span><span class="dv">1994</span>]
-WWd &lt;-<span class="st"> </span><span class="kw">index</span>(VTSMX)[WW$year &gt;=<span class="st"> </span><span class="dv">1994</span>]
+VTd &lt;-<span class="st"> </span><span class="kw">index</span>(VTSMX)[VT$year &gt;=<span class="st"> </span><span class="dv">1994</span>]
 SPd &lt;-<span class="st"> </span><span class="kw">index</span>(GSPC)[SP$year &gt;=<span class="st"> </span><span class="dv">1994</span>]
 NNd &lt;-<span class="st"> </span><span class="kw">index</span>(NDX)[NN$year &gt;=<span class="st"> </span><span class="dv">1994</span>]
 
-W5000_rla &lt;-<span class="st"> </span><span class="kw">diff</span>(<span class="kw">log</span>(WWb), <span class="dt">lag =</span> <span class="dv">252</span>)
-W5000_rra &lt;-<span class="st"> </span><span class="fl">100.0</span>*(<span class="kw">exp</span>(W5000_rla)-<span class="dv">1</span>)
+VTSMX_rla &lt;-<span class="st"> </span><span class="kw">diff</span>(<span class="kw">log</span>(VTb), <span class="dt">lag =</span> <span class="dv">252</span>)
+VTSMX_rra &lt;-<span class="st"> </span><span class="fl">100.0</span>*(<span class="kw">exp</span>(VTSMX_rla)-<span class="dv">1</span>)
 
 SP500_rla &lt;-<span class="st"> </span><span class="kw">diff</span>(<span class="kw">log</span>(SPb), <span class="dt">lag =</span> <span class="dv">252</span>)
 SP500_rra &lt;-<span class="st"> </span><span class="fl">100.0</span>*(<span class="kw">exp</span>(SP500_rla)-<span class="dv">1</span>)
@@ -415,14 +444,14 @@ SP500_rra &lt;-<span class="st"> </span><span class="fl">100.0</span>*(<span cla
 N100_rla &lt;-<span class="st"> </span><span class="kw">diff</span>(<span class="kw">log</span>(NNb), <span class="dt">lag =</span> <span class="dv">252</span>)
 N100_rra &lt;-<span class="st"> </span><span class="fl">100.0</span>*(<span class="kw">exp</span>(N100_rla)-<span class="dv">1</span>)
 
-rr.df &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">date =</span> WWd[-(<span class="dv">1</span>:<span class="dv">252</span>)], <span class="dt">WW =</span> W5000_rra, <span class="dt">SP =</span> SP500_rra, <span class="dt">NN =</span> N100_rra)
+rr.df &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">date =</span> VTd[-(<span class="dv">1</span>:<span class="dv">252</span>)], <span class="dt">VT =</span> VTSMX_rra, <span class="dt">SP =</span> SP500_rra, <span class="dt">NN =</span> N100_rra)
 rr.df$time &lt;-<span class="st"> </span><span class="kw">as.POSIXct</span>(rr.df$date)
 
-rr.df$WWidx &lt;-<span class="st"> </span>WWb[-(<span class="dv">1</span>:<span class="dv">252</span>)]
+rr.df$VTidx &lt;-<span class="st"> </span>VTb[-(<span class="dv">1</span>:<span class="dv">252</span>)]
 rr.df$SPidx &lt;-<span class="st"> </span>SPb[-(<span class="dv">1</span>:<span class="dv">252</span>)]
 rr.df$NNidx &lt;-<span class="st"> </span>NNb[-(<span class="dv">1</span>:<span class="dv">252</span>)]
 
-rr.df$WWidx_n &lt;-<span class="st"> </span>WWb[-(<span class="dv">1</span>:<span class="dv">252</span>)]/rr.df$WWidx[rr.df$date ==<span class="st"> &quot;1996-01-02&quot;</span>]
+rr.df$VTidx_n &lt;-<span class="st"> </span>VTb[-(<span class="dv">1</span>:<span class="dv">252</span>)]/rr.df$VTidx[rr.df$date ==<span class="st"> &quot;1996-01-02&quot;</span>]
 rr.df$SPidx_n &lt;-<span class="st"> </span>SPb[-(<span class="dv">1</span>:<span class="dv">252</span>)]/rr.df$SPidx[rr.df$date ==<span class="st"> &quot;1996-01-02&quot;</span>]
 rr.df$NNidx_n &lt;-<span class="st"> </span>NNb[-(<span class="dv">1</span>:<span class="dv">252</span>)]/rr.df$NNidx[rr.df$date ==<span class="st"> &quot;1996-01-02&quot;</span>]</code></pre>
 <p>This crude estimates of annual returns are plotted here with dotted distributions, which exhibit a significant degree of irregularity. In particular all indices, being all stock-based, show similar double humped structure with a main hump at moderate positive returns and a smaller one at around 10-40% negative returns.</p>
@@ -430,20 +459,20 @@ rr.df$NNidx_n &lt;-<span class="st"> </span>NNb[-(<span class="dv">1</span>:<spa
 <button class="toggle_plot_code">
 show plot code
 </button>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(<span class="kw">density</span>(W5000_rra), <span class="dt">type =</span> <span class="st">&quot;n&quot;</span>, 
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(<span class="kw">density</span>(VTSMX_rra), <span class="dt">type =</span> <span class="st">&quot;n&quot;</span>, 
      <span class="dt">xlim =</span> <span class="kw">c</span>(-<span class="fl">100.0</span>, <span class="fl">200.0</span>), 
      <span class="dt">ylim =</span> <span class="kw">c</span>(<span class="fl">0.0</span>, <span class="fl">0.037</span>), 
      <span class="dt">xlab =</span> <span class="st">&quot;annual return [%]&quot;</span>, 
-     <span class="dt">main =</span> <span class="st">&quot;Wilshire5000, S&amp;P500, NASDAQ100&quot;</span>)
+     <span class="dt">main =</span> <span class="st">&quot;VTSMX, S&amp;P500, NASDAQ100&quot;</span>)
 <span class="kw">grid</span>()
 <span class="kw">lines</span>(<span class="kw">density</span>(N100_rra),      <span class="dt">col =</span> <span class="st">&quot;red2&quot;</span>,   <span class="dt">lwd =</span> <span class="dv">3</span>, <span class="dt">lty =</span> <span class="dv">3</span>)
 <span class="kw">lines</span>(<span class="kw">density</span>(SP500_rra),     <span class="dt">col =</span> <span class="st">&quot;blue2&quot;</span>,  <span class="dt">lwd =</span> <span class="dv">3</span>, <span class="dt">lty =</span> <span class="dv">3</span>)
-<span class="kw">lines</span>(<span class="kw">density</span>(W5000_rra),     <span class="dt">col =</span> <span class="st">&quot;green3&quot;</span>, <span class="dt">lwd =</span> <span class="dv">3</span>, <span class="dt">lty =</span> <span class="dv">3</span>)
+<span class="kw">lines</span>(<span class="kw">density</span>(VTSMX_rra),     <span class="dt">col =</span> <span class="st">&quot;green3&quot;</span>, <span class="dt">lwd =</span> <span class="dv">3</span>, <span class="dt">lty =</span> <span class="dv">3</span>)
 <span class="kw">lines</span>(<span class="kw">density</span>(test_rr.N100),  <span class="dt">col =</span> <span class="st">&quot;red2&quot;</span>,   <span class="dt">lwd =</span> <span class="dv">3</span>)
 <span class="kw">lines</span>(<span class="kw">density</span>(test_rr.SP500), <span class="dt">col =</span> <span class="st">&quot;blue2&quot;</span>,  <span class="dt">lwd =</span> <span class="dv">3</span>)
-<span class="kw">lines</span>(<span class="kw">density</span>(test_rr.W5000), <span class="dt">col =</span> <span class="st">&quot;green3&quot;</span>, <span class="dt">lwd =</span> <span class="dv">3</span>)
+<span class="kw">lines</span>(<span class="kw">density</span>(test_rr.VTSMX), <span class="dt">col =</span> <span class="st">&quot;green3&quot;</span>, <span class="dt">lwd =</span> <span class="dv">3</span>)
 <span class="kw">legend</span>(<span class="st">&quot;topleft&quot;</span>, <span class="dt">bty =</span> <span class="st">&quot;y&quot;</span>, <span class="dt">bg =</span> <span class="st">&quot;grey95&quot;</span>, <span class="dt">x.intersp =</span> <span class="fl">0.7</span>, <span class="dt">y.intersp =</span> <span class="fl">0.8</span>, 
-       <span class="dt">legend =</span> <span class="kw">c</span>(<span class="st">&quot;Nasdaq100&quot;</span>, <span class="st">&quot;S&amp;P 500&quot;</span>, <span class="st">&quot;Wilshire5000&quot;</span>), 
+       <span class="dt">legend =</span> <span class="kw">c</span>(<span class="st">&quot;Nasdaq100&quot;</span>, <span class="st">&quot;S&amp;P 500&quot;</span>, <span class="st">&quot;VTSMX&quot;</span>), 
        <span class="dt">lty =</span> <span class="dv">1</span>, <span class="dt">lwd =</span> <span class="dv">3</span>,
        <span class="dt">col =</span> <span class="kw">c</span>(<span class="st">&quot;red2&quot;</span>, <span class="st">&quot;blue2&quot;</span>, <span class="st">&quot;green3&quot;</span>),
        <span class="dt">cex =</span> <span class="fl">1.0</span>)
@@ -453,13 +482,13 @@ show plot code
        <span class="dt">col =</span> <span class="kw">c</span>(<span class="st">&quot;grey10&quot;</span>, <span class="st">&quot;grey10&quot;</span>),
        <span class="dt">cex =</span> <span class="fl">1.0</span>)</code></pre>
 <p><img src="figures/plot-annual_returns_distr_2-1.png" title="" alt="" width="800" style="display: block; margin: auto;" /></p>
-<div id="time-series-plots-of-returns" class="section level4">
-<h4>Time-series plots of returns</h4>
+<div id="time-series-plots-of-returns" class="section level3">
+<h3>Time-series plots of returns</h3>
 <button class="toggle_plot_code">
 show plot code
 </button>
-<pre class="sourceCode r"><code class="sourceCode r">tmp &lt;-<span class="st"> </span>dplyr::<span class="kw">select</span>(rr.df, date, time, WW, SP, NN) %&gt;%<span class="st"> </span>
-<span class="st">              </span><span class="kw">gather</span>(. , name, value, NN, SP, WW)
+<pre class="sourceCode r"><code class="sourceCode r">tmp &lt;-<span class="st"> </span>dplyr::<span class="kw">select</span>(rr.df, date, time, VT, SP, NN) %&gt;%<span class="st"> </span>
+<span class="st">              </span><span class="kw">gather</span>(. , name, value, NN, SP, VT)
 
 <span class="kw">ggplot</span>(<span class="dt">data =</span> tmp, <span class="kw">aes</span>(<span class="dt">x =</span> date, <span class="dt">y =</span> value)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span>
 <span class="st">       </span><span class="kw">theme</span>(<span class="dt">axis.title =</span> <span class="kw">element_text</span>(<span class="dt">size =</span> <span class="dv">16</span>),
@@ -472,16 +501,16 @@ show plot code
 <span class="st">       </span><span class="kw">geom_hline</span>(<span class="dt">h=</span><span class="dv">0</span>, <span class="dt">lty =</span> <span class="dv">2</span>, <span class="dt">col =</span> <span class="st">&quot;orange&quot;</span>) +
 <span class="st">       </span><span class="kw">geom_line</span>(<span class="kw">aes</span>(<span class="dt">color =</span> name)) +<span class="st"> </span>
 <span class="st">       </span><span class="kw">scale_colour_manual</span>(<span class="dt">values =</span> <span class="kw">c</span>(<span class="st">&quot;red2&quot;</span>, <span class="st">&quot;blue2&quot;</span>, <span class="st">&quot;green4&quot;</span>), <span class="dt">name =</span> <span class="st">&quot;Index&quot;</span>, 
-                           <span class="dt">labels =</span> <span class="kw">c</span>(<span class="st">&quot;NASDAQ100&quot;</span>, <span class="st">&quot;S&amp;P500&quot;</span>, <span class="st">&quot;Wilshire5000&quot;</span>))</code></pre>
+                           <span class="dt">labels =</span> <span class="kw">c</span>(<span class="st">&quot;NASDAQ100&quot;</span>, <span class="st">&quot;S&amp;P500&quot;</span>, <span class="st">&quot;VTSMX&quot;</span>))</code></pre>
 <p><img src="figures/plot-annual_returns_timeseries_ggplot_ALT-1.png" title="" alt="" width="1000" style="display: block; margin: auto;" /></p>
 </div>
-<div id="time-series-plots-of-indices-normalized-to-1996-01-02" class="section level4">
-<h4>Time-series plots of indices (normalized to 1996-01-02)</h4>
+<div id="time-series-plots-of-indices-normalized-to-1996-01-02" class="section level3">
+<h3>Time-series plots of indices (normalized to 1996-01-02)</h3>
 <button class="toggle_plot_code">
 show plot code
 </button>
-<pre class="sourceCode r"><code class="sourceCode r">tmp &lt;-<span class="st"> </span>dplyr::<span class="kw">select</span>(rr.df, date, time, WWidx_n, SPidx_n, NNidx_n) %&gt;%<span class="st"> </span>
-<span class="st">              </span><span class="kw">gather</span>(. , name, value, NNidx_n, SPidx_n, WWidx_n)
+<pre class="sourceCode r"><code class="sourceCode r">tmp &lt;-<span class="st"> </span>dplyr::<span class="kw">select</span>(rr.df, date, time, VTidx_n, SPidx_n, NNidx_n) %&gt;%<span class="st"> </span>
+<span class="st">              </span><span class="kw">gather</span>(. , name, value, NNidx_n, SPidx_n, VTidx_n)
 
 <span class="kw">ggplot</span>(<span class="dt">data =</span> tmp, <span class="kw">aes</span>(<span class="dt">x =</span> date, <span class="dt">y =</span> value)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span>
 <span class="st">       </span><span class="kw">theme</span>(<span class="dt">axis.title =</span> <span class="kw">element_text</span>(<span class="dt">size =</span> <span class="dv">16</span>),
@@ -496,9 +525,9 @@ show plot code
 <span class="st">       </span><span class="kw">geom_vline</span>(<span class="dt">xintercept =</span> <span class="kw">as.numeric</span>(<span class="kw">as.Date</span>(<span class="st">&quot;1996-01-02&quot;</span>)), <span class="dt">lty =</span> <span class="dv">2</span>, <span class="dt">col =</span> <span class="st">&quot;orange&quot;</span>) +
 <span class="st">       </span><span class="kw">geom_line</span>(<span class="kw">aes</span>(<span class="dt">color =</span> name)) +<span class="st"> </span>
 <span class="st">       </span><span class="kw">scale_colour_manual</span>(<span class="dt">values =</span> <span class="kw">c</span>(<span class="st">&quot;red2&quot;</span>, <span class="st">&quot;blue2&quot;</span>, <span class="st">&quot;green4&quot;</span>), <span class="dt">name =</span> <span class="st">&quot;Index&quot;</span>, 
-                           <span class="dt">labels =</span> <span class="kw">c</span>(<span class="st">&quot;NASDAQ100&quot;</span>, <span class="st">&quot;S&amp;P500&quot;</span>, <span class="st">&quot;Wilshire5000&quot;</span>))</code></pre>
+                           <span class="dt">labels =</span> <span class="kw">c</span>(<span class="st">&quot;NASDAQ100&quot;</span>, <span class="st">&quot;S&amp;P500&quot;</span>, <span class="st">&quot;VTSMX&quot;</span>))</code></pre>
 <p><img src="figures/plot-indices_timeseries_ggplot_norm_ALT-1.png" title="" alt="" width="1000" style="display: block; margin: auto;" /></p>
-<hr class="separator">
+<hr class="thin_separator">
 <p><a name="APPENDIX"></a></p>
 </div>
 </div>
@@ -508,7 +537,7 @@ show plot code
 <p><a name="APPENDIX-functions"></a></p>
 <div id="functions" class="section level2">
 <h2>Functions</h2>
-<p>Source code of the user-defined functions in <a href="https://github.com/pedrosan/DataScienceExamples/tree/master/Rent_vs_Buy/Returns/scripts/my_functions.R">scripts/my_functions.R</a></p>
+<p>Source code of the user-defined functions in <a href="https://github.com/pedrosan/DataScienceExamples/tree/master/Rent_vs_Buy/scripts/my_functions_returns.R">scripts/my_functions_returns.R</a></p>
 <button class="toggle_code">
 show code
 </button>
@@ -531,8 +560,6 @@ prepare_data &lt;-<span class="st"> </span>function(<span class="dt">data =</spa
     rr_mean &lt;-<span class="st"> </span><span class="kw">mean</span>(returns_rel)
     rr_fit_norm1 &lt;-<span class="st"> </span><span class="kw">fitdistr</span>(returns_rel[<span class="kw">abs</span>(returns_rel -<span class="st"> </span>rr_mean) &lt;=<span class="st"> </span><span class="fl">5.0</span>], <span class="st">&quot;normal&quot;</span>)
     rr_fit_norm2 &lt;-<span class="st"> </span><span class="kw">fitdistr</span>(returns_rel[<span class="kw">abs</span>(returns_rel -<span class="st"> </span>rr_mean) &lt;=<span class="st"> </span><span class="fl">2.0</span>], <span class="st">&quot;normal&quot;</span>)
-    <span class="co"># rr_fit_norm1 &lt;- fitdistr(returns_rel[abs(returns_rel) &lt;= 5.0], &quot;normal&quot;)</span>
-    <span class="co"># rr_fit_norm2 &lt;- fitdistr(returns_rel[abs(returns_rel) &lt;= 2.0], &quot;normal&quot;)</span>
 
     rr_fit_norm1_y &lt;-<span class="st"> </span><span class="kw">dnorm</span>(xlin, <span class="dt">mean =</span> rr_fit_norm1$estimate[<span class="dv">1</span>], <span class="dt">sd =</span> rr_fit_norm1$estimate[<span class="dv">2</span>])
     rr_fit_norm2_y &lt;-<span class="st"> </span><span class="kw">dnorm</span>(xlin, <span class="dt">mean =</span> rr_fit_norm2$estimate[<span class="dv">1</span>], <span class="dt">sd =</span> rr_fit_norm2$estimate[<span class="dv">2</span>])
@@ -557,8 +584,6 @@ prepare_data &lt;-<span class="st"> </span>function(<span class="dt">data =</spa
     rl_mean &lt;-<span class="st"> </span><span class="kw">mean</span>(returns_log)
     rl_fit_norm1 &lt;-<span class="st"> </span><span class="kw">fitdistr</span>(returns_log[<span class="kw">abs</span>(returns_log -<span class="st"> </span>rl_mean) &lt;=<span class="st"> </span><span class="fl">0.05</span>], <span class="st">&quot;normal&quot;</span>)
     rl_fit_norm2 &lt;-<span class="st"> </span><span class="kw">fitdistr</span>(returns_log[<span class="kw">abs</span>(returns_log -<span class="st"> </span>rl_mean) &lt;=<span class="st"> </span><span class="fl">0.02</span>], <span class="st">&quot;normal&quot;</span>)
-    <span class="co"># rl_fit_norm1 &lt;- fitdistr(returns_log[abs(returns_log) &lt;= 0.05], &quot;normal&quot;)</span>
-    <span class="co"># rl_fit_norm2 &lt;- fitdistr(returns_log[abs(returns_log) &lt;= 0.02], &quot;normal&quot;)</span>
 
     rl_fit_norm1_y &lt;-<span class="st"> </span><span class="kw">dnorm</span>(xlog, <span class="dt">mean =</span> rl_fit_norm1$estimate[<span class="dv">1</span>], <span class="dt">sd =</span> rl_fit_norm1$estimate[<span class="dv">2</span>])
     rl_fit_norm2_y &lt;-<span class="st"> </span><span class="kw">dnorm</span>(xlog, <span class="dt">mean =</span> rl_fit_norm2$estimate[<span class="dv">1</span>], <span class="dt">sd =</span> rl_fit_norm2$estimate[<span class="dv">2</span>])
@@ -597,8 +622,8 @@ mylog_trans &lt;-<span class="st"> </span>function(<span class="dt">base =</span
 
 <span class="co">#===================================================================================================</span>
 
-<span class="co"># plot_return_distributions &lt;- function(data = NULL, fits = NULL) {</span>
-plot_distr_rel_returns &lt;-<span class="st"> </span>function(<span class="dt">data =</span> <span class="ot">NULL</span>, <span class="dt">fits =</span> <span class="ot">NULL</span>) {
+plot_distr_rel_returns &lt;-<span class="st"> </span>function(<span class="dt">data =</span> <span class="ot">NULL</span>, 
+                                   <span class="dt">fits =</span> <span class="ot">NULL</span>) {
     
     df &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">returns =</span> data, <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
 
@@ -624,9 +649,9 @@ plot_distr_rel_returns &lt;-<span class="st"> </span>function(<span class="dt">d
 }
 
 <span class="co">#===================================================================================================</span>
-<span class="co"># plot_return_distributions_ALT &lt;- function(data = NULL, fits = NULL, xlim = NULL, binwidth = NULL) {</span>
-<span class="co"># plot_return_distributions_ALT &lt;- function(data = NULL, fits = NULL) {</span>
-plot_distr_log_returns &lt;-<span class="st"> </span>function(<span class="dt">data =</span> <span class="ot">NULL</span>, <span class="dt">fits =</span> <span class="ot">NULL</span>) {
+
+plot_distr_log_returns &lt;-<span class="st"> </span>function(<span class="dt">data =</span> <span class="ot">NULL</span>, 
+                                   <span class="dt">fits =</span> <span class="ot">NULL</span>) {
     
     df &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">returns =</span> data, <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
     hh &lt;-<span class="st"> </span><span class="kw">hist</span>(data, <span class="dt">breaks =</span> <span class="kw">seq</span>(-<span class="fl">2.5</span>, <span class="fl">2.5</span>, <span class="dt">by =</span><span class="fl">0.0025</span>), <span class="dt">plot =</span> <span class="ot">FALSE</span>)
@@ -674,16 +699,16 @@ plot_distr_log_returns &lt;-<span class="st"> </span>function(<span class="dt">d
 <span class="co"># [1] grid      stats     graphics  grDevices utils     datasets  methods   base     </span>
 <span class="co"># </span>
 <span class="co"># other attached packages:</span>
-<span class="co">#  [1] scales_0.2.4    MASS_7.3-41     GLDEX_2.0.0.2   cluster_2.0.1   quantmod_0.4-4  TTR_0.22-0     </span>
-<span class="co">#  [7] xts_0.9-7       zoo_1.7-12      gridExtra_0.9.1 ggplot2_1.0.1   tidyr_0.2.0     dplyr_0.4.2    </span>
+<span class="co">#  [1] MASS_7.3-41     GLDEX_2.0.0.2   cluster_2.0.1   quantmod_0.4-4  TTR_0.22-0      xts_0.9-7      </span>
+<span class="co">#  [7] zoo_1.7-12      scales_0.2.4    gridExtra_0.9.1 ggplot2_1.0.1   tidyr_0.2.0     dplyr_0.4.2    </span>
 <span class="co"># [13] knitr_1.10.5   </span>
 <span class="co"># </span>
 <span class="co"># loaded via a namespace (and not attached):</span>
-<span class="co">#  [1] DBI_0.3.1        R6_2.0.1         Rcpp_0.11.6      assertthat_0.1   colorspace_1.2-6</span>
-<span class="co">#  [6] digest_0.6.8     evaluate_0.7     formatR_1.2      gtable_0.1.2     htmltools_0.2.6 </span>
-<span class="co"># [11] labeling_0.3     lattice_0.20-31  lazyeval_0.1.10  magrittr_1.5     munsell_0.4.2   </span>
-<span class="co"># [16] parallel_3.1.3   plyr_1.8.3       proto_0.3-10     reshape2_1.4.1   rmarkdown_0.7   </span>
-<span class="co"># [21] stringi_0.5-5    stringr_1.0.0    tools_3.1.3      yaml_2.1.13</span></code></pre>
+<span class="co">#  [1] DBI_0.3.1        R6_2.0.1         Rcpp_0.11.6      assertthat_0.1   codetools_0.2-11</span>
+<span class="co">#  [6] colorspace_1.2-6 digest_0.6.8     evaluate_0.7     formatR_1.2      gtable_0.1.2    </span>
+<span class="co"># [11] htmltools_0.2.6  labeling_0.3     lattice_0.20-31  lazyeval_0.1.10  magrittr_1.5    </span>
+<span class="co"># [16] munsell_0.4.2    parallel_3.1.3   plyr_1.8.3       proto_0.3-10     reshape2_1.4.1  </span>
+<span class="co"># [21] rmarkdown_0.7    stringi_0.5-5    stringr_1.0.0    tools_3.1.3      yaml_2.1.13</span></code></pre>
 <hr />
 </div>
 </div>
