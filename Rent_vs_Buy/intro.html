@@ -121,14 +121,43 @@ img {
 <p>Investment returns could be drawn from a proxy for different investing styles: bond indexes for conservative, S&amp;P500 for middle-ground, NASDAQ composite for more aggressive approach.<br />Real estate property values could be adjusted regionally, increasing the usefulness and relevance of the Calculator.</p>
 <p>The data exist and accessible. I just did not have time to bring them into <em>the fold</em>…</p>
 <p>An example is shown below.</p>
-<div id="example-of-summary-plot" class="section level4">
-<h4>Example of Summary Plot</h4>
+<div id="examples-of-results-with-their-summary-plots" class="section level3">
+<h3>Examples of results with their summary plots</h3>
+<div id="case-1" class="section level4">
+<h4>Case 1</h4>
 <button class="toggle_code">
-show output
+show parameter values
 </button>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Define parameters (names and values)</span>
+<pre class="sourceCode r"><code class="sourceCode r">test_input1 &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">start_prop_value =</span> <span class="dv">200000</span>, 
+                    <span class="dt">down_payment_pct =</span> <span class="fl">20.0</span>, 
+                    <span class="dt">mortgage_rate    =</span> <span class="fl">4.5</span>, 
+                    <span class="dt">n_years          =</span> <span class="dv">30</span>, 
+                    <span class="dt">initial_fixed_costs =</span> <span class="fl">6000.0</span>, 
+                    <span class="dt">prop_tax_rate_pct   =</span>  <span class="fl">2.05</span>,
+                    <span class="dt">prop_insurance      =</span> <span class="fl">4000.0</span>, 
+                    <span class="dt">HOA_monthly_fee     =</span>  <span class="fl">400.0</span>,
+                    <span class="dt">start_rent          =</span> <span class="fl">1500.0</span>, 
+                    <span class="dt">rent_insurance      =</span>  <span class="fl">260.0</span>, 
+                    <span class="dt">annual_appreciation    =</span> <span class="fl">3.0</span>, 
+                    <span class="dt">annual_appreciation_sd =</span> <span class="fl">2.0</span>, 
+                    <span class="dt">annual_inv             =</span> <span class="fl">5.0</span>, 
+                    <span class="dt">annual_inv_sd          =</span> <span class="fl">7.0</span>, 
+                    <span class="dt">annual_inflation       =</span> <span class="fl">1.5</span>, 
+                    <span class="dt">annual_inflation_sd    =</span> <span class="fl">1.0</span>, 
+                    <span class="dt">annual_rent_extra_increase_mean =</span> <span class="fl">0.5</span>, 
+                    <span class="dt">fraction_extra_cash_invested_pct =</span> <span class="fl">50.0</span>, 
+                    <span class="dt">income_tax_rate_pct =</span> <span class="fl">25.0</span>, 
+                    <span class="dt">itemized_deductions =</span> <span class="fl">0.0</span>, 
+                    <span class="dt">std_deduction =</span> <span class="dv">12200</span>, 
+                    <span class="dt">n_sim =</span> <span class="dv">200</span>)
 
-paramNames &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;start_prop_value&quot;</span>, <span class="st">&quot;down_payment_pct&quot;</span>, <span class="st">&quot;mortgage_rate&quot;</span>, <span class="st">&quot;n_years&quot;</span>, 
+<span class="co"># tmp.df &lt;- data.frame(value = as.character(unlist(test_input1)))</span>
+<span class="co"># row.names(tmp.df) &lt;- names(test_input1)</span></code></pre>
+<br />
+<button class="toggle_code">
+show code
+</button>
+<pre class="sourceCode r"><code class="sourceCode r">paramNames &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;start_prop_value&quot;</span>, <span class="st">&quot;down_payment_pct&quot;</span>, <span class="st">&quot;mortgage_rate&quot;</span>, <span class="st">&quot;n_years&quot;</span>, 
                 <span class="st">&quot;initial_fixed_costs&quot;</span>,
                 <span class="st">&quot;prop_tax_rate_pct&quot;</span>, <span class="st">&quot;prop_insurance&quot;</span>, <span class="st">&quot;HOA_monthly_fee&quot;</span>,
                 <span class="st">&quot;start_rent&quot;</span>, <span class="st">&quot;rent_insurance&quot;</span>,
@@ -140,38 +169,31 @@ paramNames &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="
                 <span class="st">&quot;income_tax_rate_pct&quot;</span>, <span class="st">&quot;itemized_deductions&quot;</span>, <span class="st">&quot;std_deduction&quot;</span>,
                 <span class="st">&quot;n_sim&quot;</span>)
 
-fake_input &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">start_prop_value =</span> <span class="dv">200000</span>, 
-                   <span class="dt">down_payment_pct =</span> <span class="fl">20.0</span>, 
-                   <span class="dt">mortgage_rate =</span> <span class="fl">4.5</span>, 
-                   <span class="dt">n_years =</span> <span class="dv">30</span>, 
-                   <span class="dt">initial_fixed_costs =</span> <span class="dv">6000</span>, 
-                   <span class="dt">prop_tax_rate_pct =</span> <span class="fl">2.05</span>,
-                   <span class="dt">prop_insurance =</span> <span class="fl">4000.0</span>, 
-                   <span class="dt">HOA_monthly_fee =</span> <span class="fl">400.0</span>,
-                   <span class="dt">start_rent =</span> <span class="fl">1500.0</span>, 
-                   <span class="dt">rent_insurance =</span> <span class="fl">260.0</span>, 
-                   <span class="dt">annual_appreciation =</span> <span class="fl">3.0</span>, 
-                   <span class="dt">annual_appreciation_sd =</span> <span class="fl">2.0</span>, 
-                   <span class="dt">annual_inv =</span> <span class="fl">5.0</span>, 
-                   <span class="dt">annual_inv_sd =</span> <span class="fl">7.0</span>, 
-                   <span class="dt">annual_inflation =</span> <span class="fl">1.5</span>, 
-                   <span class="dt">annual_inflation_sd =</span> <span class="fl">1.0</span>, 
-                   <span class="dt">annual_rent_extra_increase_mean =</span> <span class="fl">0.5</span>, 
-                   <span class="dt">fraction_extra_cash_invested_pct =</span> <span class="fl">50.0</span>, 
-                   <span class="dt">income_tax_rate_pct =</span> <span class="fl">25.0</span>, 
-                   <span class="dt">itemized_deductions =</span> <span class="fl">0.0</span>, 
-                   <span class="dt">std_deduction =</span> <span class="dv">12200</span>, 
-                   <span class="dt">n_sim =</span> <span class="dv">200</span>)
-    
-sims.tradeoff &lt;-<span class="st"> </span><span class="kw">do.call</span>(simulate_tradeoff, <span class="kw">getParams1</span>(fake_input, paramNames))
-
-n.sim &lt;-<span class="st"> </span><span class="kw">getParams1</span>(fake_input, <span class="st">&quot;n_sim&quot;</span>)[[<span class="dv">1</span>]]
-n.years &lt;-<span class="st"> </span><span class="kw">getParams1</span>(fake_input, <span class="st">&quot;n_years&quot;</span>)[[<span class="dv">1</span>]]</code></pre>
+sims.tradeoff1 &lt;-<span class="st"> </span><span class="kw">do.call</span>(simulate_tradeoff, <span class="kw">getParams1</span>(test_input1, paramNames))
+n.sim &lt;-<span class="st"> </span><span class="kw">getParams1</span>(test_input1, <span class="st">&quot;n_sim&quot;</span>)[[<span class="dv">1</span>]]
+n.years &lt;-<span class="st"> </span><span class="kw">getParams1</span>(test_input1, <span class="st">&quot;n_years&quot;</span>)[[<span class="dv">1</span>]]</code></pre>
+<br />
 <button class="toggle_plot_code">
 show plot code
 </button>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot_sims</span>(n.sim, n.years, sims.tradeoff)</code></pre>
-<p><img src="figures/plot_results-1.png" title="" alt="" width="900" style="display: block; margin: auto;" /></p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot_sims</span>(n.sim, n.years, sims.tradeoff1)</code></pre>
+<p><img src="figures/test_case_1-plot_results-1.png" title="" alt="" width="800" style="display: block; margin: auto;" /></p>
+</div>
+<div id="case-2" class="section level4">
+<h4>Case 2</h4>
+<p>The only difference from the previous case is the <strong>increase from 6.0% to 6.5%</strong> of the <strong>mean for the return of investment</strong> rate (<code>annual_inv</code>).</p>
+<button class="toggle_code">
+show code
+</button>
+<pre class="sourceCode r"><code class="sourceCode r">test_input2 &lt;-<span class="st"> </span>test_input1
+test_input2$annual_inv &lt;-<span class="st"> </span><span class="fl">6.5</span>
+sims.tradeoff2 &lt;-<span class="st"> </span><span class="kw">do.call</span>(simulate_tradeoff, <span class="kw">getParams1</span>(test_input2, paramNames))</code></pre>
+<button class="toggle_plot_code">
+show plot code
+</button>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot_sims</span>(n.sim, n.years, sims.tradeoff2)</code></pre>
+<p><img src="figures/test_case_2-plot_results-1.png" title="" alt="" width="800" style="display: block; margin: auto;" /></p>
+</div>
 </div>
 </div>
 <div id="model-parameters" class="section level2">
@@ -183,7 +205,7 @@ show plot code
 <ul>
 <li><strong>Purchase price</strong> ($)</li>
 <li><strong>Down payment</strong> (%)</li>
-<li><strong>Mortgage rate</strong> (%)</li>
+<li><strong>Mortgage interest rate</strong> (%)</li>
 <li><strong>Duration</strong> (years)</li>
 <li><strong>Initial fixed costs</strong> ($): additional cost incurred when buying a property, e.g. closing costs, or repairs.</li>
 </ul>
@@ -254,7 +276,10 @@ show plot code
 <p><a name="APPENDIX-functions"></a></p>
 <div id="functions" class="section level2">
 <h2>Functions</h2>
-<p>Source code of the user-defined functions in <a href="https://github.com/pedrosan/DataScienceExamples/tree/master/Rent_vs_Buy/Returns/scripts/my_functions.R">scripts/my_functions.R</a></p>
+<p>Source code of the user-defined functions:</p>
+<ul>
+<li>
+<a href="https://github.com/pedrosan/DataScienceExamples/tree/master/Rent_vs_Buy/scripts/my_functions_1.R">scripts/my_functions_1.R</a> —
 <button class="toggle_code">
 show code
 </button>
@@ -329,6 +354,9 @@ getParams1 &lt;-<span class="st"> </span>function(input, pnames) {
 }
 
 <span class="co">#=------------------------------------------------------------------------------</span></code></pre>
+</li>
+<li>
+<a href="https://github.com/pedrosan/DataScienceExamples/tree/master/Rent_vs_Buy/scripts/my_functions_2.R">scripts/my_functions_2.R</a> —
 <button class="toggle_code">
 show code
 </button>
@@ -692,6 +720,7 @@ plot_sims &lt;-<span class="st"> </span>function(n.sim, n.years, sim.to) {
 }
 
 <span class="co">#=-------------------------------------------------------------------------------</span></code></pre>
+</li>
 <p><a name="SessionInfo"></a></p>
 </div>
 <div id="r-session-info" class="section level2">

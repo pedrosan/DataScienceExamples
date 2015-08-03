@@ -103,12 +103,46 @@ The data exist and accessible.  I just did not have time to bring them into _the
 
 An example is shown below.
 
-#### Example of Summary Plot
+### Examples of results with their summary plots
 
-<button class="toggle_code">show output</button>
-```{r prepare_for_plot, echo = TRUE}
-# Define parameters (names and values)
+#### Case 1
 
+<button class="toggle_code">show parameter values</button>
+```{r test_case_1-set_parameters, echo = TRUE}
+test_input1 <- list(start_prop_value = 200000, 
+                    down_payment_pct = 20.0, 
+                    mortgage_rate    = 4.5, 
+                    n_years          = 30, 
+                    initial_fixed_costs = 6000.0, 
+                    prop_tax_rate_pct   =  2.05,
+                    prop_insurance      = 4000.0, 
+                    HOA_monthly_fee     =  400.0,
+                    start_rent          = 1500.0, 
+                    rent_insurance      =  260.0, 
+                    annual_appreciation    = 3.0, 
+                    annual_appreciation_sd = 2.0, 
+                    annual_inv             = 5.0, 
+                    annual_inv_sd          = 7.0, 
+                    annual_inflation       = 1.5, 
+                    annual_inflation_sd    = 1.0, 
+                    annual_rent_extra_increase_mean = 0.5, 
+                    fraction_extra_cash_invested_pct = 50.0, 
+                    income_tax_rate_pct = 25.0, 
+                    itemized_deductions = 0.0, 
+                    std_deduction = 12200, 
+                    n_sim = 200)
+
+# tmp.df <- data.frame(value = as.character(unlist(test_input1)))
+# row.names(tmp.df) <- names(test_input1)
+```
+
+```{r test_case-print_parameters, echo = FALSE}
+# kable(tmp.df, align = "r")
+```
+
+<br />
+<button class="toggle_code">show code</button>
+```{r test_case_1-prepare_for_plot, echo = TRUE}
 paramNames <- c("start_prop_value", "down_payment_pct", "mortgage_rate", "n_years", 
                 "initial_fixed_costs",
                 "prop_tax_rate_pct", "prop_insurance", "HOA_monthly_fee",
@@ -121,38 +155,32 @@ paramNames <- c("start_prop_value", "down_payment_pct", "mortgage_rate", "n_year
                 "income_tax_rate_pct", "itemized_deductions", "std_deduction",
                 "n_sim")
 
-fake_input <- list(start_prop_value = 200000, 
-                   down_payment_pct = 20.0, 
-                   mortgage_rate = 4.5, 
-                   n_years = 30, 
-                   initial_fixed_costs = 6000, 
-                   prop_tax_rate_pct = 2.05,
-                   prop_insurance = 4000.0, 
-                   HOA_monthly_fee = 400.0,
-                   start_rent = 1500.0, 
-                   rent_insurance = 260.0, 
-                   annual_appreciation = 3.0, 
-                   annual_appreciation_sd = 2.0, 
-                   annual_inv = 5.0, 
-                   annual_inv_sd = 7.0, 
-                   annual_inflation = 1.5, 
-                   annual_inflation_sd = 1.0, 
-                   annual_rent_extra_increase_mean = 0.5, 
-                   fraction_extra_cash_invested_pct = 50.0, 
-                   income_tax_rate_pct = 25.0, 
-                   itemized_deductions = 0.0, 
-                   std_deduction = 12200, 
-                   n_sim = 200)
-    
-sims.tradeoff <- do.call(simulate_tradeoff, getParams1(fake_input, paramNames))
+sims.tradeoff1 <- do.call(simulate_tradeoff, getParams1(test_input1, paramNames))
+n.sim <- getParams1(test_input1, "n_sim")[[1]]
+n.years <- getParams1(test_input1, "n_years")[[1]]
+```
 
-n.sim <- getParams1(fake_input, "n_sim")[[1]]
-n.years <- getParams1(fake_input, "n_years")[[1]]
+<br />
+<button class="toggle_plot_code">show plot code</button>
+```{r test_case_1-plot_results, cache = FALSE, fig.width = 8.0, fig.height = 6.0, echo = TRUE}
+plot_sims(n.sim, n.years, sims.tradeoff1)
+```
+
+#### Case 2
+
+The only difference from the previous case is the __increase from 6.0% to 6.5%__ of the 
+__mean for the return of investment__ rate (`annual_inv`).
+
+<button class="toggle_code">show code</button>
+```{r test_case_2-prepare_for_plot, echo = TRUE}
+test_input2 <- test_input1
+test_input2$annual_inv <- 6.5
+sims.tradeoff2 <- do.call(simulate_tradeoff, getParams1(test_input2, paramNames))
 ```
 
 <button class="toggle_plot_code">show plot code</button>
-```{r plot_results, cache = FALSE, fig.width = 9.0, fig.height = 6.0, echo = TRUE}
-plot_sims(n.sim, n.years, sims.tradeoff)
+```{r test_case_2-plot_results, cache = FALSE, fig.width = 8.0, fig.height = 6.0, echo = TRUE}
+plot_sims(n.sim, n.years, sims.tradeoff2)
 ```
     
 ## Model Parameters
@@ -228,24 +256,29 @@ Assuming uncorrelated normally distributed values.
 
 ## Functions
 
-Source code of the user-defined functions in 
-[scripts/my_functions.R](https://github.com/pedrosan/DataScienceExamples/tree/master/Rent_vs_Buy/Returns/scripts/my_functions.R) 
-
-
 ```{r read_my_functions, eval = TRUE, echo = FALSE, cache = FALSE}
 read_chunk("./scripts/my_functions_1.R")
 read_chunk("./scripts/my_functions_2.R")
 ```
 
+Source code of the user-defined functions:
+
+<ul>
+<li>
+[scripts/my_functions_1.R](https://github.com/pedrosan/DataScienceExamples/tree/master/Rent_vs_Buy/scripts/my_functions_1.R) --- 
 <button class="toggle_code">show code</button>
 ```{r print_chunk_1, eval = FALSE, echo = TRUE, cache = FALSE}
 <<my_functions_1>>
 ```
+</li>
 
+<li>
+[scripts/my_functions_2.R](https://github.com/pedrosan/DataScienceExamples/tree/master/Rent_vs_Buy/scripts/my_functions_2.R) --- 
 <button class="toggle_code">show code</button>
 ```{r print_chunk_2, eval = FALSE, echo = TRUE, cache = FALSE}
 <<my_functions_2>>
 ```
+</li>
 
 
 <a name="SessionInfo"></a>
