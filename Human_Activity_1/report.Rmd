@@ -1,5 +1,5 @@
 ---
-title: "Analysis of Human Activity Data"
+title: "Human Activity: Steps History and Patterns"
 subtitle : 
 author   : Giovanni Fossati
 job      : null

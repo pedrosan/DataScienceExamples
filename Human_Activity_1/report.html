@@ -11,7 +11,7 @@
 <meta name="author" content="Giovanni Fossati" />
 
 
-<title>Analysis of Human Activity Data</title>
+<title>Human Activity: Steps History and Patterns</title>
 
 <script src="common/libs/jquery-1.11.0/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -76,7 +76,7 @@ img {
 
 
 <div id="header">
-<h1 class="title">Analysis of Human Activity Data</h1>
+<h1 class="title">Human Activity: Steps History and Patterns</h1>
 <h4 class="author"><em>Giovanni Fossati</em></h4>
 </div>
 
@@ -123,7 +123,7 @@ img {
 <li><a href="#IMPUTING">IMPUTING MISSING VALUES</a>
 <ul>
 <li>Some thoughts about missing data</li>
-<li>What do the <code>NA</code> in this dataset <em>look like</em>? <br />How many are there and how are they distributed?</li>
+<li>What do the <code>NA</code> in this dataset <em>look like</em>? How many are there and how are they distributed?</li>
 <li>An <em>imputing</em> strategy</li>
 <li>Average activity pattern by day of the week</li>
 </ul></li>
@@ -182,7 +182,7 @@ main$chunk &lt;-<span class="st"> </span><span class="kw">cut</span>(main$hour, 
 <span class="co">#  $ date     : Factor w/ 61 levels &quot;2012-10-01&quot;,&quot;2012-10-02&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...</span>
 <span class="co">#  $ interval : int  0 5 10 15 20 25 30 35 40 45 ...</span>
 <span class="co">#  $ fullTime : POSIXlt, format: &quot;2012-10-01 00:00:00&quot; &quot;2012-10-01 00:05:00&quot; &quot;2012-10-01 00:10:00&quot; ...</span>
-<span class="co">#  $ hour     : POSIXct, format: &quot;2015-08-01 00:00:00&quot; &quot;2015-08-01 00:05:00&quot; &quot;2015-08-01 00:10:00&quot; ...</span>
+<span class="co">#  $ hour     : POSIXct, format: &quot;2015-08-03 00:00:00&quot; &quot;2015-08-03 00:05:00&quot; &quot;2015-08-03 00:10:00&quot; ...</span>
 <span class="co">#  $ dayName  : chr  &quot;Monday&quot; &quot;Monday&quot; &quot;Monday&quot; &quot;Monday&quot; ...</span>
 <span class="co">#  $ dayFactor: Ord.factor w/ 7 levels &quot;Monday&quot;&lt;&quot;Tuesday&quot;&lt;..: 1 1 1 1 1 1 1 1 1 1 ...</span>
 <span class="co">#  $ dayFlag  : Factor w/ 2 levels &quot;weekday&quot;,&quot;weekend&quot;: 1 1 1 1 1 1 1 1 1 1 ...</span>
@@ -351,7 +351,7 @@ maxN  &lt;-<span class="st"> </span>ts.ByHour[<span class="kw">which.max</span>(
 <p>The <strong>maximum value</strong> of the number of steps per interval averaged over the full period is 206.17, occurring at 08:35:</p>
 <pre class="sourceCode r"><code class="sourceCode r">ts.ByHour[<span class="kw">which.max</span>(<span class="dt">x=</span>ts.ByHour$Avrg),<span class="kw">c</span>(<span class="st">&quot;hour&quot;</span>,<span class="st">&quot;Avrg&quot;</span>)]
 <span class="co">#                    hour     Avrg</span>
-<span class="co"># 104 2015-08-01 08:35:00 206.1698</span></code></pre>
+<span class="co"># 104 2015-08-03 08:35:00 206.1698</span></code></pre>
 <hr class="thin_separator">
 <p><a name="IMPUTING"></a></p>
 </div>
@@ -507,7 +507,7 @@ ts.ByDay.ByHour &lt;-<span class="st"> </span><span class="kw">ddply</span>(main
 <span class="kw">str</span>(ts.ByDay.ByHour)
 <span class="co"># &#39;data.frame&#39;: 2016 obs. of  5 variables:</span>
 <span class="co">#  $ dayFactor: Ord.factor w/ 7 levels &quot;Monday&quot;&lt;&quot;Tuesday&quot;&lt;..: 1 1 1 1 1 1 1 1 1 1 ...</span>
-<span class="co">#  $ hour     : POSIXct, format: &quot;2015-08-01 00:00:00&quot; &quot;2015-08-01 00:05:00&quot; &quot;2015-08-01 00:10:00&quot; ...</span>
+<span class="co">#  $ hour     : POSIXct, format: &quot;2015-08-03 00:00:00&quot; &quot;2015-08-03 00:05:00&quot; &quot;2015-08-03 00:10:00&quot; ...</span>
 <span class="co">#  $ Avrg     : num  1.43 0 0 0 0 ...</span>
 <span class="co">#  $ Sd       : num  3.78 0 0 0 0 ...</span>
 <span class="co">#  $ N        : int  7 7 7 7 7 7 7 7 7 7 ...</span></code></pre>

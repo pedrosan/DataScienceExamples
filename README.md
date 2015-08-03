@@ -22,7 +22,7 @@ A __report__ is available for some of them, hosted under pedrosan.github.io usin
   * [REPORT](http://pedrosan.github.io/DataScienceExamples/Synthetic_Data/)
   * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Synthetic_Data)
 
-* Analysis of Human Activity Data:
+* Analysis of Human Activity Data: Steps History and Patterns
   * [REPORT](http://pedrosan.github.io/DataScienceExamples/Human_Activity_1/)
   * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Human_Activity_1)
 
