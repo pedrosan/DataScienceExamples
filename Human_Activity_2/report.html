@@ -11,7 +11,7 @@
 <meta name="author" content="Giovanni Fossati" />
 
 
-<title>Assessment of The Quality of Weight-lifting Exercises</title>
+<title>ML-based Assessement of the Quality of Weight-lifting Exercises</title>
 
 <script src="common/libs/jquery-1.11.0/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -76,7 +76,7 @@ img {
 
 
 <div id="header">
-<h1 class="title">Assessment of The Quality of Weight-lifting Exercises</h1>
+<h1 class="title">ML-based Assessement of the Quality of Weight-lifting Exercises</h1>
 <h4 class="author"><em>Giovanni Fossati</em></h4>
 </div>
 
@@ -116,7 +116,7 @@ img {
 <li><em>random forest</em>.</li>
 </ul>
 <p>The first two methods failed to yield high quality results. This may have been caused by less than ideal choice of parameters, although in most cases we run them with the default values from <code>caret</code>, which are expected to be reasonable for decent results.</p>
-<p><strong>Random forest</strong> models produced high quality results, with accuracies exceeding 99%, both in the built-in <em>Out Of the Bag</em> resampling, and on a subset of the data that we set aside as <em>testing</em> dataset.</p>
+<p><strong>Random forest</strong> models produced high quality results, with <strong>out-of-sample accuracies exceeding 99%</strong>, both in the built-in <em>Out Of the Bag</em> resampling, and on a subset of the data that we set aside as <em>testing</em> dataset.</p>
 <p>Beside its clearly better performance, the choice of a random forest as an ensemble method is supported by its ability to handle multi-class problems.</p>
 <p>We ran <em>random forest</em> models with <strong>three different <em>internal</em> cross-validation</strong> setups (implemented through the <code>trainControl()</code> function of <code>caret</code>):</p>
 <ul>
@@ -262,91 +262,21 @@ alt.TEST.select &lt;-<span class="st"> </span>alt.TEST.good[, alt.tt]</code></pr
 </div>
 <div id="exploratory-analysis" class="section level1">
 <h1>EXPLORATORY ANALYSIS</h1>
-<div id="features-plotted-vs.sequence-index-and-color-coded-by-user_name-and-classe" class="section level3">
-<h3>Features plotted vs. sequence index, and color coded by <code>user_name</code> and <code>classe</code></h3>
-<p>These kind of plots show that some of the features seem to correlated very strongly with the <em>user</em>, even more than with their <code>classe</code>.<br />This suggest that the training to predict the quality parameter of the weight lifting exercise (<code>classe</code>) that we can achieve with this dataset may not be easily generalized.</p>
-<div id="roll_arm-vs.user" class="section level4">
-<h4>roll_arm vs. user</h4>
-<button class="toggle_plot_code">
-show plot code
-</button>
-<pre class="sourceCode r"><code class="sourceCode r">df &lt;-<span class="st"> </span>alt.full
-<span class="co">#   8 = roll_belt</span>
-<span class="co">#   9 = pitch_belt</span>
-<span class="co">#  10 = yaw_belt</span>
-<span class="co">#  46 = roll_arm</span>
-<span class="co"># 122 = roll_forearm</span>
-ii &lt;-<span class="st"> </span><span class="dv">46</span>
-
-title_string &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="kw">colnames</span>(df)[ii], <span class="st">&quot;by user and classe&quot;</span>, <span class="dt">sep=</span><span class="st">&quot; &quot;</span>)
-tmp.df &lt;-<span class="st"> </span>df[, <span class="kw">c</span>(<span class="st">&quot;user_name&quot;</span>, <span class="st">&quot;classe&quot;</span>, <span class="kw">colnames</span>(df)[ii])]
-tmp.df$index &lt;-<span class="st"> </span><span class="dv">1</span>:<span class="kw">nrow</span>(tmp.df)
-
-p.base &lt;-<span class="st"> </span><span class="kw">ggplot</span>(tmp.df, <span class="kw">aes</span>(<span class="dt">x =</span> index, <span class="dt">y =</span> roll_arm)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span>
-<span class="st">            </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">&quot;top&quot;</span>, 
-                   <span class="dt">panel.background =</span> <span class="kw">element_rect</span>(<span class="dt">fill =</span> <span class="st">&quot;grey90&quot;</span>),
-                   <span class="dt">panel.grid.major =</span> <span class="kw">element_line</span>(<span class="dt">size =</span> <span class="fl">0.50</span>, <span class="dt">linetype =</span> <span class="st">&#39;dashed&#39;</span>, <span class="dt">colour =</span> <span class="st">&quot;white&quot;</span>), 
-                   <span class="dt">panel.grid.minor =</span> <span class="kw">element_line</span>(<span class="dt">size =</span> <span class="fl">0.25</span>, <span class="dt">linetype =</span> <span class="st">&#39;dashed&#39;</span>, <span class="dt">colour =</span> <span class="st">&quot;white&quot;</span>)) +<span class="st"> </span>
-<span class="st">            </span><span class="kw">ylab</span>(<span class="kw">colnames</span>(df)[ii]) 
-
-p<span class="fl">.1</span> &lt;-<span class="st"> </span>p.base +<span class="st"> </span>
-<span class="st">            </span><span class="kw">ggtitle</span>(title_string) +
-<span class="st">            </span><span class="kw">scale_color_brewer</span>(<span class="dt">palette =</span> <span class="st">&quot;Set3&quot;</span>, <span class="dt">name =</span> <span class="st">&quot;User&quot;</span>) +
-<span class="st">            </span><span class="kw">geom_point</span>(<span class="kw">aes</span>(<span class="dt">col =</span> user_name)) 
-
-p<span class="fl">.2</span> &lt;-<span class="st"> </span>p.base +
-<span class="st">            </span><span class="kw">scale_color_brewer</span>(<span class="dt">palette =</span> <span class="st">&quot;Set1&quot;</span>, <span class="dt">name =</span> <span class="st">&quot;Classe&quot;</span>) +
-<span class="st">            </span><span class="kw">geom_point</span>(<span class="kw">aes</span>(<span class="dt">col =</span> classe)) 
-
-<span class="kw">grid.arrange</span>(p<span class="fl">.1</span>, p<span class="fl">.2</span>, <span class="dt">nrow=</span><span class="dv">2</span>)</code></pre>
-<p><img src="figures/plots-examine2b-1.png" title="" alt="" width="800" style="display: block; margin: auto;" /></p>
-<button class="toggle_plot_code">
-show plot code
-</button>
-<pre class="sourceCode r"><code class="sourceCode r">df &lt;-<span class="st"> </span>alt.full
-<span class="co">#   8 = roll_belt</span>
-<span class="co">#   9 = pitch_belt</span>
-<span class="co">#  10 = yaw_belt</span>
-<span class="co">#  46 = roll_arm</span>
-<span class="co"># 122 = roll_forearm</span>
-ii &lt;-<span class="st"> </span><span class="dv">9</span>
-
-title_string &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="kw">colnames</span>(df)[ii], <span class="st">&quot;by user and classe&quot;</span>, <span class="dt">sep=</span><span class="st">&quot; &quot;</span>)
-tmp.df &lt;-<span class="st"> </span>df[, <span class="kw">c</span>(<span class="st">&quot;user_name&quot;</span>, <span class="st">&quot;classe&quot;</span>, <span class="kw">colnames</span>(df)[ii])]
-tmp.df$index &lt;-<span class="st"> </span><span class="dv">1</span>:<span class="kw">nrow</span>(tmp.df)
-
-p.base &lt;-<span class="st"> </span><span class="kw">ggplot</span>(tmp.df, <span class="kw">aes</span>(<span class="dt">x =</span> index, <span class="dt">y =</span> pitch_belt)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span>
-<span class="st">            </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">&quot;top&quot;</span>, 
-                   <span class="dt">panel.background =</span> <span class="kw">element_rect</span>(<span class="dt">fill =</span> <span class="st">&quot;grey90&quot;</span>),
-                   <span class="dt">panel.grid.major =</span> <span class="kw">element_line</span>(<span class="dt">size =</span> <span class="fl">0.50</span>, <span class="dt">linetype =</span> <span class="st">&#39;dashed&#39;</span>, <span class="dt">colour =</span> <span class="st">&quot;white&quot;</span>), 
-                   <span class="dt">panel.grid.minor =</span> <span class="kw">element_line</span>(<span class="dt">size =</span> <span class="fl">0.25</span>, <span class="dt">linetype =</span> <span class="st">&#39;dashed&#39;</span>, <span class="dt">colour =</span> <span class="st">&quot;white&quot;</span>)) +<span class="st"> </span>
-<span class="st">            </span><span class="kw">ylab</span>(<span class="kw">colnames</span>(df)[ii]) 
-
-p<span class="fl">.1</span> &lt;-<span class="st"> </span>p.base +<span class="st"> </span>
-<span class="st">            </span><span class="kw">ggtitle</span>(title_string) +
-<span class="st">            </span><span class="kw">scale_color_brewer</span>(<span class="dt">palette =</span> <span class="st">&quot;Set2&quot;</span>, <span class="dt">name =</span> <span class="st">&quot;User&quot;</span>) +
-<span class="st">            </span><span class="kw">geom_point</span>(<span class="kw">aes</span>(<span class="dt">col =</span> user_name)) 
-
-p<span class="fl">.2</span> &lt;-<span class="st"> </span>p.base +
-<span class="st">            </span><span class="kw">scale_color_brewer</span>(<span class="dt">palette =</span> <span class="st">&quot;Set1&quot;</span>, <span class="dt">name =</span> <span class="st">&quot;Classe&quot;</span>) +
-<span class="st">            </span><span class="kw">geom_point</span>(<span class="kw">aes</span>(<span class="dt">col =</span> classe)) 
-
-<span class="kw">grid.arrange</span>(p<span class="fl">.1</span>, p<span class="fl">.2</span>, <span class="dt">nrow=</span><span class="dv">2</span>)</code></pre>
-<p><img src="figures/plots-examine2c-1.png" title="" alt="" width="800" style="display: block; margin: auto;" /></p>
-</div>
-</div>
 <div id="feature-vs.feature-plots-faceted-by-user-and-classe" class="section level3">
 <h3>Feature vs. Feature Plots faceted by <em>user</em> and <em>classe</em></h3>
-<p>This second set of example plots shows that there are indeed some reasonably recognizable patterns allowing to distinguish between different <code>classe</code> categories.<br />However, it is noticeable how the patterns are really different from user to user, which would imply that models might have to be highly personalized.</p>
-<p>The expectation is that the ML algorithm will be able to identify them and build on them a classification scheme.</p>
+<p>These example plots shows that there are indeed some reasonably recognizable patterns allowing to distinguish between different <code>classe</code> categories.<br />The expectation is that the ML algorithm will be able to identify them and build on them a classification scheme.</p>
+<p>However, it is noticeable how the patterns are really different from user to user, which would imply that models might have to be highly personalized, and in turn that the training to predict the quality parameter (<code>classe</code>) that we can achieve with this dataset may not be easily generalized.</p>
 <button class="toggle_plot_code">
 show plot code
 </button>
-<pre class="sourceCode r"><code class="sourceCode r">myPalette &lt;-<span class="st"> </span><span class="kw">colorRampPalette</span>(<span class="kw">rev</span>(<span class="kw">brewer.pal</span>(<span class="dv">11</span>, <span class="st">&quot;Spectral&quot;</span>)))
+<pre class="sourceCode r"><code class="sourceCode r">df &lt;-<span class="st"> </span>alt.full
+myPalette &lt;-<span class="st"> </span><span class="kw">colorRampPalette</span>(<span class="kw">rev</span>(<span class="kw">brewer.pal</span>(<span class="dv">11</span>, <span class="st">&quot;Spectral&quot;</span>)))
 
 p &lt;-<span class="st"> </span><span class="kw">ggplot</span>(df, <span class="kw">aes</span>(pitch_arm, roll_arm)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span>
 <span class="st">            </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">&quot;top&quot;</span>, 
-                  <span class="dt">panel.background =</span> <span class="kw">element_rect</span>(<span class="dt">fill =</span> <span class="st">&quot;grey90&quot;</span>)) +
+                  <span class="dt">panel.background =</span> <span class="kw">element_rect</span>(<span class="dt">fill =</span> <span class="st">&quot;grey90&quot;</span>), 
+                  <span class="dt">panel.grid.major =</span> <span class="kw">element_line</span>(<span class="dt">size =</span> <span class="fl">0.50</span>, <span class="dt">linetype =</span> <span class="st">&#39;dashed&#39;</span>, <span class="dt">colour =</span> <span class="st">&quot;white&quot;</span>), 
+                  <span class="dt">panel.grid.minor =</span> <span class="kw">element_line</span>(<span class="dt">size =</span> <span class="fl">0.25</span>, <span class="dt">linetype =</span> <span class="st">&#39;dashed&#39;</span>, <span class="dt">colour =</span> <span class="st">&quot;white&quot;</span>)) +<span class="st"> </span>
 <span class="st">            </span><span class="co"># scale_color_gradient(low = &quot;gold&quot;, high = &quot;blue&quot;) +</span>
 <span class="st">            </span><span class="kw">scale_colour_gradientn</span>(<span class="dt">colours =</span> <span class="kw">myPalette</span>(<span class="dv">100</span>)) +<span class="st"> </span>
 <span class="st">            </span><span class="kw">geom_point</span>(<span class="kw">aes</span>(<span class="dt">col =</span> yaw_arm)) +<span class="st"> </span>
@@ -472,32 +402,7 @@ mod.alt.rf1c &lt;-<span class="st"> </span><span class="kw">train</span>(<span c
 </div>
 <div id="fit-summary" class="section level3">
 <h3>Fit Summary</h3>
-<pre class="sourceCode r"><code class="sourceCode r">mod.alt.rf1c
-<span class="co"># Random Forest </span>
-<span class="co"># </span>
-<span class="co"># 14414 samples</span>
-<span class="co">#    32 predictor</span>
-<span class="co">#     5 classes: &#39;A&#39;, &#39;B&#39;, &#39;C&#39;, &#39;D&#39;, &#39;E&#39; </span>
-<span class="co"># </span>
-<span class="co"># No pre-processing</span>
-<span class="co"># Resampling: Cross-Validated (4 fold) </span>
-<span class="co"># </span>
-<span class="co"># Summary of sample sizes: 10811, 10810, 10811, 10810 </span>
-<span class="co"># </span>
-<span class="co"># Resampling results across tuning parameters:</span>
-<span class="co"># </span>
-<span class="co">#   mtry  Accuracy   Kappa      Accuracy SD  Kappa SD   </span>
-<span class="co">#    2    0.9898018  0.9870959  0.003951942  0.005002063</span>
-<span class="co">#    6    0.9911893  0.9888523  0.002982777  0.003774821</span>
-<span class="co">#   10    0.9901487  0.9875353  0.003060048  0.003872692</span>
-<span class="co">#   18    0.9879979  0.9848141  0.002999668  0.003797201</span>
-<span class="co">#   26    0.9830026  0.9784937  0.003199211  0.004049294</span>
-<span class="co">#   34    0.9777993  0.9719118  0.003413927  0.004319903</span>
-<span class="co"># </span>
-<span class="co"># Accuracy was used to select the optimal model using  the largest value.</span>
-<span class="co"># The final value used for the model was mtry = 6.</span>
-
-mod.alt.rf1c$finalModel
+<pre class="sourceCode r"><code class="sourceCode r">mod.alt.rf1c$finalModel
 <span class="co"># </span>
 <span class="co"># Call:</span>
 <span class="co">#  randomForest(x = x, y = y, mtry = param$mtry, importance = TRUE) </span>
@@ -512,9 +417,11 @@ mod.alt.rf1c$finalModel
 <span class="co"># B   17 2762   10    0    0 0.0096808892</span>
 <span class="co"># C    0   19 2484   10    1 0.0119331742</span>
 <span class="co"># D    1    0   21 2337    2 0.0101651842</span>
-<span class="co"># E    0    0    1    2 2643 0.0011337868</span>
-
-mod.alt.rf1c$results
+<span class="co"># E    0    0    1    2 2643 0.0011337868</span></code></pre>
+<button class="toggle_code">
+show more
+</button>
+<pre class="sourceCode r"><code class="sourceCode r">mod.alt.rf1c$results
 <span class="co">#   mtry  Accuracy     Kappa  AccuracySD     KappaSD</span>
 <span class="co"># 1    2 0.9898018 0.9870959 0.003951942 0.005002063</span>
 <span class="co"># 2    6 0.9911893 0.9888523 0.002982777 0.003774821</span>
@@ -625,32 +532,7 @@ mod.rf1b &lt;-<span class="st"> </span><span class="kw">train</span>(<span class
 </div>
 <div id="fit-summary-1" class="section level3">
 <h3>Fit Summary</h3>
-<pre class="sourceCode r"><code class="sourceCode r">mod.rf1b
-<span class="co"># Random Forest </span>
-<span class="co"># </span>
-<span class="co"># 14718 samples</span>
-<span class="co">#    34 predictor</span>
-<span class="co">#     5 classes: &#39;A&#39;, &#39;B&#39;, &#39;C&#39;, &#39;D&#39;, &#39;E&#39; </span>
-<span class="co"># </span>
-<span class="co"># No pre-processing</span>
-<span class="co"># Resampling: Bootstrapped (25 reps) </span>
-<span class="co"># </span>
-<span class="co"># Summary of sample sizes: 14718, 14718, 14718, 14718, 14718, 14718, ... </span>
-<span class="co"># </span>
-<span class="co"># Resampling results across tuning parameters:</span>
-<span class="co"># </span>
-<span class="co">#   mtry  Accuracy   Kappa      Accuracy SD  Kappa SD   </span>
-<span class="co">#    2    0.9880161  0.9848382  0.002011458  0.002541064</span>
-<span class="co">#    6    0.9892243  0.9863680  0.001674175  0.002113586</span>
-<span class="co">#   10    0.9887082  0.9857150  0.001479500  0.001868168</span>
-<span class="co">#   18    0.9866414  0.9831000  0.001855994  0.002343789</span>
-<span class="co">#   26    0.9835928  0.9792425  0.002145057  0.002708918</span>
-<span class="co">#   34    0.9768211  0.9706757  0.002932730  0.003698371</span>
-<span class="co"># </span>
-<span class="co"># Accuracy was used to select the optimal model using  the largest value.</span>
-<span class="co"># The final value used for the model was mtry = 6.</span>
-
-mod.rf1b$finalModel
+<pre class="sourceCode r"><code class="sourceCode r">mod.rf1b$finalModel
 <span class="co"># </span>
 <span class="co"># Call:</span>
 <span class="co">#  randomForest(x = x, y = y, mtry = param$mtry) </span>
@@ -665,9 +547,11 @@ mod.rf1b$finalModel
 <span class="co"># B   13 2826    8    0    1 0.0077247191</span>
 <span class="co"># C    0   19 2530   17    1 0.0144137125</span>
 <span class="co"># D    0    0   21 2387    4 0.0103648425</span>
-<span class="co"># E    0    0    2    5 2699 0.0025868441</span>
-
-mod.rf1b$results
+<span class="co"># E    0    0    2    5 2699 0.0025868441</span></code></pre>
+<button class="toggle_code">
+show more
+</button>
+<pre class="sourceCode r"><code class="sourceCode r">mod.rf1b$results
 <span class="co">#   mtry  Accuracy     Kappa  AccuracySD     KappaSD</span>
 <span class="co"># 1    2 0.9880161 0.9848382 0.002011458 0.002541064</span>
 <span class="co"># 2    6 0.9892243 0.9863680 0.001674175 0.002113586</span>
@@ -783,31 +667,7 @@ mod.alt.rf1e &lt;-<span class="st"> </span><span class="kw">train</span>(<span c
 </div>
 <div id="fit-summary-2" class="section level3">
 <h3>Fit Summary</h3>
-<pre class="sourceCode r"><code class="sourceCode r">mod.alt.rf1e
-<span class="co"># Random Forest </span>
-<span class="co"># </span>
-<span class="co"># 14414 samples</span>
-<span class="co">#    32 predictor</span>
-<span class="co">#     5 classes: &#39;A&#39;, &#39;B&#39;, &#39;C&#39;, &#39;D&#39;, &#39;E&#39; </span>
-<span class="co"># </span>
-<span class="co"># No pre-processing</span>
-<span class="co"># Resampling: Repeated Train/Test Splits Estimated (25 reps, 0.75%) </span>
-<span class="co"># </span>
-<span class="co"># Summary of sample sizes: 10812, 10812, 10812, 10812, 10812, 10812, ... </span>
-<span class="co"># </span>
-<span class="co"># Resampling results across tuning parameters:</span>
-<span class="co"># </span>
-<span class="co">#   mtry  Accuracy   Kappa      Accuracy SD  Kappa SD   </span>
-<span class="co">#    2    0.9896724  0.9869327  0.001744837  0.002208660</span>
-<span class="co">#    4    0.9910383  0.9886615  0.001203534  0.001523144</span>
-<span class="co">#    6    0.9910272  0.9886476  0.001361771  0.001723509</span>
-<span class="co">#    8    0.9907052  0.9882400  0.001660179  0.002101095</span>
-<span class="co">#   10    0.9903054  0.9877342  0.001701827  0.002153699</span>
-<span class="co"># </span>
-<span class="co"># Accuracy was used to select the optimal model using  the largest value.</span>
-<span class="co"># The final value used for the model was mtry = 4.</span>
-
-mod.alt.rf1e$finalModel
+<pre class="sourceCode r"><code class="sourceCode r">mod.alt.rf1e$finalModel
 <span class="co"># </span>
 <span class="co"># Call:</span>
 <span class="co">#  randomForest(x = x, y = y, mtry = param$mtry, importance = TRUE) </span>
@@ -822,9 +682,11 @@ mod.alt.rf1e$finalModel
 <span class="co"># B   18 2764    7    0    0 0.0089637863</span>
 <span class="co"># C    0   19 2483   12    0 0.0123309467</span>
 <span class="co"># D    0    0   28 2330    3 0.0131300296</span>
-<span class="co"># E    0    0    1    3 2642 0.0015117158</span>
-
-mod.alt.rf1e$results
+<span class="co"># E    0    0    1    3 2642 0.0015117158</span></code></pre>
+<button class="toggle_code">
+show more
+</button>
+<pre class="sourceCode r"><code class="sourceCode r">mod.alt.rf1e$results
 <span class="co">#   mtry  Accuracy     Kappa  AccuracySD     KappaSD</span>
 <span class="co"># 1    2 0.9896724 0.9869327 0.001744837 0.002208660</span>
 <span class="co"># 2    4 0.9910383 0.9886615 0.001203534 0.001523144</span>

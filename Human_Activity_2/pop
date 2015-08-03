@@ -1,5 +1,5 @@
 ---
-title   : ML-based Assessement of the Quality of Weight-lifting Exercises
+title   : Assessment of The Quality of Weight-lifting Exercises
 subtitle: 
 author  : Giovanni Fossati
 job     : null
@@ -109,12 +109,12 @@ This may have been caused by less than ideal choice of parameters, although in m
 we run them with the default values from `caret`, which are expected to be 
 reasonable for decent results.   
 
-__Random forest__ models produced high quality results, 
-with __out-of-sample accuracies exceeding 99%__, both in the built-in _Out Of the Bag_ resampling, 
-and on a subset of the data that we set aside as _testing_ dataset.
+__Random forest__ models produced high quality results, with accuracies
+exceeding 99%, both in the built-in _Out Of the Bag_ resampling, and on a subset of the data 
+that we set aside as _testing_ dataset.
 
-Beside its clearly better performance, the choice of a random forest as an ensemble method is
-supported by its ability to handle multi-class problems.
+Beside its clearly better performance, the choice of a random forest as an
+ensemble method is supported by its ability to handle multi-class problems.
 
 We ran _random forest_ models with __three different _internal_
 cross-validation__ setups (implemented through the `trainControl()` function of `caret`):
@@ -299,27 +299,95 @@ alt.TEST.select <- alt.TEST.good[, alt.tt]
 
 # EXPLORATORY ANALYSIS
 
+### Features plotted vs. sequence index, and color coded by `user_name` and `classe`
+
+These kind of plots show that some of the features seem to correlated very strongly with the
+_user_, even more than with their `classe`.   
+This suggest that the training to predict the quality parameter of the weight lifting exercise (`classe`) 
+that we can achieve with this dataset may not be easily generalized.
+
+```{r plots-examine2b, fig.width = 8, fig.height = 8, echo = TRUE}
+df <- alt.full
+#   8 = roll_belt
+#   9 = pitch_belt
+#  10 = yaw_belt
+#  46 = roll_arm
+# 122 = roll_forearm
+ii <- 46
+
+title_string <- paste(colnames(df)[ii], "by user and classe", sep=" ")
+tmp.df <- df[, c("user_name", "classe", colnames(df)[ii])]
+tmp.df$index <- 1:nrow(tmp.df)
+
+p.base <- ggplot(tmp.df, aes(x = index, y = roll_arm)) + theme_bw() + 
+            theme(legend.position = "top", 
+                   panel.background = element_rect(fill = "grey90"),
+                   panel.grid.major = element_line(size = 0.50, linetype = 'dashed', colour = "white"), 
+                   panel.grid.minor = element_line(size = 0.25, linetype = 'dashed', colour = "white")) + 
+            ylab(colnames(df)[ii]) 
+
+p.1 <- p.base + 
+            ggtitle(title_string) +
+            scale_color_brewer(palette = "Set3", name = "User") +
+            geom_point(aes(col = user_name)) 
+
+p.2 <- p.base +
+            scale_color_brewer(palette = "Set1", name = "Classe") +
+            geom_point(aes(col = classe)) 
+
+grid.arrange(p.1, p.2, nrow=2)
+```
+
+<button class="toggle_plot_code">show plot code</button>
+```{r plots-examine2c, fig.width = 8, fig.height = 8, echo = TRUE}
+df <- alt.full
+#   8 = roll_belt
+#   9 = pitch_belt
+#  10 = yaw_belt
+#  46 = roll_arm
+# 122 = roll_forearm
+ii <- 9
+
+title_string <- paste(colnames(df)[ii], "by user and classe", sep=" ")
+tmp.df <- df[, c("user_name", "classe", colnames(df)[ii])]
+tmp.df$index <- 1:nrow(tmp.df)
+
+p.base <- ggplot(tmp.df, aes(x = index, y = pitch_belt)) + theme_bw() + 
+            theme(legend.position = "top", 
+                   panel.background = element_rect(fill = "grey90"),
+                   panel.grid.major = element_line(size = 0.50, linetype = 'dashed', colour = "white"), 
+                   panel.grid.minor = element_line(size = 0.25, linetype = 'dashed', colour = "white")) + 
+            ylab(colnames(df)[ii]) 
+
+p.1 <- p.base + 
+            ggtitle(title_string) +
+            scale_color_brewer(palette = "Set2", name = "User") +
+            geom_point(aes(col = user_name)) 
+
+p.2 <- p.base +
+            scale_color_brewer(palette = "Set1", name = "Classe") +
+            geom_point(aes(col = classe)) 
+
+grid.arrange(p.1, p.2, nrow=2)
+```
+
+
 ### Feature vs. Feature Plots faceted by _user_ and _classe_
 
-These example plots shows that there are indeed some reasonably recognizable patterns
+This second set of example plots shows that there are indeed some reasonably recognizable patterns
 allowing to distinguish between different `classe` categories.   
-The expectation is that the ML algorithm will be able to identify them and build on them a classification scheme.
-
 However, it is noticeable how the patterns are really different from user to user, which 
-would imply that models might have to be highly personalized, and in turn that the training to
-predict the quality parameter (`classe`) that we can achieve with this dataset may not be easily generalized.
+would imply that models might have to be highly personalized.
 
+The expectation is that the ML algorithm will be able to identify them and build on them a classification scheme.
 
 <button class="toggle_plot_code">show plot code</button>
 ```{r plots-more_1, fig.width = 8, fig.height = 8, echo = TRUE}
-df <- alt.full
 myPalette <- colorRampPalette(rev(brewer.pal(11, "Spectral")))
 
 p <- ggplot(df, aes(pitch_arm, roll_arm)) + theme_bw() + 
             theme(legend.position = "top", 
-                  panel.background = element_rect(fill = "grey90"), 
-                  panel.grid.major = element_line(size = 0.50, linetype = 'dashed', colour = "white"), 
-                  panel.grid.minor = element_line(size = 0.25, linetype = 'dashed', colour = "white")) + 
+                  panel.background = element_rect(fill = "grey90")) +
             # scale_color_gradient(low = "gold", high = "blue") +
             scale_colour_gradientn(colours = myPalette(100)) + 
             geom_point(aes(col = yaw_arm)) + 
@@ -511,11 +579,10 @@ mod.alt.rf1c <- train(x = alt.training.cut75[, -1],
 ### Fit Summary
 
 ```{r rf1c_post-summary}
-mod.alt.rf1c$finalModel
-```
+mod.alt.rf1c
 
-<button class="toggle_code">show more</button>
-```{r rf1c_post-summary_more}
+mod.alt.rf1c$finalModel
+
 mod.alt.rf1c$results
 ```
 
@@ -571,11 +638,10 @@ mod.rf1b <- train(x = training.cut75[, -1],
 ### Fit Summary
 
 ```{r rf1b_post-summary}
-mod.rf1b$finalModel
-```
+mod.rf1b
 
-<button class="toggle_code">show more</button>
-```{r rf1b_post-summary_more}
+mod.rf1b$finalModel
+
 mod.rf1b$results
 ```
 
@@ -637,11 +703,10 @@ mod.alt.rf1e <- train(x = alt.training.cut75[, -1],
 ### Fit Summary
 
 ```{r rf1e_post-summary}
-mod.alt.rf1e$finalModel
-```
+mod.alt.rf1e
 
-<button class="toggle_code">show more</button>
-```{r rf1e_post-summary_more}
+mod.alt.rf1e$finalModel
+
 mod.alt.rf1e$results
 ```
 
