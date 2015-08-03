@@ -31,8 +31,8 @@ library("ggplot2")
 ```
 
 ```{r load_packages, cache = FALSE, echo = FALSE, message = FALSE, warning = FALSE, tidy = FALSE}
-source("./scripts/my_functions_1.R")
-source("./scripts/my_functions_2.R")
+source("./scripts/my_functions_intro_1.R")
+source("./scripts/my_functions_intro_2.R")
 ```
 
 ## What is it and why we want it
@@ -257,26 +257,26 @@ Assuming uncorrelated normally distributed values.
 ## Functions
 
 ```{r read_my_functions, eval = TRUE, echo = FALSE, cache = FALSE}
-read_chunk("./scripts/my_functions_1.R")
-read_chunk("./scripts/my_functions_2.R")
+read_chunk("./scripts/my_functions_intro_1.R")
+read_chunk("./scripts/my_functions_intro_2.R")
 ```
 
 Source code of the user-defined functions:
 
 <ul>
 <li>
-[scripts/my_functions_1.R](https://github.com/pedrosan/DataScienceExamples/tree/master/Rent_vs_Buy/scripts/my_functions_1.R) --- 
+[scripts/my_functions_intro_1.R](https://github.com/pedrosan/DataScienceExamples/tree/master/Rent_vs_Buy/scripts/my_functions_intro_1.R) --- 
 <button class="toggle_code">show code</button>
 ```{r print_chunk_1, eval = FALSE, echo = TRUE, cache = FALSE}
-<<my_functions_1>>
+<<my_functions_intro_1>>
 ```
 </li>
 
 <li>
-[scripts/my_functions_2.R](https://github.com/pedrosan/DataScienceExamples/tree/master/Rent_vs_Buy/scripts/my_functions_2.R) --- 
+[scripts/my_functions_intro_2.R](https://github.com/pedrosan/DataScienceExamples/tree/master/Rent_vs_Buy/scripts/my_functions_intro_2.R) --- 
 <button class="toggle_code">show code</button>
 ```{r print_chunk_2, eval = FALSE, echo = TRUE, cache = FALSE}
-<<my_functions_2>>
+<<my_functions_intro_2>>
 ```
 </li>
 

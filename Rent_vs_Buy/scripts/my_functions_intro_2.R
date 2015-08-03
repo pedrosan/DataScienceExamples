@@ -1,5 +1,5 @@
 
-## ---- my_functions_2
+## ---- my_functions_intro_2
 
 #=-------------------------------------------------------------------------------
 # setup mortgage quantities
@@ -362,5 +362,5 @@ plot_sims <- function(n.sim, n.years, sim.to) {
 
 #=-------------------------------------------------------------------------------
 
-## ---- end-of-my_functions_2
+## ---- end-of-my_functions_intro_2
 
