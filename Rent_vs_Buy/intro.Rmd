@@ -51,7 +51,7 @@ For instance:
 * the benefit of the return of investment of the capital not put into a down-payment.
 
 <span style="color: #006600 !important;">
-[This calculator](https://pedrosan.shinyapps.io/buy_vs_rent/) implements a more comprehensive 
+[__This calculator__ (running on shinyapps.io)](https://pedrosan.shinyapps.io/AdvBvsR/) implements a more comprehensive 
 and realistic picture, including these and other ingredients, and yields 
 a __statistical assessment__ of the __buy vs. rent__ question __by means of simulations__.
 </span>
