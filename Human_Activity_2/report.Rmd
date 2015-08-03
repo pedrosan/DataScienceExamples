@@ -9,7 +9,7 @@ output  :
 ---
 
 ```{r setup, cache = FALSE, echo = FALSE, message = FALSE, warning = FALSE, tidy = FALSE}
-require(knitr)
+require("knitr")
 # make this an external chunk that can be included in any file
 options(width = 100)
 opts_chunk$set(message = FALSE, 
@@ -27,21 +27,22 @@ opts_chunk$set(message = FALSE,
 ```
 
 ```{r load_packages, cache = FALSE, echo = FALSE, message = FALSE, warning = FALSE, tidy = FALSE}
-require(plyr)
+require("plyr")
 #
-require(ggplot2)
-require(gtable)
-require(gridExtra)
-require(corrplot)
-require(rattle)
+require("ggplot2")
+require("gtable")
+require("RColorBrewer")
+require("gridExtra")
+require("corrplot")
+require("rattle")
 #
-require(caret)
-require(randomForest)
-require(partykit)
-require(gbm)
-require(rpart)
+require("caret")
+require("randomForest")
+require("partykit")
+require("gbm")
+require("rpart")
 #
-require(pROC)
+require("pROC")
 ```
 
 ```{r my_defs, echo=FALSE}
@@ -378,49 +379,35 @@ grid.arrange(p.1, p.2, nrow=2)
 ### Feature vs. Feature Plots faceted by _user_ and _classe_
 
 This second set of example plots shows that there are indeed some reasonably recognizable patterns
-allowing to distinguish between different `classe` categories.
+allowing to distinguish between different `classe` categories.   
+However, it is noticeable how the patterns are really different from user to user, which 
+would imply that models might have to be highly personalized.
 
 The expectation is that the ML algorithm will be able to identify them and build on them a classification scheme.
 
-```{r plots-more_1, fig.width = 8, fig.height = 8, echo = FALSE, eval = FALSE}
-# NOT EVALUATED
-# NOT ECHOED
-df <- alt.full.select 
-df$user_name <- alt.user
-p <- ggplot(df, aes(pitch_arm, roll_arm)) + theme_bw() + 
-        geom_point(aes(col=classe)) + 
-        ggtitle("pitch_arm vs. roll_arm by user and classe")
-p + facet_grid(user_name ~ classe)
-```
+<button class="toggle_plot_code">show plot code</button>
+```{r plots-more_1, fig.width = 8, fig.height = 8, echo = TRUE}
+myPalette <- colorRampPalette(rev(brewer.pal(11, "Spectral")))
 
-```{r plots-more_2, fig.width = 8, fig.height = 8, echo = FALSE, eval = FALSE}
-# NOT EVALUATED
-# NOT ECHOED
-p <- ggplot(df, aes(pitch_forearm, roll_forearm)) + theme_bw() + 
-        geom_point(aes(col = classe)) + 
-        ggtitle("pitch_forearm vs. roll_forearm by user and classe")
+p <- ggplot(df, aes(pitch_arm, roll_arm)) + theme_bw() + 
+            theme(legend.position = "top", 
+                  panel.background = element_rect(fill = "grey90")) +
+            # scale_color_gradient(low = "gold", high = "blue") +
+            scale_colour_gradientn(colours = myPalette(100)) + 
+            geom_point(aes(col = yaw_arm)) + 
+            ggtitle("arm : pitch vs. roll, colored by yaw, facets by user and classe")
 p + facet_grid(user_name ~ classe)
 ```
 
 <button class="toggle_plot_code">show plot code</button>
-```{r plots-more_2b, fig.width = 8, fig.height = 8, echo = TRUE}
-p <- ggplot(df, aes(pitch_arm, roll_arm)) + theme_bw() + 
-            theme(legend.position = "top", 
-                  panel.background = element_rect(fill = "grey90")) +
-            scale_color_gradient(low = "gold", high = "blue") +
-            geom_point(aes(col = total_accel_arm)) + 
-            ggtitle("pitch_arm vs. roll_arm by user and classe")
-p + facet_grid(user_name ~ classe)
-```
-
-<button class="toggle_plot_code">show plot code</button>
-```{r plots-more_1b, fig.width = 8, fig.height = 8, echo = TRUE}
+```{r plots-more_2, fig.width = 8, fig.height = 8, echo = TRUE}
 p <- ggplot(df, aes(pitch_forearm, roll_forearm)) + theme_bw() + 
             theme(legend.position = "top", 
                   panel.background = element_rect(fill = "grey90")) +
-            scale_color_gradient(low = "gold", high = "blue") +
-            geom_point(aes(col = total_accel_forearm)) + 
-            ggtitle("pitch_forearm vs. roll_forearm by user and classe")
+            # scale_color_gradient(low = "gold", high = "blue") +
+            scale_colour_gradientn(colours = myPalette(100)) + 
+            geom_point(aes(col = yaw_forearm)) + 
+            ggtitle("forearm : pitch vs. roll, colored by yaw, facets by user and classe")
 p + facet_grid(user_name ~ classe)
 ```
 
@@ -461,7 +448,7 @@ The actual predictors filtering was done applying this method just on the _train
 <hr class="thin_separator">
 <a name="DATA_SPLITTING"></a>
 
-# DATA SPLITTING: "NEW" _TRAINING_ AND _TESTING_ SUBSETS
+# DATA SPLITTING: _TRAINING_ AND _TESTING_ SUBSETS
 
 For validation purposes we split the full dataset in two subsets:
 
