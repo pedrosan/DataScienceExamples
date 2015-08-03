@@ -91,13 +91,32 @@ img {
 <p>The rapid diffusion of sensors able to record physical parameters associated with motion (<em>e.g.</em> accelerometers), in dedicated devices and more importantly in general consumer electronics available/used by a broader population has sparked a great interest in developing applications taking advantage of these motion-related data. One area of particular interest concerns fitness-related activities.</p>
 <p>This report summarizes the results of the development, and testing, of a <em>Machine Learning</em> model able to recognize the <em>quality</em> of a simple weight lifting exercise, namely whether or not it was performed appropropriately (and hence safely and effectively).</p>
 <p>We used the dataset put together by the <a href="http://groupware.les.inf.puc-rio.br/har">research group on Human Activity Recognition</a> at the <em>PUC of Rio de Janeiro</em>.</p>
+<p>With modern devices it is now easy to collect data about personal activities, and quantify how much of a particular activity one does, but it is more difficuly, hence rarely done, to assess how well it is done.</p>
+<div id="the-goal" class="section level3">
+<h3>The goal</h3>
+<p>The goal of this project was to build model predicting (recognizing) if a particular weight-lifting exercise was performed correctly or in one of several incorrect manners, corresponding to common mistakes, using data recorded from accelerometers placed on the belt, forearm, arm, and dumbell of the participants.</p>
+<p>Six individuals were asked to perform barbell lifts (<em>Unilateral Dumbbell Biceps Curl</em>) correctly and incorrectly in 5 different ways, recorded as <em>classes</em>:</p>
+<ul>
+<li><strong>Class A</strong>: exactly according to the specification.</li>
+<li><strong>Class B</strong>: throwing the elbows to the front.</li>
+<li><strong>Class C</strong>: lifting the dumbbell only halfway.</li>
+<li><strong>Class D</strong>: lowering the dumbbell only halfway.</li>
+<li><strong>Class E</strong>: throwing the hips to the front.</li>
+</ul>
+<p>The objective is to build a model using the available (or new) features, tested properly with cross-validation techniques, able to predict the <em>class</em> of each repetition of the exercise.</p>
 <p><a name="SUMMARY"></a></p>
+</div>
 </div>
 <div id="summary-of-results" class="section level1">
 <h1>SUMMARY OF RESULTS</h1>
-<p>We tested three types of ML algorithms, all <em>tree-based</em> methods: <em>CART</em> trees, <em>boosted</em> trees, and <em>random forest</em>.</p>
+<p>We tested three types of ML algorithms, all <em>tree-based</em> methods:</p>
+<ul>
+<li><em>CART</em> trees,</li>
+<li><em>boosted</em> trees, and</li>
+<li><em>random forest</em>.</li>
+</ul>
 <p>The first two methods failed to yield high quality results. This may have been caused by less than ideal choice of parameters, although in most cases we run them with the default values from <code>caret</code>, which are expected to be reasonable for decent results.</p>
-<p><strong>Random forest</strong> models produced high quality results, with accuracies exceeding 99%, both in the built-in <em>Out Of the Bag</em> resampling, and on our separate <em>testing</em> subset.</p>
+<p><strong>Random forest</strong> models produced high quality results, with accuracies exceeding 99%, both in the built-in <em>Out Of the Bag</em> resampling, and on a subset of the data that we set aside as <em>testing</em> dataset.</p>
 <p>Beside its clearly better performance, the choice of a random forest as an ensemble method is supported by its ability to handle multi-class problems.</p>
 <p>We ran <em>random forest</em> models with <strong>three different <em>internal</em> cross-validation</strong> setups (implemented through the <code>trainControl()</code> function of <code>caret</code>):</p>
 <ul>
@@ -185,9 +204,9 @@ alt.TEST &lt;-<span class="st"> </span><span class="kw">tidy_df</span>(TEST)</co
 </div>
 <div id="the-sensor-data" class="section level2">
 <h2>The Sensor Data</h2>
-<p>As described in the paper by <a href="http://groupware.les.inf.puc-rio.br/work.jsf?p1=11201">Velloso et al.</a>,</p>
+<p>The data-collection setup, described in the paper by <a href="http://groupware.les.inf.puc-rio.br/work.jsf?p1=11201">Velloso et al.</a>, was the following:</p>
 <ul>
-<li>four <em>inertial measurement units</em> (IMU) where setup, placed on <em>belt</em>, <em>arm</em>, <em>forearm</em>, <em>dumbbell</em>.</li>
+<li><em>Four inertial measurement units</em> (IMU) where setup, placed on <em>belt</em>, <em>arm</em>, <em>forearm</em>, <em>dumbbell</em>.</li>
 <li>Each sensor measured 3-axes acceleration, gyroscope and magnetometer data at high cadence (45 Hz).</li>
 <li>These data were processed to yield 13 timed variables for each sensor:
 <ul>
@@ -203,7 +222,7 @@ alt.TEST &lt;-<span class="st"> </span><span class="kw">tidy_df</span>(TEST)</co
 <li>For <code>total_accel</code>, its variance <code>var_accel</code>.</li>
 <li>For each of the three angles: <code>avg</code>, <code>stddev</code>, <code>var</code>, <code>kurtosis</code>, <code>skewness</code>, <code>max</code>, <code>min</code>, <code>amplitude</code> (<span class="math">\(3 \times 8\)</span> variables).</li>
 </ul>
-<p>These <span class="math">\(1 + 24 = 25\)</span> statistical summaries for each sensor add another <span class="math">\(100\)</span> variables to the dataset for a total of <span class="math">\(152\)</span> variables.</p>
+<p>These <span class="math">\(1 + 24 = 25\)</span> statistical summaries for each sensor (4) add another <span class="math">\(100\)</span> variables to the dataset for a total of <span class="math">\(152\)</span> variables.</p>
 <p>It is worth emphasizing that the dataset presents <em>timed</em> and <em>summary</em> variables all together in one table. While this may be practically convenient, it makes this dataset <em>un-tidy</em> by combining variables of different nature. Fortunately the two types of variables can be easily separated on the basis of the value of the <code>new_window</code> auxiliary variable, which has value <code>no</code> for entries corresponding to timed data, and <code>yes</code> for their statistical summaries over each exercise window.</p>
 <hr class="thin_separator">
 <p><a name="DATA_PREPARATION"></a></p>
@@ -219,12 +238,12 @@ alt.TEST &lt;-<span class="st"> </span><span class="kw">tidy_df</span>(TEST)</co
 <p>Some variables should be discarded because associated with very specific aspects of the experiment that should be irrelevant from the point of view of its goal, such as <em>window</em> flags and <em>time stamps</em>.<br />These are the excluded variables: <code>X</code>, <code>user_name</code>, <code>new_window</code>, <code>num_window</code>, <code>cvtd_timestamp</code>, <code>raw_timestamp_part_1</code>, <code>raw_timestamp_part_2</code>.</p>
 <p>Beside their intrinsic irrelevance, keeping these in would likely strongly drive the results in a completely spurious and meaningless way, because for instance the algorithm may hook on the <code>user_name</code> or <code>num_window</code>.</p>
 </div>
-<div id="individual-measurements-vs-summaries-the-new_window-variable" class="section level3">
-<h3>Individual measurements <em>vs</em> <em>summaries</em> : the <code>new_window</code> variable</h3>
-<p>To the best of my understanding, the dataset combines two different kinds of <em>observations</em>:</p>
+<div id="individual-measurements-vs-summaries" class="section level3">
+<h3>Individual measurements <em>vs</em> summaries</h3>
+<p>As illustrated above the dataset combines two different kinds of <em>observations</em>:</p>
 <ul>
-<li>single measurements of the main observables from the sensors, with some time cadence, and organized in <em>windows</em>, which are numbered (<code>num_window</code> variable).<br />These data have <code>new_window == &quot;no&quot;</code>.</li>
-<li>statistical summaries of the measurements of each main observable over each <em>window</em>.<br />These data have <code>new_window == &quot;yes&quot;</code>, and</li>
+<li><strong>Individual measurements</strong> of the main observables from the sensors, with some time cadence, and organized in <em>windows</em>, which are numbered (<code>num_window</code> variable).<br />These data have <code>new_window == &quot;no&quot;</code>.</li>
+<li><strong>Statistical summaries</strong> of the measurements of each main observable over each <em>window</em>.<br />These data have <code>new_window == &quot;yes&quot;</code>.</li>
 </ul>
 <p>We restricted our analysis to the 52 variables representing individual <em>timed</em> measurements, discarding the <em>summary</em> data.</p>
 <pre class="sourceCode r"><code class="sourceCode r">alt.full &lt;-<span class="st"> </span><span class="kw">subset</span>(alt.full, new_window ==<span class="st"> &quot;no&quot;</span>)
@@ -245,8 +264,9 @@ alt.TEST.select &lt;-<span class="st"> </span>alt.TEST.good[, alt.tt]</code></pr
 <h1>EXPLORATORY ANALYSIS</h1>
 <div id="features-plotted-vs.sequence-index-and-color-coded-by-user_name-and-classe" class="section level3">
 <h3>Features plotted vs. sequence index, and color coded by <code>user_name</code> and <code>classe</code></h3>
-<p>These kind of plots shows that some of the features seem to correlated very strongly with the <em>user</em>, even more than with their <code>classe</code>, somewhat oddly.</p>
-<p>This suggest that the training to predict the quality parameter of the weight lifting exercise (<code>classe</code>) that we can achieve with this dataset may not be easily generalized.</p>
+<p>These kind of plots show that some of the features seem to correlated very strongly with the <em>user</em>, even more than with their <code>classe</code>.<br />This suggest that the training to predict the quality parameter of the weight lifting exercise (<code>classe</code>) that we can achieve with this dataset may not be easily generalized.</p>
+<div id="roll_arm-vs.user" class="section level4">
+<h4>roll_arm vs. user</h4>
 <button class="toggle_plot_code">
 show plot code
 </button>
@@ -259,14 +279,27 @@ show plot code
 ii &lt;-<span class="st"> </span><span class="dv">46</span>
 
 title_string &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="kw">colnames</span>(df)[ii], <span class="st">&quot;by user and classe&quot;</span>, <span class="dt">sep=</span><span class="st">&quot; &quot;</span>)
-p1 &lt;-<span class="st"> </span><span class="kw">ggplot</span>(df, <span class="kw">aes</span>(<span class="dv">1</span>:<span class="kw">nrow</span>(df), df[, ii])) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span><span class="kw">geom_point</span>(<span class="kw">aes</span>(<span class="dt">col=</span>user_name)) +<span class="st"> </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">&quot;top&quot;</span>) 
-p1 &lt;-<span class="st"> </span>p1 +<span class="st"> </span><span class="kw">ylab</span>(<span class="kw">colnames</span>(df)[ii]) +<span class="st"> </span><span class="kw">ggtitle</span>(title_string)
+tmp.df &lt;-<span class="st"> </span>df[, <span class="kw">c</span>(<span class="st">&quot;user_name&quot;</span>, <span class="st">&quot;classe&quot;</span>, <span class="kw">colnames</span>(df)[ii])]
+tmp.df$index &lt;-<span class="st"> </span><span class="dv">1</span>:<span class="kw">nrow</span>(tmp.df)
 
-p2 &lt;-<span class="st"> </span><span class="kw">ggplot</span>(df, <span class="kw">aes</span>(<span class="dv">1</span>:<span class="kw">nrow</span>(df), df[, ii])) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span><span class="kw">geom_point</span>(<span class="kw">aes</span>(<span class="dt">col=</span>classe)) +<span class="st"> </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">&quot;bottom&quot;</span>) 
-p2 &lt;-<span class="st"> </span>p2 +<span class="st"> </span><span class="kw">ylab</span>(<span class="kw">colnames</span>(df)[ii]) 
+p.base &lt;-<span class="st"> </span><span class="kw">ggplot</span>(tmp.df, <span class="kw">aes</span>(<span class="dt">x =</span> index, <span class="dt">y =</span> roll_arm)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span>
+<span class="st">            </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">&quot;top&quot;</span>, 
+                   <span class="dt">panel.background =</span> <span class="kw">element_rect</span>(<span class="dt">fill =</span> <span class="st">&quot;grey90&quot;</span>),
+                   <span class="dt">panel.grid.major =</span> <span class="kw">element_line</span>(<span class="dt">size =</span> <span class="fl">0.50</span>, <span class="dt">linetype =</span> <span class="st">&#39;dashed&#39;</span>, <span class="dt">colour =</span> <span class="st">&quot;white&quot;</span>), 
+                   <span class="dt">panel.grid.minor =</span> <span class="kw">element_line</span>(<span class="dt">size =</span> <span class="fl">0.25</span>, <span class="dt">linetype =</span> <span class="st">&#39;dashed&#39;</span>, <span class="dt">colour =</span> <span class="st">&quot;white&quot;</span>)) +<span class="st"> </span>
+<span class="st">            </span><span class="kw">ylab</span>(<span class="kw">colnames</span>(df)[ii]) 
 
-<span class="kw">grid.arrange</span>(p1, p2, <span class="dt">nrow=</span><span class="dv">2</span>)</code></pre>
-<p><img src="figures/plots-examine2b-1.png" title="" alt="" width="600" style="display: block; margin: auto;" /></p>
+p<span class="fl">.1</span> &lt;-<span class="st"> </span>p.base +<span class="st"> </span>
+<span class="st">            </span><span class="kw">ggtitle</span>(title_string) +
+<span class="st">            </span><span class="kw">scale_color_brewer</span>(<span class="dt">palette =</span> <span class="st">&quot;Set3&quot;</span>, <span class="dt">name =</span> <span class="st">&quot;User&quot;</span>) +
+<span class="st">            </span><span class="kw">geom_point</span>(<span class="kw">aes</span>(<span class="dt">col =</span> user_name)) 
+
+p<span class="fl">.2</span> &lt;-<span class="st"> </span>p.base +
+<span class="st">            </span><span class="kw">scale_color_brewer</span>(<span class="dt">palette =</span> <span class="st">&quot;Set1&quot;</span>, <span class="dt">name =</span> <span class="st">&quot;Classe&quot;</span>) +
+<span class="st">            </span><span class="kw">geom_point</span>(<span class="kw">aes</span>(<span class="dt">col =</span> classe)) 
+
+<span class="kw">grid.arrange</span>(p<span class="fl">.1</span>, p<span class="fl">.2</span>, <span class="dt">nrow=</span><span class="dv">2</span>)</code></pre>
+<p><img src="figures/plots-examine2b-1.png" title="" alt="" width="800" style="display: block; margin: auto;" /></p>
 <button class="toggle_plot_code">
 show plot code
 </button>
@@ -279,33 +312,55 @@ show plot code
 ii &lt;-<span class="st"> </span><span class="dv">9</span>
 
 title_string &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="kw">colnames</span>(df)[ii], <span class="st">&quot;by user and classe&quot;</span>, <span class="dt">sep=</span><span class="st">&quot; &quot;</span>)
-p1 &lt;-<span class="st"> </span><span class="kw">ggplot</span>(df, <span class="kw">aes</span>(<span class="dv">1</span>:<span class="kw">nrow</span>(df), df[, ii])) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span><span class="kw">geom_point</span>(<span class="kw">aes</span>(<span class="dt">col=</span>user_name)) +<span class="st"> </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">&quot;top&quot;</span>) 
-p1 &lt;-<span class="st"> </span>p1 +<span class="st"> </span><span class="kw">ylab</span>(<span class="kw">colnames</span>(df)[ii]) +<span class="st"> </span><span class="kw">ggtitle</span>(title_string)
-p2 &lt;-<span class="st"> </span><span class="kw">ggplot</span>(df, <span class="kw">aes</span>(<span class="dv">1</span>:<span class="kw">nrow</span>(df), df[, ii])) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span><span class="kw">geom_point</span>(<span class="kw">aes</span>(<span class="dt">col=</span>classe)) +<span class="st"> </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">&quot;bottom&quot;</span>) 
-p2 &lt;-<span class="st"> </span>p2 +<span class="st"> </span><span class="kw">ylab</span>(<span class="kw">colnames</span>(df)[ii]) 
-<span class="kw">grid.arrange</span>(p1, p2, <span class="dt">nrow=</span><span class="dv">2</span>)</code></pre>
-<p><img src="figures/plots-examine2c-1.png" title="" alt="" width="600" style="display: block; margin: auto;" /></p>
+tmp.df &lt;-<span class="st"> </span>df[, <span class="kw">c</span>(<span class="st">&quot;user_name&quot;</span>, <span class="st">&quot;classe&quot;</span>, <span class="kw">colnames</span>(df)[ii])]
+tmp.df$index &lt;-<span class="st"> </span><span class="dv">1</span>:<span class="kw">nrow</span>(tmp.df)
+
+p.base &lt;-<span class="st"> </span><span class="kw">ggplot</span>(tmp.df, <span class="kw">aes</span>(<span class="dt">x =</span> index, <span class="dt">y =</span> pitch_belt)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span>
+<span class="st">            </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">&quot;top&quot;</span>, 
+                   <span class="dt">panel.background =</span> <span class="kw">element_rect</span>(<span class="dt">fill =</span> <span class="st">&quot;grey90&quot;</span>),
+                   <span class="dt">panel.grid.major =</span> <span class="kw">element_line</span>(<span class="dt">size =</span> <span class="fl">0.50</span>, <span class="dt">linetype =</span> <span class="st">&#39;dashed&#39;</span>, <span class="dt">colour =</span> <span class="st">&quot;white&quot;</span>), 
+                   <span class="dt">panel.grid.minor =</span> <span class="kw">element_line</span>(<span class="dt">size =</span> <span class="fl">0.25</span>, <span class="dt">linetype =</span> <span class="st">&#39;dashed&#39;</span>, <span class="dt">colour =</span> <span class="st">&quot;white&quot;</span>)) +<span class="st"> </span>
+<span class="st">            </span><span class="kw">ylab</span>(<span class="kw">colnames</span>(df)[ii]) 
+
+p<span class="fl">.1</span> &lt;-<span class="st"> </span>p.base +<span class="st"> </span>
+<span class="st">            </span><span class="kw">ggtitle</span>(title_string) +
+<span class="st">            </span><span class="kw">scale_color_brewer</span>(<span class="dt">palette =</span> <span class="st">&quot;Set2&quot;</span>, <span class="dt">name =</span> <span class="st">&quot;User&quot;</span>) +
+<span class="st">            </span><span class="kw">geom_point</span>(<span class="kw">aes</span>(<span class="dt">col =</span> user_name)) 
+
+p<span class="fl">.2</span> &lt;-<span class="st"> </span>p.base +
+<span class="st">            </span><span class="kw">scale_color_brewer</span>(<span class="dt">palette =</span> <span class="st">&quot;Set1&quot;</span>, <span class="dt">name =</span> <span class="st">&quot;Classe&quot;</span>) +
+<span class="st">            </span><span class="kw">geom_point</span>(<span class="kw">aes</span>(<span class="dt">col =</span> classe)) 
+
+<span class="kw">grid.arrange</span>(p<span class="fl">.1</span>, p<span class="fl">.2</span>, <span class="dt">nrow=</span><span class="dv">2</span>)</code></pre>
+<p><img src="figures/plots-examine2c-1.png" title="" alt="" width="800" style="display: block; margin: auto;" /></p>
 </div>
-<div id="feature-vs.feature-plots-with-separate-panels-by-classe" class="section level3">
-<h3>Feature vs. Feature Plots with Separate Panels by <code>classe</code></h3>
+</div>
+<div id="feature-vs.feature-plots-faceted-by-user-and-classe" class="section level3">
+<h3>Feature vs. Feature Plots faceted by <em>user</em> and <em>classe</em></h3>
 <p>This second set of example plots shows that there are indeed some reasonably recognizable patterns allowing to distinguish between different <code>classe</code> categories.</p>
 <p>The expectation is that the ML algorithm will be able to identify them and build on them a classification scheme.</p>
 <button class="toggle_plot_code">
 show plot code
 </button>
-<pre class="sourceCode r"><code class="sourceCode r">df &lt;-<span class="st"> </span>alt.full.select 
-p &lt;-<span class="st"> </span><span class="kw">ggplot</span>(df, <span class="kw">aes</span>(pitch_arm, roll_arm)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span><span class="kw">geom_point</span>(<span class="kw">aes</span>(<span class="dt">col=</span>classe)) +<span class="st"> </span>
-<span class="st">     </span><span class="kw">ggtitle</span>(<span class="st">&quot;pitch_arm vs. roll_arm by classe&quot;</span>)
-p +<span class="st"> </span><span class="kw">facet_grid</span>(classe ~<span class="st"> </span>.)</code></pre>
-<p><img src="figures/plots-more_1-1.png" title="" alt="" width="600" style="display: block; margin: auto;" /></p>
+<pre class="sourceCode r"><code class="sourceCode r">p &lt;-<span class="st"> </span><span class="kw">ggplot</span>(df, <span class="kw">aes</span>(pitch_arm, roll_arm)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span>
+<span class="st">            </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">&quot;top&quot;</span>, 
+                  <span class="dt">panel.background =</span> <span class="kw">element_rect</span>(<span class="dt">fill =</span> <span class="st">&quot;grey90&quot;</span>)) +
+<span class="st">            </span><span class="kw">scale_color_gradient</span>(<span class="dt">low =</span> <span class="st">&quot;gold&quot;</span>, <span class="dt">high =</span> <span class="st">&quot;blue&quot;</span>) +
+<span class="st">            </span><span class="kw">geom_point</span>(<span class="kw">aes</span>(<span class="dt">col =</span> total_accel_arm)) +<span class="st"> </span>
+<span class="st">            </span><span class="kw">ggtitle</span>(<span class="st">&quot;pitch_arm vs. roll_arm by user and classe&quot;</span>)
+p +<span class="st"> </span><span class="kw">facet_grid</span>(user_name ~<span class="st"> </span>classe)</code></pre>
+<p><img src="figures/plots-more_2b-1.png" title="" alt="" width="800" style="display: block; margin: auto;" /></p>
 <button class="toggle_plot_code">
 show plot code
 </button>
-<pre class="sourceCode r"><code class="sourceCode r">df &lt;-<span class="st"> </span>alt.full.select 
-p &lt;-<span class="st"> </span><span class="kw">ggplot</span>(df, <span class="kw">aes</span>(pitch_forearm, roll_forearm)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span><span class="kw">geom_point</span>(<span class="kw">aes</span>(<span class="dt">col=</span>classe)) +<span class="st"> </span>
-<span class="st">     </span><span class="kw">ggtitle</span>(<span class="st">&quot;pitch_forearm vs. roll_forearm by classe&quot;</span>)
-p +<span class="st"> </span><span class="kw">facet_grid</span>(classe ~<span class="st"> </span>.)</code></pre>
-<p><img src="figures/plots-more_2-1.png" title="" alt="" width="600" style="display: block; margin: auto;" /></p>
+<pre class="sourceCode r"><code class="sourceCode r">p &lt;-<span class="st"> </span><span class="kw">ggplot</span>(df, <span class="kw">aes</span>(pitch_forearm, roll_forearm)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span>
+<span class="st">            </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">&quot;top&quot;</span>, 
+                  <span class="dt">panel.background =</span> <span class="kw">element_rect</span>(<span class="dt">fill =</span> <span class="st">&quot;grey90&quot;</span>)) +
+<span class="st">            </span><span class="kw">scale_color_gradient</span>(<span class="dt">low =</span> <span class="st">&quot;gold&quot;</span>, <span class="dt">high =</span> <span class="st">&quot;blue&quot;</span>) +
+<span class="st">            </span><span class="kw">geom_point</span>(<span class="kw">aes</span>(<span class="dt">col =</span> total_accel_forearm)) +<span class="st"> </span>
+<span class="st">            </span><span class="kw">ggtitle</span>(<span class="st">&quot;pitch_forearm vs. roll_forearm by user and classe&quot;</span>)
+p +<span class="st"> </span><span class="kw">facet_grid</span>(user_name ~<span class="st"> </span>classe)</code></pre>
+<p><img src="figures/plots-more_1b-1.png" title="" alt="" width="800" style="display: block; margin: auto;" /></p>
 <p><a name="feature_selection"></a></p>
 </div>
 <div id="about-feature-selection" class="section level2">
@@ -387,7 +442,7 @@ alt.testing.cut75 &lt;-<span class="st"> </span>alt.testing[, -(i.fC<span class=
 <ul>
 <li><code>cv</code>: Cross-Validation, 4-fold (<em>i.e.</em> 75%/25% splits).</li>
 <li><code>boot</code> (the default): bootstrap, 25 repeats.</li>
-<li>’LGOCV`: Leave Group Out Cross Validation, 25 repeats, 75%/25% train/test splits of the data.</li>
+<li><code>LGOCV</code>: Leave Group Out Cross Validation, 25 repeats, 75%/25% train/test splits of the data.</li>
 </ul>
 <p>In all cases we also tried a set of values for <code>mtry</code>, which regulates how many predictors are selected in the <em>random forest</em> random subsetting of variables.</p>
 <hr class="thin_separator">
@@ -1182,16 +1237,16 @@ answers &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st"
 <span class="co"># [13] ggplot2_1.0.1       plyr_1.8.3          knitr_1.10.5       </span>
 <span class="co"># </span>
 <span class="co"># loaded via a namespace (and not attached):</span>
-<span class="co">#  [1] BradleyTerry2_1.0-6 MASS_7.3-41         Matrix_1.2-0        Rcpp_0.11.6        </span>
-<span class="co">#  [5] SparseM_1.6         brglm_0.5-9         car_2.0-25          class_7.3-12       </span>
-<span class="co">#  [9] codetools_0.2-11    colorspace_1.2-6    digest_0.6.8        e1071_1.6-4        </span>
-<span class="co"># [13] evaluate_0.7        foreach_1.4.2       formatR_1.2         gtools_3.4.2       </span>
-<span class="co"># [17] htmltools_0.2.6     iterators_1.0.7     labeling_0.3        lme4_1.1-8         </span>
-<span class="co"># [21] magrittr_1.5        mgcv_1.8-6          minqa_1.2.4         munsell_0.4.2      </span>
-<span class="co"># [25] nlme_3.1-120        nloptr_1.0.4        nnet_7.3-9          pbkrtest_0.4-2     </span>
-<span class="co"># [29] proto_0.3-10        quantreg_5.11       reshape2_1.4.1      rmarkdown_0.7      </span>
-<span class="co"># [33] scales_0.2.4        stringi_0.5-5       stringr_1.0.0       tools_3.1.3        </span>
-<span class="co"># [37] yaml_2.1.13</span></code></pre>
+<span class="co">#  [1] BradleyTerry2_1.0-6 MASS_7.3-41         Matrix_1.2-0        RColorBrewer_1.1-2 </span>
+<span class="co">#  [5] Rcpp_0.11.6         SparseM_1.6         brglm_0.5-9         car_2.0-25         </span>
+<span class="co">#  [9] class_7.3-12        codetools_0.2-11    colorspace_1.2-6    digest_0.6.8       </span>
+<span class="co"># [13] e1071_1.6-4         evaluate_0.7        foreach_1.4.2       formatR_1.2        </span>
+<span class="co"># [17] gtools_3.4.2        htmltools_0.2.6     iterators_1.0.7     labeling_0.3       </span>
+<span class="co"># [21] lme4_1.1-8          magrittr_1.5        mgcv_1.8-6          minqa_1.2.4        </span>
+<span class="co"># [25] munsell_0.4.2       nlme_3.1-120        nloptr_1.0.4        nnet_7.3-9         </span>
+<span class="co"># [29] pbkrtest_0.4-2      proto_0.3-10        quantreg_5.11       reshape2_1.4.1     </span>
+<span class="co"># [33] rmarkdown_0.7       scales_0.2.4        stringi_0.5-5       stringr_1.0.0      </span>
+<span class="co"># [37] tools_3.1.3         yaml_2.1.13</span></code></pre>
 <hr />
 </div>
 </div>

@@ -63,19 +63,45 @@ in dedicated devices and more importantly in general consumer electronics availa
 has sparked a great interest in developing applications taking advantage of these motion-related data.
 One area of particular interest concerns fitness-related activities.
 
-This report summarizes the results of the development, and testing, of a _Machine Learning_ model able
-to recognize the _quality_ of a simple weight lifting exercise, namely whether
-or not it was performed appropropriately (and hence safely and effectively).
+This report summarizes the results of the development, and testing, of a _Machine Learning_ model
+able to recognize the _quality_ of a simple weight lifting exercise, namely whether or not it was
+performed appropropriately (and hence safely and effectively).
 
 We used the dataset put together by the [research group on Human Activity Recognition](http://groupware.les.inf.puc-rio.br/har)
 at the _PUC of Rio de Janeiro_.
+
+With modern devices it is now easy to collect data about personal activities, and quantify
+how much of a particular activity one does, but it is more difficuly, hence rarely done, to
+assess how well it is done.
+
+### The goal 
+
+The goal of this project was to build model predicting (recognizing) if a particular weight-lifting 
+exercise was performed correctly or in one of several incorrect manners, corresponding to common mistakes, 
+using data recorded from accelerometers placed on the belt, forearm, arm, and dumbell of the participants.
+
+Six individuals were asked to perform barbell lifts (_Unilateral Dumbbell Biceps Curl_) 
+correctly and incorrectly in 5 different ways, recorded as _classes_:
+
+* __Class A__: exactly according to the specification.
+* __Class B__: throwing the elbows to the front.
+* __Class C__: lifting the dumbbell only halfway.
+* __Class D__: lowering the dumbbell only halfway.
+* __Class E__: throwing the hips to the front.
+
+The objective is to build a model using the available (or new) features, tested properly with
+cross-validation techniques, able to predict the _class_ of each repetition of the exercise.
 
 
 <a name="SUMMARY"></a>
 
 # SUMMARY OF RESULTS
 
-We tested three types of ML algorithms, all _tree-based_ methods: _CART_ trees, _boosted_ trees, and _random forest_.
+We tested three types of ML algorithms, all _tree-based_ methods: 
+
+* _CART_ trees, 
+* _boosted_ trees, and 
+* _random forest_.
 
 The first two methods failed to yield high quality results.
 This may have been caused by less than ideal choice of parameters, although in most cases
@@ -83,8 +109,8 @@ we run them with the default values from `caret`, which are expected to be
 reasonable for decent results.   
 
 __Random forest__ models produced high quality results, with accuracies
-exceeding 99%, both in the built-in _Out Of the Bag_ resampling, and on our
-separate _testing_ subset.
+exceeding 99%, both in the built-in _Out Of the Bag_ resampling, and on a subset of the data 
+that we set aside as _testing_ dataset.
 
 Beside its clearly better performance, the choice of a random forest as an
 ensemble method is supported by its ability to handle multi-class problems.
@@ -148,13 +174,13 @@ Two separate sets were posted:
 
 Data files were downloaded and read-in from local copies:
 
-```{r load_training_dataset}
+```{r load_training_dataset, cache = TRUE}
 full <- read.csv("./data/pml-training.csv.gz", na.strings=c("#DIV/0!","","NA"), stringsAsFactors=FALSE)
 full <- add_new_variables(full)
 alt.full <- tidy_df(full)
 ```
 
-```{r load_TEST_dataset}
+```{r load_TEST_dataset, cache = TRUE}
 TEST <- read.csv("./data/pml-testing.csv.gz", na.strings=c("#DIV/0!","","NA"), stringsAsFactors=FALSE)
 alt.TEST <- tidy_df(TEST)
 ```
@@ -178,9 +204,10 @@ The dataset comprises __`r ncol(full)` variables__:
 
 ## The Sensor Data
 
-As described in the paper by [Velloso et al.](http://groupware.les.inf.puc-rio.br/work.jsf?p1=11201), 
+The data-collection setup, described in the paper by [Velloso et al.](http://groupware.les.inf.puc-rio.br/work.jsf?p1=11201), 
+was the following:
 
-* four _inertial measurement units_ (IMU) where setup, placed  on _belt_, _arm_, _forearm_, _dumbbell_.
+* _Four inertial measurement units_ (IMU) where setup, placed  on _belt_, _arm_, _forearm_, _dumbbell_.
 * Each sensor measured 3-axes acceleration, gyroscope and magnetometer data at high cadence (45 Hz).
 * These data were processed to yield 13 timed variables for each sensor: 
     * _total acceleration_.
@@ -201,7 +228,8 @@ In addition to these, several statistical summaries are computed and reported fo
 * For `total_accel`, its variance `var_accel`.
 * For each of the three angles: `avg`, `stddev`, `var`, `kurtosis`, `skewness`, `max`, `min`, `amplitude` ($3 \times 8$ variables).
 
-These $1 + 24 = 25$ statistical summaries for each sensor add another $100$ variables to the dataset for a total of $152$ variables.
+These $1 + 24 = 25$ statistical summaries for each sensor (4) add another $100$ variables to 
+the dataset for a total of $152$ variables.
 
 It is worth emphasizing that the dataset presents _timed_ and _summary_ variables all together in one table.
 While this may be practically convenient, it makes this dataset _un-tidy_ by combining variables of different nature.
@@ -232,17 +260,18 @@ in a completely spurious and meaningless way, because for instance the algorithm
 
 
 
-### Individual measurements _vs_ _summaries_ : the `new_window` variable
+### Individual measurements _vs_ summaries
 
-To the best of my understanding, the dataset combines two different kinds of _observations_:
+As illustrated above the dataset combines two different kinds of _observations_:
 
-* single measurements of the main observables from the sensors, with some time cadence, and 
+* __Individual measurements__ of the main observables from the sensors, with some time cadence, and 
 organized in _windows_, which are numbered (`num_window` variable).   
 These data have `new_window == "no"`.
-* statistical summaries of the measurements of each main observable over each _window_.   
-These data have `new_window == "yes"`, and 
+* __Statistical summaries__ of the measurements of each main observable over each _window_.   
+These data have `new_window == "yes"`.
 
-We restricted our analysis to the 52 variables representing individual _timed_ measurements, discarding the _summary_ data.
+We restricted our analysis to the 52 variables representing individual _timed_ measurements, 
+discarding the _summary_ data.
 
 ```{r clean_data}
 alt.full <- subset(alt.full, new_window == "no")
@@ -272,15 +301,15 @@ alt.TEST.select <- alt.TEST.good[, alt.tt]
 
 ### Features plotted vs. sequence index, and color coded by `user_name` and `classe`
 
-These kind of plots shows that some of the features seem to correlated very strongly with the
-_user_, even more than with their `classe`, somewhat oddly.
-
+These kind of plots show that some of the features seem to correlated very strongly with the
+_user_, even more than with their `classe`.   
 This suggest that the training to predict the quality parameter of the weight lifting exercise (`classe`) 
 that we can achieve with this dataset may not be easily generalized.
 
+#### roll_arm vs. user 
 
 <button class="toggle_plot_code">show plot code</button>
-```{r plots-examine2b, fig.width = 6, fig.height = 6, echo = TRUE}
+```{r plots-examine2b, fig.width = 8, fig.height = 8, echo = TRUE}
 df <- alt.full
 #   8 = roll_belt
 #   9 = pitch_belt
@@ -290,17 +319,30 @@ df <- alt.full
 ii <- 46
 
 title_string <- paste(colnames(df)[ii], "by user and classe", sep=" ")
-p1 <- ggplot(df, aes(1:nrow(df), df[, ii])) + theme_bw() + geom_point(aes(col=user_name)) + theme(legend.position = "top") 
-p1 <- p1 + ylab(colnames(df)[ii]) + ggtitle(title_string)
+tmp.df <- df[, c("user_name", "classe", colnames(df)[ii])]
+tmp.df$index <- 1:nrow(tmp.df)
 
-p2 <- ggplot(df, aes(1:nrow(df), df[, ii])) + theme_bw() + geom_point(aes(col=classe)) + theme(legend.position = "bottom") 
-p2 <- p2 + ylab(colnames(df)[ii]) 
+p.base <- ggplot(tmp.df, aes(x = index, y = roll_arm)) + theme_bw() + 
+            theme(legend.position = "top", 
+                   panel.background = element_rect(fill = "grey90"),
+                   panel.grid.major = element_line(size = 0.50, linetype = 'dashed', colour = "white"), 
+                   panel.grid.minor = element_line(size = 0.25, linetype = 'dashed', colour = "white")) + 
+            ylab(colnames(df)[ii]) 
 
-grid.arrange(p1, p2, nrow=2)
+p.1 <- p.base + 
+            ggtitle(title_string) +
+            scale_color_brewer(palette = "Set3", name = "User") +
+            geom_point(aes(col = user_name)) 
+
+p.2 <- p.base +
+            scale_color_brewer(palette = "Set1", name = "Classe") +
+            geom_point(aes(col = classe)) 
+
+grid.arrange(p.1, p.2, nrow=2)
 ```
 
 <button class="toggle_plot_code">show plot code</button>
-```{r plots-examine2c, fig.width = 6, fig.height = 6, echo = TRUE}
+```{r plots-examine2c, fig.width = 8, fig.height = 8, echo = TRUE}
 df <- alt.full
 #   8 = roll_belt
 #   9 = pitch_belt
@@ -310,35 +352,76 @@ df <- alt.full
 ii <- 9
 
 title_string <- paste(colnames(df)[ii], "by user and classe", sep=" ")
-p1 <- ggplot(df, aes(1:nrow(df), df[, ii])) + theme_bw() + geom_point(aes(col=user_name)) + theme(legend.position = "top") 
-p1 <- p1 + ylab(colnames(df)[ii]) + ggtitle(title_string)
-p2 <- ggplot(df, aes(1:nrow(df), df[, ii])) + theme_bw() + geom_point(aes(col=classe)) + theme(legend.position = "bottom") 
-p2 <- p2 + ylab(colnames(df)[ii]) 
-grid.arrange(p1, p2, nrow=2)
+tmp.df <- df[, c("user_name", "classe", colnames(df)[ii])]
+tmp.df$index <- 1:nrow(tmp.df)
+
+p.base <- ggplot(tmp.df, aes(x = index, y = pitch_belt)) + theme_bw() + 
+            theme(legend.position = "top", 
+                   panel.background = element_rect(fill = "grey90"),
+                   panel.grid.major = element_line(size = 0.50, linetype = 'dashed', colour = "white"), 
+                   panel.grid.minor = element_line(size = 0.25, linetype = 'dashed', colour = "white")) + 
+            ylab(colnames(df)[ii]) 
+
+p.1 <- p.base + 
+            ggtitle(title_string) +
+            scale_color_brewer(palette = "Set2", name = "User") +
+            geom_point(aes(col = user_name)) 
+
+p.2 <- p.base +
+            scale_color_brewer(palette = "Set1", name = "Classe") +
+            geom_point(aes(col = classe)) 
+
+grid.arrange(p.1, p.2, nrow=2)
 ```
 
-### Feature vs. Feature Plots with Separate Panels by `classe`
 
-This second set of example plots shows that there are indeed some reasonably recognizable patterns allowing to
-distinguish between different `classe` categories.
+### Feature vs. Feature Plots faceted by _user_ and _classe_
+
+This second set of example plots shows that there are indeed some reasonably recognizable patterns
+allowing to distinguish between different `classe` categories.
 
 The expectation is that the ML algorithm will be able to identify them and build on them a classification scheme.
 
-
-<button class="toggle_plot_code">show plot code</button>
-```{r plots-more_1, fig.width = 6, fig.height = 6, echo = TRUE}
+```{r plots-more_1, fig.width = 8, fig.height = 8, echo = FALSE, eval = FALSE}
+# NOT EVALUATED
+# NOT ECHOED
 df <- alt.full.select 
-p <- ggplot(df, aes(pitch_arm, roll_arm)) + theme_bw() + geom_point(aes(col=classe)) + 
-     ggtitle("pitch_arm vs. roll_arm by classe")
-p + facet_grid(classe ~ .)
+df$user_name <- alt.user
+p <- ggplot(df, aes(pitch_arm, roll_arm)) + theme_bw() + 
+        geom_point(aes(col=classe)) + 
+        ggtitle("pitch_arm vs. roll_arm by user and classe")
+p + facet_grid(user_name ~ classe)
+```
+
+```{r plots-more_2, fig.width = 8, fig.height = 8, echo = FALSE, eval = FALSE}
+# NOT EVALUATED
+# NOT ECHOED
+p <- ggplot(df, aes(pitch_forearm, roll_forearm)) + theme_bw() + 
+        geom_point(aes(col = classe)) + 
+        ggtitle("pitch_forearm vs. roll_forearm by user and classe")
+p + facet_grid(user_name ~ classe)
 ```
 
 <button class="toggle_plot_code">show plot code</button>
-```{r plots-more_2, fig.width = 6, fig.height = 6, echo = TRUE}
-df <- alt.full.select 
-p <- ggplot(df, aes(pitch_forearm, roll_forearm)) + theme_bw() + geom_point(aes(col=classe)) + 
-     ggtitle("pitch_forearm vs. roll_forearm by classe")
-p + facet_grid(classe ~ .)
+```{r plots-more_2b, fig.width = 8, fig.height = 8, echo = TRUE}
+p <- ggplot(df, aes(pitch_arm, roll_arm)) + theme_bw() + 
+            theme(legend.position = "top", 
+                  panel.background = element_rect(fill = "grey90")) +
+            scale_color_gradient(low = "gold", high = "blue") +
+            geom_point(aes(col = total_accel_arm)) + 
+            ggtitle("pitch_arm vs. roll_arm by user and classe")
+p + facet_grid(user_name ~ classe)
+```
+
+<button class="toggle_plot_code">show plot code</button>
+```{r plots-more_1b, fig.width = 8, fig.height = 8, echo = TRUE}
+p <- ggplot(df, aes(pitch_forearm, roll_forearm)) + theme_bw() + 
+            theme(legend.position = "top", 
+                  panel.background = element_rect(fill = "grey90")) +
+            scale_color_gradient(low = "gold", high = "blue") +
+            geom_point(aes(col = total_accel_forearm)) + 
+            ggtitle("pitch_forearm vs. roll_forearm by user and classe")
+p + facet_grid(user_name ~ classe)
 ```
 
 
@@ -471,13 +554,13 @@ through the `trainControl()` function of `caret`:
 
 * `cv`: Cross-Validation, 4-fold (_i.e._ 75%/25% splits).
 * `boot` (the default): bootstrap, 25 repeats.
-* 'LGOCV`: Leave Group Out Cross Validation, 25 repeats, 75%/25% train/test splits of the data.
+* `LGOCV`: Leave Group Out Cross Validation, 25 repeats, 75%/25% train/test splits of the data.
 
 In all cases we also tried a set of values for `mtry`, which regulates how many
 predictors are selected in the _random forest_ random subsetting of variables.
 
 
-```{r load_data_rf, echo = FALSE}
+```{r load_data_rf, cache = TRUE, echo = FALSE}
 mod.alt.rf1c <- readRDS("./data/mod.alt.rf1c.RDS")
 mod.alt.rf1e <- readRDS("./data/mod.alt.rf1e.RDS")
 
