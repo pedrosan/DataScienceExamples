@@ -4,7 +4,7 @@
 A calculator for a more comprehensive and realistic scenario comparing the cost/benefits of 
 buying a property vs. renting a comparable one.
 
-It runs on _shinyapps.io_ 
+It [runs on _shinyapps.io_ ](https://pedrosan.shinyapps.io/AdvBvsR).
 
 The repository comprises the following:
 

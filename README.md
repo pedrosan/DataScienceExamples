@@ -5,6 +5,7 @@ Mix of projects showcasing some of data science work
 A __report__ is available for some of them, hosted under pedrosan.github.io using the _pages_ feature.
 
 * Rent vs. Buy (simulation-based) Calculator
+  * [The Calculator on _shinyapps.io](https://pedrosan.shinyapps.io/AdvBvsR/)
   * [Introduction and general information](http://pedrosan.github.io/DataScience/Rent_vs_Buy/intro.html)
   * [Analysis of stock market returns](http://pedrosan.github.io/DataScience/Rent_vs_Buy/returns.html) 
     (indices) to get a handle on how to include them in the _calculator_.
