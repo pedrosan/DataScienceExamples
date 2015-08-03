@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="author" content="Giovanni Fossati" />
+
+
+<title>Buy vs. Rent App</title>
+
+<script src="common/libs/jquery-1.11.0/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="common/libs/bootstrap-3.3.1/css/cerulean.min.css" rel="stylesheet" />
+<script src="common/libs/bootstrap-3.3.1/js/bootstrap.min.js"></script>
+<script src="common/libs/bootstrap-3.3.1/shim/html5shiv.min.js"></script>
+<script src="common/libs/bootstrap-3.3.1/shim/respond.min.js"></script>
+
+<script src="common/js/toggle_GF.js"></script>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; background-color: #f8f8f8; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+pre, code { background-color: #f8f8f8; }
+code > span.kw { color: #204a87; font-weight: bold; }
+code > span.dt { color: #204a87; }
+code > span.dv { color: #0000cf; }
+code > span.bn { color: #0000cf; }
+code > span.fl { color: #0000cf; }
+code > span.ch { color: #4e9a06; }
+code > span.st { color: #4e9a06; }
+code > span.co { color: #8f5902; font-style: italic; }
+code > span.ot { color: #8f5902; }
+code > span.al { color: #ef2929; }
+code > span.fu { color: #000000; }
+code > span.er { font-weight: bold; }
+</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<link rel="stylesheet" href="common/css/gf_xnew_nolines.css" type="text/css" />
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img { 
+  max-width:100%; 
+  height: auto; 
+}
+</style>
+<div class="container-fluid main-container">
+
+
+<div id="header">
+<h1 class="title">Buy vs. Rent App</h1>
+<h3 class="subtitle"><em>a simulation-based calculator</em></h3>
+<h4 class="author"><em>Giovanni Fossati</em></h4>
+</div>
+
+
+<div id="what-is-it-and-why-we-want-it" class="section level2">
+<h2>What is it and why we want it</h2>
+<p>The <em>Buy vs. Rent</em> question confuses countless people daily.<br />We seek help online, being almost invariably mislead by over-simplistic tools.</p>
+<p>The plethora of calculators found on the web in the majority of cases do not properly handle several important aspects of the cost/benefit analysis of buying vs. renting.</p>
+<p>For instance:</p>
+<ul>
+<li>tax-related items, namely the tax benefits of the mortgage interest deduction, also considering the fact that applying it means itemizing deductions, hence losing the <em>standard deduction</em>.</li>
+<li>the benefits of re-investing money potentially saved by renting instead of buying,</li>
+<li>the benefit of the return of investment of the capital not put into a down-payment.</li>
+</ul>
+<p><span style="color: #006600 !important;"> <a href="https://pedrosan.shinyapps.io/buy_vs_rent/">This calculator</a> implements a more comprehensive and realistic picture, including these and other ingredients, and yields a <strong>statistical assessment</strong> of the <strong>buy vs. rent</strong> question <strong>by means of simulations</strong>. </span></p>
+<hr />
+</div>
+<div id="a-simulations-based-approach" class="section level2">
+<h2>A Simulations-based Approach</h2>
+<p>Given a set of input parameters, 250 simulations are performed, with stochastic “predictions” of the time varying values of:</p>
+<ul>
+<li>property appreciation,</li>
+<li>return of investment of the “unused cash” when renting,</li>
+<li>inflation,</li>
+<li>rent increase (over inflation).</li>
+</ul>
+<p>For the first three, values are drawn from Normal distributions with means and standard deviations given among the application inputs. The additional rent increase rate is drawn from an exponential distribution.</p>
+<p>For each simulation a ‘trade-off’ value is computed, giving the difference between buying the given property and renting (including the return of the investment of the cash not put into the property) for each year, for the duration of the mortgage loan. Positive values are in favor of buying, negative indicate that renting would be more beneficial financially.</p>
+<hr />
+</div>
+<div id="application-results" class="section level2">
+<h2>Application Results</h2>
+<p>The simulations results are summarized in three plots showing:</p>
+<ol style="list-style-type: decimal">
+<li>the trends of the ‘tradeoff’ amount,</li>
+<li>the fraction of simulations favoring buying over renting, over time,</li>
+<li>the distribution of tradeoff amounts over time, highligthing the distributions at 1/2, 3/4 and at the end of the loan period.</li>
+</ol>
+<p>The simulations performed by this simple Application are purely based on general probability density functions, namely Gaussian and Exponential.</p>
+<p>However it is clear that for the <em>Annual Variations</em> inputs it would be possible to apply a more real-data-driven approach, by sampling their values from distributions derived from real data from stock market or bonds investment returns, real estate property values, and inflation.</p>
+<p>Investment returns could be drawn from a proxy for different investing styles: bond indexes for conservative, S&amp;P500 for middle-ground, NASDAQ composite for more aggressive approach.<br />Real estate property values could be adjusted regionally, increasing the usefulness and relevance of the Calculator.</p>
+<p>The data exist and accessible. I just did not have time to bring them into <em>the fold</em>…</p>
+<p>An example is shown below.</p>
+<div id="example-of-summary-plot" class="section level4">
+<h4>Example of Summary Plot</h4>
+<button class="toggle_code">
+show output
+</button>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Define parameters (names and values)</span>
+
+paramNames &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;start_prop_value&quot;</span>, <span class="st">&quot;down_payment_pct&quot;</span>, <span class="st">&quot;mortgage_rate&quot;</span>, <span class="st">&quot;n_years&quot;</span>, 
+                <span class="st">&quot;initial_fixed_costs&quot;</span>,
+                <span class="st">&quot;prop_tax_rate_pct&quot;</span>, <span class="st">&quot;prop_insurance&quot;</span>, <span class="st">&quot;HOA_monthly_fee&quot;</span>,
+                <span class="st">&quot;start_rent&quot;</span>, <span class="st">&quot;rent_insurance&quot;</span>,
+                <span class="st">&quot;annual_appreciation&quot;</span>, <span class="st">&quot;annual_appreciation_sd&quot;</span>,
+                <span class="st">&quot;annual_inv&quot;</span>, <span class="st">&quot;annual_inv_sd&quot;</span>,
+                <span class="st">&quot;annual_inflation&quot;</span>, <span class="st">&quot;annual_inflation_sd&quot;</span>,
+                <span class="st">&quot;annual_rent_extra_increase_mean&quot;</span>,
+                <span class="st">&quot;fraction_extra_cash_invested_pct&quot;</span>,
+                <span class="st">&quot;income_tax_rate_pct&quot;</span>, <span class="st">&quot;itemized_deductions&quot;</span>, <span class="st">&quot;std_deduction&quot;</span>,
+                <span class="st">&quot;n_sim&quot;</span>)
+
+fake_input &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">start_prop_value =</span> <span class="dv">200000</span>, 
+                   <span class="dt">down_payment_pct =</span> <span class="fl">20.0</span>, 
+                   <span class="dt">mortgage_rate =</span> <span class="fl">4.5</span>, 
+                   <span class="dt">n_years =</span> <span class="dv">30</span>, 
+                   <span class="dt">initial_fixed_costs =</span> <span class="dv">6000</span>, 
+                   <span class="dt">prop_tax_rate_pct =</span> <span class="fl">2.05</span>,
+                   <span class="dt">prop_insurance =</span> <span class="fl">4000.0</span>, 
+                   <span class="dt">HOA_monthly_fee =</span> <span class="fl">400.0</span>,
+                   <span class="dt">start_rent =</span> <span class="fl">1500.0</span>, 
+                   <span class="dt">rent_insurance =</span> <span class="fl">260.0</span>, 
+                   <span class="dt">annual_appreciation =</span> <span class="fl">3.0</span>, 
+                   <span class="dt">annual_appreciation_sd =</span> <span class="fl">2.0</span>, 
+                   <span class="dt">annual_inv =</span> <span class="fl">5.0</span>, 
+                   <span class="dt">annual_inv_sd =</span> <span class="fl">7.0</span>, 
+                   <span class="dt">annual_inflation =</span> <span class="fl">1.5</span>, 
+                   <span class="dt">annual_inflation_sd =</span> <span class="fl">1.0</span>, 
+                   <span class="dt">annual_rent_extra_increase_mean =</span> <span class="fl">0.5</span>, 
+                   <span class="dt">fraction_extra_cash_invested_pct =</span> <span class="fl">50.0</span>, 
+                   <span class="dt">income_tax_rate_pct =</span> <span class="fl">25.0</span>, 
+                   <span class="dt">itemized_deductions =</span> <span class="fl">0.0</span>, 
+                   <span class="dt">std_deduction =</span> <span class="dv">12200</span>, 
+                   <span class="dt">n_sim =</span> <span class="dv">200</span>)
+    
+sims.tradeoff &lt;-<span class="st"> </span><span class="kw">do.call</span>(simulate_tradeoff, <span class="kw">getParams1</span>(fake_input, paramNames))
+
+n.sim &lt;-<span class="st"> </span><span class="kw">getParams1</span>(fake_input, <span class="st">&quot;n_sim&quot;</span>)[[<span class="dv">1</span>]]
+n.years &lt;-<span class="st"> </span><span class="kw">getParams1</span>(fake_input, <span class="st">&quot;n_years&quot;</span>)[[<span class="dv">1</span>]]</code></pre>
+<button class="toggle_plot_code">
+show plot code
+</button>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot_sims</span>(n.sim, n.years, sims.tradeoff)</code></pre>
+<p><img src="figures/plot_results-1.png" title="" alt="" width="900" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="model-parameters" class="section level2">
+<h2>Model Parameters</h2>
+<div id="buy-rent-and-tax-parameters" class="section level3">
+<h3>Buy, Rent and Tax Parameters</h3>
+<div id="property-and-mortgage" class="section level4">
+<h4>Property and mortgage</h4>
+<ul>
+<li><strong>Purchase price</strong> ($)</li>
+<li><strong>Down payment</strong> (%)</li>
+<li><strong>Mortgage rate</strong> (%)</li>
+<li><strong>Duration</strong> (years)</li>
+<li><strong>Initial fixed costs</strong> ($): additional cost incurred when buying a property, e.g. closing costs, or repairs.</li>
+</ul>
+</div>
+<div id="ownership-costs-property-taxes-insurance-fees" class="section level4">
+<h4>Ownership costs: property taxes, insurance, fees</h4>
+<ul>
+<li><strong>Property tax rate</strong> (%)</li>
+<li><strong>Insurance cost</strong> ($): home-owner insurance premium (annual).</li>
+<li><strong>HOA fee</strong> ($): home-owner association fees (monthly).</li>
+</ul>
+</div>
+<div id="rent" class="section level4">
+<h4>Rent</h4>
+<ul>
+<li><strong>Rent</strong> ($): monthly, ideally for a property comparable to that considered for purchase.</li>
+<li><strong>Renter insurance</strong> ($)</li>
+<li><strong>Fraction of saved cash re-invested</strong> (%): if the total costs of renting are lower than those of owning, a portion of the saved cash can be re-invested. This parameter regulates the fraction of this saved cash that is added to the investments.</li>
+</ul>
+</div>
+<div id="income-tax-related" class="section level4">
+<h4>Income Tax Related</h4>
+<ul>
+<li><strong>Marginal income tax</strong> (%): tax rate to use to calculate the potential tax-savings of the deduction of mortgage interests.</li>
+<li><strong>Other itemized deductions</strong> ($): the mortgage interest deduction can only be taken if one itemizes all deductions, thus losing the standard deduction. Because of this, the actual benefit of the mortgage interest deduction is only related to the portion that exceeds the standard deduction.</li>
+<li><strong>Standard deduction</strong>: please note that it may be different if filing as married or separately.</li>
+</ul>
+</div>
+</div>
+<div id="annual-variations" class="section level3">
+<h3>Annual Variations</h3>
+<div id="property-appreciation" class="section level4">
+<h4>Property appreciation</h4>
+<p>Assuming uncorrelated normally distributed values.</p>
+<ul>
+<li><strong>Appreciation</strong> (%): mean yearly increase of property values.</li>
+<li><strong>Appreciation std. dev.</strong> (%): “volatility” of the property value changes.</li>
+</ul>
+</div>
+<div id="cash-investment-return" class="section level4">
+<h4>Cash investment return</h4>
+<p>Assuming uncorrelated normally distributed values.</p>
+<ul>
+<li><strong>Return</strong> (%): mean yearly return of cash investments.</li>
+<li><strong>Return std. dev.</strong> (%): “volatility” of cash investment returns.</li>
+</ul>
+</div>
+<div id="inflation" class="section level4">
+<h4>Inflation</h4>
+<p>Assuming uncorrelated normally distributed values.</p>
+<ul>
+<li><strong>Inflation</strong> (%): mean yearly inflation rate.</li>
+<li><strong>Inflation std. dev.</strong> (%): “volatility” of inflation.</li>
+</ul>
+</div>
+<div id="rent-increase" class="section level4">
+<h4>Rent increase</h4>
+<ul>
+<li><strong>Extra increase over inflation</strong> (%): extra rate of increase of rent, on top of inflation.<br /> Values are drawn from an exponential distribution with this mean.</li>
+</ul>
+<hr class="thin_separator">
+<p><a name="APPENDIX"></a></p>
+</div>
+</div>
+</div>
+<div id="appendix" class="section level1">
+<h1>APPENDIX</h1>
+<p><a name="APPENDIX-functions"></a></p>
+<div id="functions" class="section level2">
+<h2>Functions</h2>
+<p>Source code of the user-defined functions in <a href="https://github.com/pedrosan/DataScienceExamples/tree/master/Rent_vs_Buy/Returns/scripts/my_functions.R">scripts/my_functions.R</a></p>
+<button class="toggle_code">
+show code
+</button>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co">#=-------------------------------------------------------------------------------</span>
+
+cumprod.matrix.old &lt;-<span class="st"> </span>function(x) {
+    nrows &lt;-<span class="st"> </span><span class="kw">dim</span>(x)[<span class="dv">1</span>] 
+    ncols &lt;-<span class="st"> </span><span class="kw">dim</span>(x)[<span class="dv">2</span>]
+    y &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="dv">1</span>, <span class="dt">nrow =</span> nrows, <span class="dt">ncol =</span> ncols)
+    y[<span class="dv">1</span>, ] &lt;-<span class="st"> </span>x[<span class="dv">1</span>, ]
+    for (i in <span class="dv">2</span>:nrows) {
+        y[i, ] &lt;-<span class="st"> </span>y[i<span class="dv">-1</span>, ]*x[i, ]
+    }
+    <span class="kw">return</span>(y)
+}
+
+cumprod.matrix &lt;-<span class="st"> </span>function(x) {
+    nrows &lt;-<span class="st"> </span><span class="kw">dim</span>(x)[<span class="dv">1</span>] 
+    ncols &lt;-<span class="st"> </span><span class="kw">dim</span>(x)[<span class="dv">2</span>]
+    y &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="dv">1</span>, <span class="dt">nrow =</span> nrows, <span class="dt">ncol =</span> ncols)
+    y[<span class="dv">1</span>, ] &lt;-<span class="st"> </span>x[<span class="dv">1</span>, ]
+    for (i in <span class="dv">1</span>:ncols) {
+        y[, i] &lt;-<span class="st"> </span><span class="kw">cumprod</span>(x[, i])
+    }
+    <span class="kw">return</span>(y)
+}
+
+cumdiv.matrix &lt;-<span class="st"> </span>function(x) {
+    nrows &lt;-<span class="st"> </span><span class="kw">dim</span>(x)[<span class="dv">1</span>] 
+    ncols &lt;-<span class="st"> </span><span class="kw">dim</span>(x)[<span class="dv">2</span>]
+    y &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="dv">1</span>, <span class="dt">nrow =</span> nrows, <span class="dt">ncol =</span> ncols)
+    y[<span class="dv">1</span>, ] &lt;-<span class="st"> </span>x[<span class="dv">1</span>, ]
+    for (i in <span class="dv">2</span>:nrows) {
+        y[i, ] &lt;-<span class="st"> </span>x[i, ] /<span class="st"> </span>x[i<span class="dv">-1</span>, ]
+    }
+    <span class="kw">return</span>(y)
+}
+
+cumsum.matrix &lt;-<span class="st"> </span>function(x) {
+    nrows &lt;-<span class="st"> </span><span class="kw">dim</span>(x)[<span class="dv">1</span>] 
+    ncols &lt;-<span class="st"> </span><span class="kw">dim</span>(x)[<span class="dv">2</span>]
+    y &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="dv">1</span>, <span class="dt">nrow =</span> nrows, <span class="dt">ncol =</span> ncols)
+    y[<span class="dv">1</span>, ] &lt;-<span class="st"> </span>x[<span class="dv">1</span>, ]
+    for (i in <span class="dv">1</span>:ncols) {
+        y[, i] &lt;-<span class="st"> </span><span class="kw">cumsum</span>(x[, i])
+    }
+    <span class="co">#for (i in 2:nrows) {</span>
+    <span class="co">#    y[i, ] &lt;- x[i, ] + x[i-1, ]</span>
+    <span class="co">#}</span>
+    <span class="kw">return</span>(y)
+}
+
+cumsub.matrix &lt;-<span class="st"> </span>function(x) {
+    nrows &lt;-<span class="st"> </span><span class="kw">dim</span>(x)[<span class="dv">1</span>] 
+    ncols &lt;-<span class="st"> </span><span class="kw">dim</span>(x)[<span class="dv">2</span>]
+    y &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="dv">1</span>, <span class="dt">nrow =</span> nrows, <span class="dt">ncol =</span> ncols)
+    y[<span class="dv">1</span>, ] &lt;-<span class="st"> </span>x[<span class="dv">1</span>, ]
+    for (i in <span class="dv">2</span>:nrows) {
+        y[i, ] &lt;-<span class="st"> </span>x[i, ] -<span class="st"> </span>x[i<span class="dv">-1</span>, ]
+    }
+    <span class="kw">return</span>(y)
+}
+
+<span class="co">#=-------------------------------------------------------------------------------</span>
+
+getParams1 &lt;-<span class="st"> </span>function(input, pnames) {
+    <span class="co"># input[[&quot;run_simul&quot;]]</span>
+
+    params &lt;-<span class="st"> </span><span class="kw">lapply</span>(pnames, function(p) { input[[p]] })
+    <span class="kw">names</span>(params) &lt;-<span class="st"> </span>pnames
+    params
+}
+
+<span class="co">#=------------------------------------------------------------------------------</span></code></pre>
+<button class="toggle_code">
+show code
+</button>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co">#=-------------------------------------------------------------------------------</span>
+<span class="co"># setup mortgage quantities</span>
+
+setup_mortgage_monthly &lt;-<span class="st"> </span>function(<span class="dt">start_prop_value =</span> <span class="dv">300000</span>, 
+                                   <span class="dt">down_payment_pct =</span> <span class="fl">20.0</span>,
+                                   <span class="dt">mortgage_rate =</span> <span class="fl">4.5</span>,
+                                   <span class="dt">n_years =</span> <span class="dv">30</span>) {
+    
+    <span class="co">#----</span>
+    prop.value &lt;-<span class="st"> </span>start_prop_value
+    down.payment.fraction &lt;-<span class="st"> </span>down_payment_pct /<span class="st"> </span><span class="dv">100</span>
+    
+    rate &lt;-<span class="st"> </span>mortgage_rate /<span class="st"> </span><span class="dv">100</span>
+    Nm &lt;-<span class="st"> </span><span class="dv">12</span>*n_years
+    <span class="co">#----</span>
+    
+    loan &lt;-<span class="st"> </span>prop.value*(<span class="dv">1</span> -<span class="st"> </span>down.payment.fraction)
+    
+    rm &lt;-<span class="st"> </span>rate /<span class="st"> </span><span class="dv">12</span>
+    rm1 &lt;-<span class="st"> </span><span class="dv">1</span> +<span class="st"> </span>rm
+    
+    mo.payment &lt;-<span class="st"> </span>rm*loan*rm1^Nm/(rm1^Nm -<span class="st"> </span><span class="dv">1</span>)
+    
+    x1 &lt;-<span class="st"> </span><span class="dv">1</span>:Nm
+    x2 &lt;-<span class="st"> </span><span class="dv">2</span>:(Nm<span class="dv">+1</span>)
+    loan.balance  &lt;-<span class="st"> </span>loan*(rm1^Nm -<span class="st"> </span>rm1^(x1<span class="dv">-1</span>))/(rm1^Nm<span class="dv">-1</span>)
+    loan.balance2 &lt;-<span class="st"> </span>loan*(rm1^Nm -<span class="st"> </span>rm1^(x2<span class="dv">-1</span>))/(rm1^Nm<span class="dv">-1</span>)
+    mo.payment.interest &lt;-<span class="st"> </span>loan.balance*rm
+    mo.payment.principal &lt;-<span class="st"> </span>mo.payment -<span class="st"> </span>mo.payment.interest
+    
+    <span class="kw">return</span>(<span class="kw">data.frame</span>(<span class="dt">balance.start =</span> loan.balance, 
+                      <span class="dt">balance.end =</span> loan.balance2,
+                      <span class="dt">interest =</span> mo.payment.interest, 
+                      <span class="dt">principal =</span> mo.payment.principal,
+                      <span class="dt">mo.payment =</span> <span class="kw">rep</span>(mo.payment, Nm),
+                      <span class="dt">interest.cumul =</span> <span class="kw">cumsum</span>(mo.payment.interest),
+                      <span class="dt">principal.cumul =</span> <span class="kw">cumsum</span>(mo.payment.principal),
+                      <span class="dt">payment.cumul =</span> <span class="kw">cumsum</span>(<span class="kw">rep</span>(mo.payment, Nm)))
+    )
+}
+
+<span class="co">#=-------------------------------------------------------------------------------</span>
+make_mortgage_annual &lt;-<span class="st"> </span>function(<span class="dt">monthly_data =</span> <span class="ot">NULL</span>) {
+    
+    annual_data &lt;-<span class="st"> </span>monthly_data[ (<span class="dv">1</span>:<span class="kw">nrow</span>(monthly_data)) %%<span class="st"> </span><span class="dv">12</span> ==<span class="st"> </span><span class="dv">0</span>, <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">6</span>, <span class="dv">7</span>, <span class="dv">8</span>)]
+    annual_data$balance.start &lt;-<span class="st">  </span>monthly_data$balance.start[ (<span class="dv">1</span>:<span class="kw">nrow</span>(monthly_data) +<span class="st"> </span><span class="dv">11</span>) %%<span class="st"> </span><span class="dv">12</span> ==<span class="st"> </span><span class="dv">0</span>]
+    <span class="kw">rownames</span>(annual_data) &lt;-<span class="st"> </span><span class="ot">NULL</span>
+    annual_data.by_year &lt;-<span class="st"> </span><span class="kw">cumsub.matrix</span>(<span class="kw">as.matrix</span>(annual_data[, <span class="kw">c</span>(<span class="dv">3</span>, <span class="dv">4</span>, <span class="dv">5</span>)]))
+    df &lt;-<span class="st"> </span><span class="kw">data.frame</span>(annual_data, annual_data.by_year)
+    <span class="kw">colnames</span>(df)[<span class="kw">c</span>(<span class="dv">6</span>, <span class="dv">7</span>, <span class="dv">8</span>)] &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;interest.by_year&quot;</span>, <span class="st">&quot;principal.by_year&quot;</span>, <span class="st">&quot;payment.by_year&quot;</span>)
+    <span class="kw">return</span>(df)
+    
+}
+
+<span class="co">#=-------------------------------------------------------------------------------</span>
+simulate_tradeoff &lt;-<span class="st"> </span>function(<span class="dt">start_prop_value =</span> <span class="ot">NULL</span>,
+                              <span class="dt">down_payment_pct =</span> <span class="ot">NULL</span>,
+                              <span class="dt">mortgage_rate =</span> <span class="ot">NULL</span>,
+                              <span class="dt">n_years =</span> <span class="ot">NULL</span>, 
+                              <span class="dt">initial_fixed_costs =</span> <span class="ot">NULL</span>,
+                              <span class="dt">prop_tax_rate_pct =</span> <span class="ot">NULL</span>,
+                              <span class="dt">prop_insurance =</span> <span class="ot">NULL</span>,
+                              <span class="dt">HOA_monthly_fee =</span> <span class="ot">NULL</span>,
+                              <span class="dt">start_rent =</span> <span class="ot">NULL</span>,
+                              <span class="dt">rent_insurance =</span> <span class="ot">NULL</span>,
+                              <span class="dt">annual_appreciation =</span> <span class="ot">NULL</span>, <span class="dt">annual_appreciation_sd =</span> <span class="ot">NULL</span>, 
+                              <span class="dt">annual_inv =</span> <span class="ot">NULL</span>, <span class="dt">annual_inv_sd =</span> <span class="ot">NULL</span>, 
+                              <span class="dt">annual_inflation =</span> <span class="ot">NULL</span>, <span class="dt">annual_inflation_sd =</span> <span class="ot">NULL</span>, 
+                              <span class="dt">annual_rent_extra_increase_mean =</span> <span class="ot">NULL</span>, 
+                              <span class="dt">fraction_extra_cash_invested_pct =</span> <span class="ot">NULL</span>,
+                              <span class="dt">income_tax_rate_pct =</span> <span class="fl">25.0</span>,
+                              <span class="dt">itemized_deductions =</span> <span class="fl">0.0</span>,
+                              <span class="dt">std_deduction =</span> <span class="ot">NULL</span>, 
+                              <span class="dt">n_sim =</span> <span class="dv">200</span>) {
+
+
+  <span class="co">#-------------------------------------</span>
+  <span class="co"># Setting up mortgage tables</span>
+  <span class="co">#-------------------------------------</span>
+  mortgage &lt;-<span class="st"> </span><span class="kw">setup_mortgage_monthly</span>(<span class="dt">start_prop_value =</span> start_prop_value,
+                                     <span class="dt">down_payment_pct =</span> down_payment_pct,
+                                     <span class="dt">mortgage_rate =</span> mortgage_rate,
+                                     <span class="dt">n_years =</span> n_years)
+
+  <span class="co"># mortgage &lt;- do.call(setup_mortgage_monthly, getParams1(input, paramNamesMort)) </span>
+  annual.mortgage &lt;-<span class="st"> </span><span class="kw">make_mortgage_annual</span>(<span class="dt">monthly_data =</span> mortgage)
+
+  <span class="co">#-------------------------------------</span>
+  <span class="co"># Inputs</span>
+  <span class="co">#-------------------------------------</span>
+  <span class="co"># Initial Property Value</span>
+  start.prop_value &lt;-<span class="st"> </span>start_prop_value
+
+  <span class="co"># Down Payment</span>
+  down.payment &lt;-<span class="st"> </span>start.prop_value*down_payment_pct /<span class="st"> </span><span class="fl">100.0</span>
+
+  <span class="co"># Additional Fixed Initial Costs</span>
+  initial.fixed_costs &lt;-<span class="st"> </span>initial_fixed_costs
+
+  <span class="co"># Initial Property Insurance [index to INFLATION]</span>
+  prop.insurance &lt;-<span class="st"> </span>prop_insurance
+
+  <span class="co"># Property Tax Rate</span>
+  prop.tax.rate &lt;-<span class="st"> </span>prop_tax_rate_pct /<span class="st"> </span><span class="dv">100</span>
+
+  <span class="co"># HOA fees [index to INFLATION]</span>
+  HOA.monthly.fee &lt;-<span class="st"> </span>HOA_monthly_fee
+  HOA.annual.fee &lt;-<span class="st"> </span>HOA.monthly.fee *<span class="st"> </span><span class="fl">12.0</span>
+
+  <span class="co"># Initial Monthly Rent [index to ~INFLATION]</span>
+  start.rent =<span class="st"> </span>start_rent
+
+  <span class="co"># Monthly Rent Increase (use `rexp` to draw an increment over inflation rate)</span>
+  annual.rent.mean &lt;-<span class="st"> </span>annual_rent_extra_increase_mean /<span class="st"> </span><span class="dv">100</span>
+
+  <span class="co"># Initial Renter Insurance [index to INFLATION]</span>
+  rent.insurance &lt;-<span class="st"> </span>rent_insurance
+
+  <span class="co"># Fraction of extra cash re-invested</span>
+  fraction.extra_cash_invested &lt;-<span class="st"> </span>fraction_extra_cash_invested_pct /<span class="st"> </span><span class="dv">100</span>
+
+  <span class="co"># Income Tax Rate</span>
+  income.tax.rate &lt;-<span class="st"> </span>income_tax_rate_pct /<span class="st"> </span><span class="dv">100</span>
+
+  <span class="co"># Std Deduction [index to INFLATION]</span>
+  std.deduction &lt;-<span class="st"> </span>std_deduction
+
+  <span class="co"># Other Itemized Deductions [index to INFLATION] </span>
+  itemized.deductions &lt;-<span class="st"> </span>itemized_deductions
+
+  <span class="co">#-------------------------------------------------</span>
+  <span class="co"># Property Appreciation</span>
+  annual.appr    &lt;-<span class="st"> </span>annual_appreciation /<span class="st"> </span><span class="dv">100</span>
+  annual.appr.sd &lt;-<span class="st"> </span>annual_appreciation_sd /<span class="st"> </span><span class="dv">100</span>
+
+  <span class="co"># Investment</span>
+  annual.invest    &lt;-<span class="st"> </span>annual_inv /<span class="st"> </span><span class="dv">100</span>
+  annual.invest.sd &lt;-<span class="st"> </span>annual_inv_sd /<span class="st"> </span><span class="dv">100</span>
+
+  <span class="co"># Inflation</span>
+  annual.inflation    &lt;-<span class="st"> </span>annual_inflation /<span class="st"> </span><span class="dv">100</span>
+  annual.inflation.sd &lt;-<span class="st"> </span>annual_inflation_sd /<span class="st"> </span><span class="dv">100</span>
+  <span class="co">#-------------------------------------------------</span>
+
+  <span class="co"># Number of observations (in Years)</span>
+  n.years &lt;-<span class="st"> </span>n_years
+  <span class="co"># number of months to simulate</span>
+  n.periods &lt;-<span class="st"> </span><span class="dv">1</span>
+  n.obs &lt;-<span class="st"> </span>n.periods *<span class="st"> </span>n.years
+
+  <span class="co"># Number of simulations</span>
+  n.sim &lt;-<span class="st"> </span>n_sim
+
+  <span class="co">#-------------------------------------------------</span>
+  <span class="co"># Spreading the rate quantities to sub-periods (not necessarily months maybe)</span>
+  <span class="co">#-------------------------------------------------</span>
+  <span class="co"># Property Appreciation</span>
+  monthly.appr    &lt;-<span class="st"> </span>annual.appr /<span class="st"> </span>n.periods
+  monthly.appr.sd &lt;-<span class="st"> </span>annual.appr.sd /<span class="st"> </span><span class="kw">sqrt</span>(n.periods)
+
+  <span class="co"># Investment</span>
+  monthly.invest    &lt;-<span class="st"> </span>annual.invest /<span class="st"> </span>n.periods
+  monthly.invest.sd &lt;-<span class="st"> </span>annual.invest.sd /<span class="st"> </span><span class="kw">sqrt</span>(n.periods)
+
+  <span class="co"># Inflation</span>
+  monthly.inflation    &lt;-<span class="st"> </span>annual.inflation /<span class="st"> </span>n.periods
+  monthly.inflation.sd &lt;-<span class="st"> </span>annual.inflation.sd /<span class="st"> </span><span class="kw">sqrt</span>(n.periods)
+
+  <span class="co">#----</span>
+  <span class="co"># The following should be updated only at the full years</span>
+  <span class="co"># extra rent increase</span>
+  <span class="co"># monthly.rent.lambda &lt;- annual.rent.mean / n.periods</span>
+  annual.rent.lambda &lt;-<span class="st"> </span><span class="fl">1.0</span> /<span class="st"> </span>annual.rent.mean
+
+
+  <span class="co">#-------------------------------------------------</span>
+  <span class="co"># simulate Returns</span>
+  monthly.appr.returns      &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="dv">0</span>, n.obs, n.sim)
+  monthly.invest.returns    &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="dv">0</span>, n.obs, n.sim)
+  monthly.inflation.returns &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="dv">0</span>, n.obs, n.sim)
+  <span class="co"># monthly.rent.returns      &lt;- matrix(0, n.obs, n.sim)       # rent should really be increase only yearly</span>
+
+  monthly.appr.returns[]      &lt;-<span class="st"> </span><span class="kw">rnorm</span>(n.obs*n.sim, <span class="dt">mean =</span> monthly.appr, <span class="dt">sd =</span> monthly.appr.sd)
+  monthly.invest.returns[]    &lt;-<span class="st"> </span><span class="kw">rnorm</span>(n.obs*n.sim, <span class="dt">mean =</span> monthly.invest, <span class="dt">sd =</span> monthly.invest.sd)
+  monthly.inflation.returns[] &lt;-<span class="st"> </span><span class="kw">rnorm</span>(n.obs*n.sim, <span class="dt">mean =</span> monthly.inflation, <span class="dt">sd =</span> monthly.inflation.sd)
+  <span class="co"># Not allowing for deflation</span>
+  monthly.inflation.returns   &lt;-<span class="st"> </span><span class="kw">ifelse</span>(monthly.inflation.returns &lt;=<span class="st"> </span><span class="dv">0</span>, <span class="fl">0.0</span>, monthly.inflation.returns)
+
+  <span class="co"># resets first-year inflation rate to zero.</span>
+  monthly.inflation.returns[<span class="dv">1</span>:n.periods, ] &lt;-<span class="st"> </span><span class="fl">0.0</span>
+
+  annual.appr.returns.cumul &lt;-<span class="st"> </span><span class="kw">cumprod.matrix</span>(<span class="dv">1</span> +<span class="st"> </span>monthly.appr.returns)[ (<span class="dv">1</span>:n.obs) %%<span class="st"> </span>n.periods ==<span class="st"> </span><span class="dv">0</span>, ]
+  annual.appr.returns       &lt;-<span class="st"> </span><span class="kw">cumdiv.matrix</span>(annual.appr.returns.cumul) -<span class="st"> </span><span class="fl">1.0</span>
+  annual.appr.returns[<span class="dv">1</span>, ]  &lt;-<span class="st"> </span><span class="fl">0.0</span> 
+
+  annual.invest.returns.cumul &lt;-<span class="st"> </span><span class="kw">cumprod.matrix</span>(<span class="dv">1</span> +<span class="st"> </span>monthly.invest.returns)[ (<span class="dv">1</span>:n.obs) %%<span class="st"> </span>n.periods ==<span class="st"> </span><span class="dv">0</span>, ]
+  annual.invest.returns       &lt;-<span class="st"> </span><span class="kw">cumdiv.matrix</span>(annual.invest.returns.cumul) -<span class="st"> </span><span class="fl">1.0</span>
+  annual.invest.returns[<span class="dv">1</span>, ]  &lt;-<span class="st"> </span><span class="fl">0.0</span> 
+
+  annual.inflation.returns.cumul &lt;-<span class="st"> </span><span class="kw">cumprod.matrix</span>(<span class="dv">1</span> +<span class="st"> </span>monthly.inflation.returns)[ (<span class="dv">1</span>:n.obs) %%<span class="st"> </span>n.periods ==<span class="st"> </span><span class="dv">0</span>, ]
+  annual.inflation.returns       &lt;-<span class="st"> </span><span class="kw">cumdiv.matrix</span>(annual.inflation.returns.cumul) -<span class="st"> </span><span class="fl">1.0</span>
+  annual.inflation.returns.cumul[<span class="dv">1</span>, ]  &lt;-<span class="st"> </span><span class="fl">1.0</span> 
+  annual.inflation.returns[<span class="dv">1</span>, ]  &lt;-<span class="st"> </span><span class="fl">0.0</span> 
+
+  <span class="co"># FUDGE to set a constant rent increase</span>
+  if( annual.inflation.sd ==<span class="st"> </span><span class="dv">0</span> ) {
+    annual.rent.increases      &lt;-<span class="st"> </span><span class="fl">0.0</span>*annual.inflation.returns +<span class="st"> </span>annual.rent.mean
+    annual.rent.increases[<span class="dv">1</span>, ] &lt;-<span class="st"> </span><span class="fl">0.0</span> 
+  } else {
+  <span class="co"># REAL</span>
+    annual.rent.increases      &lt;-<span class="st"> </span>annual.inflation.returns +<span class="st"> </span><span class="kw">rexp</span>(n.years*n.sim, <span class="dt">rate =</span> annual.rent.lambda)
+  }
+
+  <span class="co">#-------------------------------------------------</span>
+  sim.prop_value      &lt;-<span class="st"> </span><span class="kw">matrix</span>(start.prop_value, n.years, n.sim) *<span class="st"> </span>annual.appr.returns.cumul
+
+  sim.prop.insurance &lt;-<span class="st"> </span><span class="kw">matrix</span>(prop.insurance, n.years, n.sim) *<span class="st"> </span>annual.inflation.returns.cumul
+  sim.HOA.fee        &lt;-<span class="st"> </span><span class="kw">matrix</span>(HOA.annual.fee, n.years, n.sim) *<span class="st"> </span>annual.inflation.returns.cumul
+
+  sim.rent           &lt;-<span class="st"> </span><span class="dv">12</span>*start.rent*<span class="kw">cumprod.matrix</span>(<span class="dv">1</span> +<span class="st"> </span>annual.rent.increases)
+
+  sim.mort.interest  &lt;-<span class="st"> </span><span class="kw">matrix</span>(annual.mortgage$interest.by_year, n.years, n_sim)
+
+  <span class="co"># Costs</span>
+  sim.own.costs &lt;-<span class="st"> </span>sim.prop_value*prop.tax.rate +<span class="st"> </span>sim.prop.insurance +<span class="st"> </span>sim.HOA.fee
+  sim.own.costs[<span class="dv">1</span>, ] &lt;-<span class="st"> </span>sim.own.costs[<span class="dv">1</span>, ] +<span class="st"> </span>initial.fixed_costs
+
+  sim.own.costs.with.mortgage &lt;-<span class="st"> </span>sim.own.costs +<span class="st"> </span>annual.mortgage$payment.by_year
+
+  <span class="co"># Tax Savings (or not)</span>
+  sim.deductions &lt;-<span class="st"> </span>sim.mort.interest +<span class="st"> </span>sim.prop_value*prop.tax.rate +<span class="st"> </span>itemized.deductions*annual.inflation.returns.cumul
+  sim.tax.savings &lt;-<span class="st"> </span><span class="kw">ifelse</span>(sim.deductions &gt;<span class="st"> </span>std.deduction*annual.inflation.returns.cumul, 
+                            income.tax.rate*(sim.deductions-std.deduction*annual.inflation.returns.cumul),
+                            <span class="dv">0</span>)
+
+  <span class="co"># True Cost (= Costs - Tax Savings)</span>
+  sim.own.true.cost &lt;-<span class="st"> </span>sim.own.costs +<span class="st"> </span>annual.mortgage$payment.by_year -<span class="st"> </span>sim.tax.savings
+
+  <span class="co"># Renting Costs</span>
+  sim.rent.cost &lt;-<span class="st"> </span>sim.rent +<span class="st"> </span>rent.insurance*annual.inflation.returns.cumul
+  <span class="co"># sim.rent.cost &lt;- sim.rent </span>
+
+  <span class="co"># Extra Cash and re-investment</span>
+  sim.cost.delta &lt;-<span class="st"> </span>sim.own.true.cost -<span class="st"> </span>sim.rent.cost
+  sim.extra.cash &lt;-<span class="st"> </span><span class="kw">ifelse</span>(sim.cost.delta &gt;<span class="st"> </span><span class="dv">0</span>, sim.cost.delta, <span class="dv">0</span>)
+
+  sim.invest &lt;-<span class="st"> </span><span class="kw">matrix</span>(down.payment, n.years, n.sim) *<span class="st"> </span>annual.invest.returns.cumul
+  sim.invest.alt &lt;-<span class="st"> </span>sim.invest
+
+  for (j in <span class="dv">2</span>:n.obs) {
+    sim.invest.alt[j, ] =<span class="st"> </span>(sim.invest.alt[j<span class="dv">-1</span>, ] +<span class="st"> </span>sim.extra.cash[j<span class="dv">-1</span>, ]*fraction.extra_cash_invested)*(<span class="dv">1</span>+annual.invest.returns[j,]) 
+                         +<span class="st"> </span>sim.extra.cash[j<span class="dv">-1</span>, ]*(<span class="dv">1</span>-fraction.extra_cash_invested)
+  }
+
+  sim.tradeoff &lt;-<span class="st"> </span>-<span class="dv">1</span>*<span class="kw">cumsum.matrix</span>(sim.cost.delta) +<span class="st"> </span>(sim.prop_value -<span class="st"> </span>annual.mortgage$balance.end) -<span class="st"> </span>sim.invest.alt
+
+  <span class="kw">return</span>(sim.tradeoff)
+}
+
+<span class="co">#=-------------------------------------------------------------------------------</span>
+plot_sims &lt;-<span class="st"> </span>function(n.sim, n.years, sim.to) {
+    
+    <span class="kw">par</span>(<span class="dt">cex.main =</span> <span class="fl">1.5</span>)
+    <span class="kw">par</span>(<span class="dt">cex.lab =</span> <span class="fl">2.0</span>)
+    <span class="kw">par</span>(<span class="dt">cex.axis =</span> <span class="fl">1.5</span>)
+
+    <span class="co"># layout3 : 1 / 2 </span>
+    shape1 &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="kw">rep</span>(<span class="dv">1</span>,<span class="dv">8</span>))
+    shape2 &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="kw">rep</span>(<span class="dv">2</span>,<span class="dv">4</span>), <span class="kw">rep</span>(<span class="dv">3</span>,<span class="dv">4</span>))
+    shape &lt;-<span class="st"> </span><span class="kw">c</span>( <span class="kw">rep</span>(shape1, <span class="dv">5</span>), <span class="kw">rep</span>(shape2, <span class="dv">5</span>))
+    mat.layout3 &lt;-<span class="st"> </span><span class="kw">matrix</span>(shape, <span class="dt">nrow =</span> <span class="dv">10</span>, <span class="dt">ncol =</span> <span class="dv">8</span>, <span class="dt">byrow =</span> <span class="ot">TRUE</span>)
+    <span class="kw">layout</span>(mat.layout3)
+    
+    <span class="kw">palette</span>(<span class="kw">c</span>(<span class="st">&quot;black&quot;</span>, <span class="st">&quot;grey50&quot;</span>, <span class="st">&quot;grey30&quot;</span>, <span class="st">&quot;grey70&quot;</span>, <span class="st">&quot;orange&quot;</span>, <span class="st">&quot;#0f23d9&quot;</span>))
+    <span class="kw">palette</span>(<span class="kw">rep</span>(<span class="kw">c</span>(<span class="st">&quot;grey30&quot;</span>, <span class="st">&quot;grey70&quot;</span>), <span class="dv">3</span>))
+
+    ny1 &lt;-<span class="st"> </span><span class="kw">floor</span>(n.years*<span class="dv">3</span>/<span class="dv">4</span>)
+    ny2 &lt;-<span class="st"> </span><span class="kw">floor</span>(n.years/<span class="dv">2</span>)
+    
+    <span class="co">#--------------------------------------------------</span>
+    <span class="co"># time-series</span>
+    <span class="kw">par</span>(<span class="dt">mar =</span>  <span class="kw">c</span>(<span class="dv">5</span>, <span class="dv">5</span>, <span class="dv">4</span>, <span class="dv">2</span>) +<span class="st"> </span><span class="fl">0.1</span>)
+    <span class="kw">matplot</span>(sim.to/<span class="dv">1000</span>, <span class="dt">type=</span><span class="st">&quot;l&quot;</span>, <span class="dt">lwd=</span><span class="fl">0.5</span>, <span class="dt">lty=</span><span class="dv">1</span>, <span class="dt">col=</span><span class="dv">1</span>:<span class="dv">6</span>, 
+        <span class="dt">las =</span> <span class="dv">1</span>, 
+            <span class="dt">xlab =</span> <span class="st">&#39;Years&#39;</span>, 
+        <span class="dt">ylab =</span> <span class="st">&#39;1000s of Dollars&#39;</span>, 
+            <span class="dt">main =</span> <span class="st">&#39;Buy vs. Rent Tradeoff&#39;</span>)
+    <span class="kw">abline</span>(<span class="dt">h=</span><span class="dv">0</span>, <span class="dt">col=</span><span class="st">&quot;black&quot;</span>, <span class="dt">lty=</span><span class="dv">2</span>, <span class="dt">lwd=</span><span class="dv">2</span>)
+    <span class="kw">abline</span>(<span class="dt">v=</span>ny1, <span class="dt">col=</span><span class="st">&quot;orange2&quot;</span>, <span class="dt">lwd=</span><span class="dv">2</span>)
+    <span class="kw">abline</span>(<span class="dt">v=</span>ny2, <span class="dt">col=</span><span class="st">&quot;purple2&quot;</span>, <span class="dt">lwd=</span><span class="dv">2</span>)
+    <span class="kw">abline</span>(<span class="dt">v=</span>n.years, <span class="dt">col=</span><span class="st">&quot;red2&quot;</span>, <span class="dt">lwd=</span><span class="dv">3</span>)
+    <span class="kw">grid</span>()
+    
+    <span class="co">#--------------------------------------------------</span>
+    <span class="co"># positive fraction </span>
+    fraction.positive &lt;-<span class="st"> </span><span class="kw">rowSums</span>(sim.to &gt;<span class="st"> </span><span class="dv">0</span>)/n.sim
+    <span class="kw">plot</span>(<span class="dv">1</span>:<span class="kw">length</span>(fraction.positive), fraction.positive, <span class="dt">type=</span><span class="st">&quot;n&quot;</span>, 
+         <span class="dt">ylim =</span> <span class="kw">c</span>(-<span class="fl">0.05</span>, <span class="fl">1.05</span>),
+     <span class="dt">las =</span> <span class="dv">1</span>,
+         <span class="dt">xlab =</span> <span class="st">&#39;Years&#39;</span>, 
+     <span class="dt">ylab =</span> <span class="st">&#39;Fraction&#39;</span>, 
+         <span class="dt">main =</span> <span class="st">&#39;Simulations with Buy &quot;winning&quot; over Rent&#39;</span>)
+    <span class="kw">grid</span>()
+    <span class="kw">lines</span>(<span class="dv">1</span>:<span class="kw">length</span>(fraction.positive), fraction.positive, <span class="dt">col=</span><span class="st">&quot;blue&quot;</span>, <span class="dt">lwd =</span> <span class="dv">3</span>)
+    <span class="kw">abline</span>(<span class="dt">v=</span>ny1, <span class="dt">col=</span><span class="st">&quot;orange2&quot;</span>, <span class="dt">lwd=</span><span class="dv">2</span>)
+    <span class="kw">abline</span>(<span class="dt">v=</span>ny2, <span class="dt">col=</span><span class="st">&quot;purple2&quot;</span>, <span class="dt">lwd=</span><span class="dv">2</span>)
+    <span class="kw">abline</span>(<span class="dt">v=</span>n.years, <span class="dt">col=</span><span class="st">&quot;red2&quot;</span>, <span class="dt">lwd=</span><span class="dv">3</span>)
+    
+    <span class="co">#--------------------------------------------------</span>
+    <span class="co"># density distributions</span>
+    <span class="co"># i.years &lt;- (1:n.years)[(1:n.years) %% 5 == 0]</span>
+    i.years &lt;-<span class="st"> </span><span class="dv">1</span>:n.years
+    <span class="co"># i.years &lt;- 1:nrow(sim.to)</span>
+    
+    to.range &lt;-<span class="st"> </span><span class="kw">range</span>(sim.to[i.years, ])/<span class="dv">1000</span>.
+    to.xmin &lt;-<span class="st"> </span>to.range[<span class="dv">1</span>] -<span class="st"> </span><span class="fl">0.1</span>*(to.range[<span class="dv">2</span>] -<span class="st"> </span>to.range[<span class="dv">1</span>])
+    to.xmax &lt;-<span class="st"> </span>to.range[<span class="dv">2</span>] +<span class="st"> </span><span class="fl">0.1</span>*(to.range[<span class="dv">2</span>] -<span class="st"> </span>to.range[<span class="dv">1</span>])
+    
+    to.distr &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="dv">0</span>, <span class="kw">length</span>(i.years), n.sim)
+    to.dens.x &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="dv">0</span>, <span class="kw">length</span>(i.years), <span class="dv">512</span>)
+    to.dens.y &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="dv">0</span>, <span class="kw">length</span>(i.years), <span class="dv">512</span>)
+    
+    for( ii in <span class="dv">1</span>:<span class="kw">length</span>(i.years) ) {
+        iy &lt;-<span class="st"> </span>i.years[ii]
+        to.distr[ii, ] &lt;-<span class="st"> </span>sim.to[iy, ]/<span class="dv">1000</span>.
+    }
+    
+    for( ii in <span class="dv">1</span>:<span class="kw">length</span>(i.years) ) {
+        to.dens.x[ii, ] &lt;-<span class="st"> </span><span class="kw">density</span>(to.distr[ii, ], <span class="dt">n=</span><span class="dv">512</span>, <span class="dt">from=</span>to.xmin, <span class="dt">to=</span>to.xmax)$x
+        to.dens.y[ii, ] &lt;-<span class="st"> </span><span class="kw">density</span>(to.distr[ii, ], <span class="dt">n=</span><span class="dv">512</span>, <span class="dt">from=</span>to.xmin, <span class="dt">to=</span>to.xmax)$y
+    }
+    tod.max &lt;-<span class="st"> </span><span class="kw">max</span>(to.dens.y[<span class="dv">13</span>:n.years, ])
+    tod.min &lt;-<span class="st"> </span><span class="fl">0.0</span> -<span class="st"> </span><span class="fl">0.05</span>*tod.max
+    tod.max &lt;-<span class="st"> </span><span class="fl">1.05</span>*tod.max
+    
+    <span class="co"># to.dens.toplot.x &lt;- density(sim.to[ny, ]/1000, n=512, from=to.xmin, to=to.xmax)$x</span>
+    <span class="co"># to.dens.toplot.y &lt;- density(sim.to[ny, ]/1000, n=512, from=to.xmin, to=to.xmax)$y</span>
+    to.dens.toplot.x &lt;-<span class="st"> </span><span class="kw">density</span>(sim.to[<span class="kw">nrow</span>(sim.to), ]/<span class="dv">1000</span>, <span class="dt">n=</span><span class="dv">512</span>, <span class="dt">from=</span>to.xmin, <span class="dt">to=</span>to.xmax)$x
+    to.dens.toplot.y &lt;-<span class="st"> </span><span class="kw">density</span>(sim.to[<span class="kw">nrow</span>(sim.to), ]/<span class="dv">1000</span>, <span class="dt">n=</span><span class="dv">512</span>, <span class="dt">from=</span>to.xmin, <span class="dt">to=</span>to.xmax)$y
+    
+    <span class="kw">par</span>(<span class="dt">mar=</span><span class="kw">c</span>(<span class="dv">5</span>,<span class="dv">4</span>,<span class="dv">3</span>,<span class="dv">2</span>)+<span class="fl">0.1</span>)
+    <span class="kw">plot</span>(to.dens.y, <span class="dt">type=</span><span class="st">&quot;n&quot;</span>, 
+         <span class="dt">xlim =</span> <span class="kw">c</span>(to.xmin, to.xmax), 
+     <span class="dt">ylim =</span> <span class="kw">c</span>(tod.min, tod.max),
+     <span class="dt">xlab =</span> <span class="st">&#39;Thousands of $$$&#39;</span>,
+     <span class="dt">ylab =</span> <span class="st">&quot;density&quot;</span>,
+         <span class="dt">main =</span> <span class="st">&quot;Distribution of Tradeoff Amounts&quot;</span>)
+    <span class="kw">grid</span>()
+
+    for( ii in <span class="dv">1</span>:<span class="kw">length</span>(i.years) ) {
+        <span class="kw">lines</span>(to.dens.x[ii, ], to.dens.y[ii, ], <span class="dt">col=</span><span class="st">&quot;grey70&quot;</span>, <span class="dt">lwd=</span><span class="dv">1</span>)
+    }
+    <span class="kw">abline</span>(<span class="dt">v=</span><span class="dv">0</span>, <span class="dt">col=</span><span class="st">&quot;black&quot;</span>, <span class="dt">lty =</span> <span class="dv">2</span>, <span class="dt">lwd =</span> <span class="dv">2</span>)
+    <span class="kw">lines</span>(to.dens.x[ny1, ], to.dens.y[ny1, ], <span class="dt">col=</span><span class="st">&quot;orange2&quot;</span>, <span class="dt">lwd=</span><span class="dv">2</span>)
+    <span class="kw">lines</span>(to.dens.x[ny2, ], to.dens.y[ny2, ], <span class="dt">col=</span><span class="st">&quot;purple2&quot;</span>, <span class="dt">lwd=</span><span class="dv">2</span>)
+    <span class="kw">lines</span>(to.dens.toplot.x, to.dens.toplot.y, <span class="dt">col=</span><span class="st">&quot;red2&quot;</span>, <span class="dt">lwd=</span><span class="dv">3</span>)
+
+}
+
+<span class="co">#=-------------------------------------------------------------------------------</span></code></pre>
+<p><a name="SessionInfo"></a></p>
+</div>
+<div id="r-session-info" class="section level2">
+<h2>R Session Info</h2>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">sessionInfo</span>()
+<span class="co"># R version 3.1.3 (2015-03-09)</span>
+<span class="co"># Platform: x86_64-pc-linux-gnu (64-bit)</span>
+<span class="co"># Running under: Ubuntu 14.04.2 LTS</span>
+<span class="co"># </span>
+<span class="co"># locale:</span>
+<span class="co">#  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8       </span>
+<span class="co">#  [4] LC_COLLATE=C               LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   </span>
+<span class="co">#  [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                  LC_ADDRESS=C              </span>
+<span class="co"># [10] LC_TELEPHONE=C             LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       </span>
+<span class="co"># </span>
+<span class="co"># attached base packages:</span>
+<span class="co"># [1] stats     graphics  grDevices utils     datasets  methods   base     </span>
+<span class="co"># </span>
+<span class="co"># other attached packages:</span>
+<span class="co"># [1] ggplot2_1.0.1 magrittr_1.5  tidyr_0.2.0   dplyr_0.4.2   knitr_1.10.5 </span>
+<span class="co"># </span>
+<span class="co"># loaded via a namespace (and not attached):</span>
+<span class="co">#  [1] DBI_0.3.1        MASS_7.3-41      R6_2.0.1         Rcpp_0.11.6      assertthat_0.1  </span>
+<span class="co">#  [6] colorspace_1.2-6 digest_0.6.8     evaluate_0.7     formatR_1.2      grid_3.1.3      </span>
+<span class="co"># [11] gtable_0.1.2     htmltools_0.2.6  munsell_0.4.2    parallel_3.1.3   plyr_1.8.3      </span>
+<span class="co"># [16] proto_0.3-10     reshape2_1.4.1   rmarkdown_0.7    scales_0.2.4     stringi_0.5-5   </span>
+<span class="co"># [21] stringr_1.0.0    tools_3.1.3      yaml_2.1.13</span></code></pre>
+<hr />
+</div>
+</div>
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+$(document).ready(function () {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+});
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

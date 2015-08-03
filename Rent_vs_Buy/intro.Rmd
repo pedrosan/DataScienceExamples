@@ -1,0 +1,259 @@
+---
+title       : Buy vs. Rent App
+subtitle    : a simulation-based calculator
+author      : Giovanni Fossati
+job         : 
+output  : 
+  html_document:
+    self_contained: false
+---
+
+```{r setup, cache = FALSE, echo = FALSE, message = FALSE, warning = FALSE, tidy = FALSE}
+require(knitr)
+options(width = 100, 
+        scipen = 1)
+opts_chunk$set(message = FALSE, 
+               error = FALSE, 
+               warning = FALSE, 
+               collapse = TRUE, 
+               tidy = FALSE,
+               cache = FALSE, 
+               cache.path = '.cache/', 
+               comment = '#',
+               fig.align = 'center', 
+               dpi = 100, 
+               fig.path = 'figures/')
+
+library("dplyr")
+library("tidyr")
+library("magrittr")
+library("ggplot2")
+```
+
+```{r load_packages, cache = FALSE, echo = FALSE, message = FALSE, warning = FALSE, tidy = FALSE}
+source("./scripts/my_functions_1.R")
+source("./scripts/my_functions_2.R")
+```
+
+## What is it and why we want it
+
+The _Buy vs. Rent_ question confuses countless people daily.   
+We seek help online, being almost invariably mislead by over-simplistic tools.
+
+The plethora of calculators found on the web in the majority of cases do not properly handle
+several important aspects of the cost/benefit analysis of buying vs. renting. 
+
+For instance:
+
+* tax-related items, namely the tax benefits of the mortgage interest deduction, also considering 
+  the fact that applying it means itemizing deductions, hence losing the _standard deduction_.
+* the benefits of re-investing money potentially saved by renting instead of buying,
+* the benefit of the return of investment of the capital not put into a down-payment.
+
+<span style="color: #006600 !important;">
+[This calculator](https://pedrosan.shinyapps.io/buy_vs_rent/) implements a more comprehensive 
+and realistic picture, including these and other ingredients, and yields 
+a __statistical assessment__ of the __buy vs. rent__ question __by means of simulations__.
+</span>
+
+--- 
+
+## A Simulations-based Approach
+
+Given a set of input parameters, 250 simulations are performed, with stochastic "predictions" 
+of the time varying values of: 
+
+* property appreciation, 
+* return of investment of the "unused cash" when renting,
+* inflation, 
+* rent increase (over inflation).
+
+For the first three, values are drawn from Normal distributions with means and standard deviations
+given among the application inputs. 
+The additional rent increase rate is drawn from an exponential distribution.
+
+For each simulation a 'trade-off' value is computed, giving the difference between buying the
+given property and renting (including the return of the investment of the cash not put into the
+property) for each year, for the duration of the mortgage loan.
+Positive values are in favor of buying, negative indicate that renting would be more beneficial financially.
+
+
+--- 
+
+## Application Results
+
+The simulations results are summarized in three plots showing:
+
+1. the trends of the 'tradeoff' amount, 
+2. the fraction of simulations favoring buying over renting, over time,
+3. the distribution of tradeoff amounts over time, highligthing the distributions at 1/2, 3/4 and at the end of the loan period.
+
+The simulations performed by this simple Application are purely based on general probability density functions, 
+namely Gaussian and Exponential.
+
+However it is clear that for the _Annual Variations_ inputs it would be possible to apply a more
+real-data-driven approach, by sampling their values from distributions derived from real data from
+stock market or bonds investment returns, real estate property values, and inflation.
+
+Investment returns could be drawn from a proxy for different investing styles: bond indexes for
+conservative, S&P500 for middle-ground, NASDAQ composite for more aggressive approach.   
+Real estate property values could be adjusted regionally, increasing the usefulness and relevance of the Calculator.
+
+The data exist and accessible.  I just did not have time to bring them into _the fold_... 
+
+An example is shown below.
+
+#### Example of Summary Plot
+
+<button class="toggle_code">show output</button>
+```{r prepare_for_plot, echo = TRUE}
+# Define parameters (names and values)
+
+paramNames <- c("start_prop_value", "down_payment_pct", "mortgage_rate", "n_years", 
+                "initial_fixed_costs",
+                "prop_tax_rate_pct", "prop_insurance", "HOA_monthly_fee",
+                "start_rent", "rent_insurance",
+                "annual_appreciation", "annual_appreciation_sd",
+                "annual_inv", "annual_inv_sd",
+                "annual_inflation", "annual_inflation_sd",
+                "annual_rent_extra_increase_mean",
+                "fraction_extra_cash_invested_pct",
+                "income_tax_rate_pct", "itemized_deductions", "std_deduction",
+                "n_sim")
+
+fake_input <- list(start_prop_value = 200000, 
+                   down_payment_pct = 20.0, 
+                   mortgage_rate = 4.5, 
+                   n_years = 30, 
+                   initial_fixed_costs = 6000, 
+                   prop_tax_rate_pct = 2.05,
+                   prop_insurance = 4000.0, 
+                   HOA_monthly_fee = 400.0,
+                   start_rent = 1500.0, 
+                   rent_insurance = 260.0, 
+                   annual_appreciation = 3.0, 
+                   annual_appreciation_sd = 2.0, 
+                   annual_inv = 5.0, 
+                   annual_inv_sd = 7.0, 
+                   annual_inflation = 1.5, 
+                   annual_inflation_sd = 1.0, 
+                   annual_rent_extra_increase_mean = 0.5, 
+                   fraction_extra_cash_invested_pct = 50.0, 
+                   income_tax_rate_pct = 25.0, 
+                   itemized_deductions = 0.0, 
+                   std_deduction = 12200, 
+                   n_sim = 200)
+    
+sims.tradeoff <- do.call(simulate_tradeoff, getParams1(fake_input, paramNames))
+
+n.sim <- getParams1(fake_input, "n_sim")[[1]]
+n.years <- getParams1(fake_input, "n_years")[[1]]
+```
+
+<button class="toggle_plot_code">show plot code</button>
+```{r plot_results, cache = FALSE, fig.width = 9.0, fig.height = 6.0, echo = TRUE}
+plot_sims(n.sim, n.years, sims.tradeoff)
+```
+    
+## Model Parameters
+
+### Buy, Rent and Tax Parameters
+
+#### Property and mortgage
+
+* __Purchase price__ (\$)
+* __Down payment__ (%)
+* __Mortgage interest rate__ (%)
+* __Duration__ (years)
+* __Initial fixed costs__ (\$): additional cost incurred when buying a property, e.g. closing costs, or repairs.
+       
+#### Ownership costs: property taxes, insurance, fees
+
+* __Property tax rate__ (%)
+* __Insurance cost__ (\$): home-owner insurance premium (annual).
+* __HOA fee__ (\$): home-owner association fees (monthly).
+          
+#### Rent
+
+* __Rent__ (\$): monthly, ideally for a property comparable to that considered for purchase.
+* __Renter insurance__ (\$)
+* __Fraction of saved cash re-invested__ (%): 
+    if the total costs of renting are lower than those of owning, a portion of the saved cash can be re-invested.
+    This parameter regulates the fraction of this saved cash that is added to the investments.
+    
+#### Income Tax Related
+
+* __Marginal income tax__ (%): tax rate to use to calculate the potential tax-savings of the deduction of mortgage interests.
+* __Other itemized deductions__ (\$): the mortgage interest deduction can only be taken if one itemizes all deductions, thus
+	        losing the standard deduction. Because of this, the actual benefit of the mortgage interest deduction is only 
+                related to the portion that exceeds the standard deduction.
+* __Standard deduction__: please note that it may be different if filing as married or separately.
+
+
+### Annual Variations
+
+#### Property appreciation
+
+Assuming uncorrelated normally distributed values.
+
+* __Appreciation__ (%): mean yearly increase of property values.
+* __Appreciation std. dev.__ (%): "volatility" of the property value changes.
+          
+#### Cash investment return
+          
+Assuming uncorrelated normally distributed values.
+
+* __Return__ (%):  mean yearly return of cash investments.
+* __Return std. dev.__ (%): "volatility" of cash investment returns.
+
+#### Inflation
+
+Assuming uncorrelated normally distributed values.
+
+* __Inflation__ (%): mean yearly inflation rate.
+* __Inflation std. dev.__ (%): "volatility" of inflation.
+          
+#### Rent increase
+
+* __Extra increase over inflation__ (%): extra rate of increase of rent, on top of inflation.   
+      Values are drawn from an exponential distribution with this mean.
+
+
+<hr class="thin_separator">
+<a name="APPENDIX"></a>
+
+# APPENDIX
+
+<a name="APPENDIX-functions"></a>
+
+## Functions
+
+Source code of the user-defined functions in 
+[scripts/my_functions.R](https://github.com/pedrosan/DataScienceExamples/tree/master/Rent_vs_Buy/Returns/scripts/my_functions.R) 
+
+
+```{r read_my_functions, eval = TRUE, echo = FALSE, cache = FALSE}
+read_chunk("./scripts/my_functions_1.R")
+read_chunk("./scripts/my_functions_2.R")
+```
+
+<button class="toggle_code">show code</button>
+```{r print_chunk_1, eval = FALSE, echo = TRUE, cache = FALSE}
+<<my_functions_1>>
+```
+
+<button class="toggle_code">show code</button>
+```{r print_chunk_2, eval = FALSE, echo = TRUE, cache = FALSE}
+<<my_functions_2>>
+```
+
+
+<a name="SessionInfo"></a>
+
+## R Session Info
+
+```{r R_session_info}
+sessionInfo()
+```
+
+---

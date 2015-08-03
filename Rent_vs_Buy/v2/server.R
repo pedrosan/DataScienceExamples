@@ -2,8 +2,8 @@
 library(shiny)
 
 # my functions
-source("scripts/my_functions1.R")
-source("scripts/my_functions2.R")
+source("scripts/my_functions_1.R")
+source("scripts/my_functions_2.R")
 
 # list of variables names
 # paramNamesMort <- c("start_prop_value", "down_payment_pct", "mortgage_rate", "n_years")

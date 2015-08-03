@@ -11,8 +11,8 @@ The repository comprises the following:
 * An analysis of stock market returns (for indices) to get a handle on how to include
   them in the _calculator_ (which uses them for return of investment of cash non-spent or not locked 
   into a mortgage down payment:
-  * [REPORT](http://pedrosan.github.io/DataScienceExamples/Rent_vs_Buy/Returns/)
-  * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Rent_vs_Buy/Returns)
+  * [REPORT](http://pedrosan.github.io/DataScienceExamples/Rent_vs_Buy/returns.html)
+  * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Rent_vs_Buy/)
 
 * Source code for the _shiny application_ itself
   * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Rent_vs_Buy/v2)
