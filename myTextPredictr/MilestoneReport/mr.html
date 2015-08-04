@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="author" content="Giovanni Fossati" />
+
+
+<title>Building a Text Prediction Algorithm</title>
+
+<script src="../../common/libs/jquery-1.11.0/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="../../common/libs/bootstrap-3.3.1/css/cerulean.min.css" rel="stylesheet" />
+<script src="../../common/libs/bootstrap-3.3.1/js/bootstrap.min.js"></script>
+<script src="../../common/libs/bootstrap-3.3.1/shim/html5shiv.min.js"></script>
+<script src="../../common/libs/bootstrap-3.3.1/shim/respond.min.js"></script>
+
+<script src="../../common/js/toggle_GF.js"></script>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; background-color: #f8f8f8; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+pre, code { background-color: #f8f8f8; }
+code > span.kw { color: #204a87; font-weight: bold; }
+code > span.dt { color: #204a87; }
+code > span.dv { color: #0000cf; }
+code > span.bn { color: #0000cf; }
+code > span.fl { color: #0000cf; }
+code > span.ch { color: #4e9a06; }
+code > span.st { color: #4e9a06; }
+code > span.co { color: #8f5902; font-style: italic; }
+code > span.ot { color: #8f5902; }
+code > span.al { color: #ef2929; }
+code > span.fu { color: #000000; }
+code > span.er { font-weight: bold; }
+</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<link rel="stylesheet" href="../../common/css/gf_xnew_nolines.css" type="text/css" />
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img { 
+  max-width:100%; 
+  height: auto; 
+}
+</style>
+<div class="container-fluid main-container">
+
+
+<div id="header">
+<h1 class="title">Building a Text Prediction Algorithm</h1>
+<h3 class="subtitle"><em>Exploratory Analysis and Thoughts about a Prediction Strategy</em></h3>
+<h4 class="author"><em>Giovanni Fossati</em></h4>
+</div>
+
+
+<p><a name="SUMMARY"></a></p>
+<div id="executive-summary" class="section level1">
+<h1>EXECUTIVE SUMMARY</h1>
+<p>In this report I briefly illustrate the exploratory analysis performed on a three datasets, comprising text from blogs, news and tweets.</p>
+<p>The ultimate goal is to produce a <em>light</em> application able to predict text (words) given some preceding text, mimicking the predictive typing feature of modern software keyboard of portable devices.</p>
+<p>As a playground a fairly substantial dataset was made available, comprising text from various heterogenous sources (blogs, news, twitter). These datasets are the foundation for developing an understanding of <em>language processing</em> and in turn devise a strategy for achieving the goal, and perhaps more importantly (in practice) they constitute our training and testing datasets.</p>
+<p>I decided to invest a significant amount of time to explore the data, and delved (too) deeply into data cleaning, assuming that this effort will pay off by making any algorithm more robust.</p>
+<p>At this stage in the project I will mostly review my exploratory analysis of the data, and outline my current thought about the strategy for developing the algorithm for the text-predicting application.</p>
+<p><strong>Performance issues</strong>: it is worth mentioning that one of the main challenges has been dealing smartly with the computational load, that turned out to be a serious limiting factor, even on a powerful workstation.<br />I did not use the suggested <code>tm</code> suite and relied instead heavily on <code>perl</code> and in <code>R</code> mainly <code>dplyr</code>, <code>NLP</code> and <code>RWeka</code>.</p>
+<div id="current-thoughts-about-predictive-algorithm-strategy" class="section level3">
+<h3>Current Thoughts About Predictive Algorithm Strategy</h3>
+<p>My current thoughts, very much in flux, about the strategy are that a <em>n-grams</em> based approach would be the most effective.<br />In particular, I am leaning towards a <em>weighted combination</em> of <em>2- 3- 4- 5-grams</em> (linear interpolation), perhaps <em>assisted</em> by some additional information drawn from an analysis of the association of words in sentences or their distance within it.</p>
+<p>An important issue that I have not yet had a chance to ponder sufficiently include the handling of <em>“zeros”</em>, <em>i.e.</em> words not included in the dictionary of the training set or, more importantly with a <em>n-grams</em> approach words that are not seen following a given <em>(n-1) gram</em>. In practice, based on my readings, this problem is tackled with some form of <em>smoothing</em>, that is assigning a probability to the <em>“zeros”</em> (and in turn re-allocating some mass probability away from the observed <em>n-grams</em>).<br />I have not yet had a chance to explore the feasibility and effectiveness of methods like <em>Good-Turing</em> or <em>Stupid Backoff</em>.</p>
+<p><a name="CONTENT"></a></p>
+</div>
+<div id="content" class="section level2">
+<h2>CONTENT</h2>
+<p>The report is organized in the following sections:</p>
+<ul>
+<li><a href="#SUMMARY">EXECUTIVE SUMMARY</a></li>
+<li><a href="#PRELIMINARIES">PRELIMINARIES</a>
+<ul>
+<li><a href="#PREPROCESSING">Preprocessing (before loading into R)</a>
+<ul>
+<li><a href="#Homogeneization">Homogeneization of Characters</a></li>
+<li><a href="#Contractions">Contractions, Profanities, Emoticons, Hashtags, etc…</a></li>
+</ul></li>
+</ul></li>
+<li><a href="#LOADING">MOVING TO R</a>
+<ul>
+<li><a href="#LOADING_THE_DATA">Loading the Data</a></li>
+<li><a href="#FURTHER_CLEANING">Further Data Cleaning in R</a>
+<ul>
+<li><a href="#text_transformations">Text transformations</a></li>
+<li><a href="#few_chars">Excluding rows with too few characters</a></li>
+<li><a href="#subsetting">Subsetting of the data</a></li>
+</ul></li>
+</ul></li>
+<li><a href="#ANALYSIS">ANALYSIS</a>
+<ul>
+<li><a href="#ANALYSIS-STEP1">Step 1 : Sentence Annotation</a></li>
+<li><a href="#ANALYSIS-STEP2">Step 2 : <em>n-grams</em> Tokenization</a>
+<ul>
+<li><a href="#ngrams_tables">A look at the n-grams</a></li>
+<li><a href="#ngrams_plots">Some Summary Plots for 4-grams</a>
+<ul>
+<li><a href="#top30_mixed">Top-30 all mixed</a></li>
+<li><a href="#top20_separate">Top-20 by data source</a></li>
+</ul></li>
+</ul></li>
+</ul></li>
+<li><a href="#APPENDIX">APPENDIX</a>
+<ul>
+<li><a href="#APPENDIX-my_functions">User Defined Functions</a></li>
+<li><a href="#APPENDIX-tokenization_issue">Mysterious issue with <code>NGramTokenizer</code></a></li>
+</ul></li>
+</ul>
+<hr class="thin_separator">
+<p><a name="PRELIMINARIES"></a></p>
+</div>
+</div>
+<div id="preliminaries" class="section level1">
+<h1>PRELIMINARIES</h1>
+<p><a href="#TOP">Back to the Top</a></p>
+<p>Libraries needed for data processing and plotting:</p>
+<button class="toggle_code">
+show code
+</button>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co">#-----------------------------</span>
+<span class="co"># NLP</span>
+<span class="kw">library</span>(<span class="st">&quot;tm&quot;</span>)
+<span class="kw">library</span>(<span class="st">&quot;SnowballC&quot;</span>)
+<span class="kw">library</span>(<span class="st">&quot;openNLP&quot;</span>)
+<span class="kw">library</span>(<span class="st">&quot;NLP&quot;</span>)
+
+<span class="co"># To help java fail less :-(</span>
+<span class="kw">options</span>( <span class="dt">java.parameters =</span> <span class="st">&quot;-Xmx6g&quot;</span>)
+<span class="kw">library</span>(<span class="st">&quot;RWeka&quot;</span>)   <span class="co"># [NGramTokenizer], [Weka_control]</span>
+
+<span class="co">#-----------------------------</span>
+<span class="co"># general</span>
+<span class="kw">library</span>(<span class="st">&quot;dplyr&quot;</span>)
+<span class="kw">library</span>(<span class="st">&quot;magrittr&quot;</span>)
+<span class="kw">library</span>(<span class="st">&quot;devtools&quot;</span>)
+
+<span class="kw">library</span>(<span class="st">&quot;ggplot2&quot;</span>)
+<span class="kw">library</span>(<span class="st">&quot;gridExtra&quot;</span>)
+<span class="co"># library(&quot;RColorBrewer&quot;)</span>
+
+<span class="kw">library</span>(<span class="st">&quot;pander&quot;</span>)
+
+<span class="co">#-----------------------------</span>
+<span class="co"># my functions</span>
+<span class="kw">source</span>(<span class="st">&quot;./scripts/my_functions.R&quot;</span>)
+<span class="co">#-----------------------------</span></code></pre>
+<p><a name="PREPROCESSING"></a></p>
+<div id="preprocessing-before-loading-into-r" class="section level2">
+<h2>PREPROCESSING (before loading into R)</h2>
+<p><a href="#CONTENT">Back to TOC</a></p>
+<p>After a quick review of the data with various R functions and packages, I decided to perform some cleaning of the text with standard <em>Linux</em> command line tools.</p>
+<p>The main task was to analyze the mix of invidual characters present in the three datasets with the goal of doing some homogeneization and tidying up of non-alphanumeric characters, such as quotes that can come in different forms.</p>
+<p>The used method is not elegant, but effective enough, relying on a simple perl command substituting a series of <em>non-odd</em> characters with spaces, thus leaving a stream of <em>odd</em> characters subsequently parsed and cleaned to produce a list of <em>odd</em> characters sorted by their count.</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">perl</span> -pe <span class="st">&#39;s|[\d\w\$\,\.\!\?\(\);:\/\\\-=&amp;%#_\~&lt;&gt;]||g; s|\s||g; s|[\^@&quot;\+\*\[\]]||g;&#39;</span> <span class="kw">|</span> <span class="kw">\</span>
+          <span class="kw">perl</span> -pe <span class="st">&quot;s/\&#39;//g;&quot;</span> <span class="kw">|</span> <span class="kw">\</span>
+          <span class="kw">egrep</span> -v <span class="st">&#39;^$&#39;</span> <span class="kw">|</span> <span class="kw">\</span>
+          <span class="kw">split_to_singles.awk</span> <span class="kw">|</span> <span class="kw">\</span>
+          <span class="kw">sort</span> -k 1 <span class="kw">|</span> <span class="kw">uniq</span> -c <span class="kw">|</span> <span class="kw">sort</span> -k 1nr
+
+<span class="co"># split_to_singles.awk is a short awk script not worth including here (it&#39;s on GitHub)</span></code></pre>
+<p>The number of unique <em>odd</em> characters found in each dataset are 2159 for blogs, 310 for news, 2087 for twitter.</p>
+<p>The following is the census of <em>odd characters</em> appearing more than 500 times in each of the datasets (the full sorted lists are available on the GitHub repo in the data directory).</p>
+<pre class="sourceCode r"><code class="sourceCode r">   blogs           news              twitter
+-----------<span class="st">      </span>----------<span class="st">         </span>------------------------
+<span class="st"> </span><span class="dv">387317</span> [’]      <span class="dv">102911</span> [’]         <span class="dv">27440</span> [“]        <span class="dv">726</span> [»]
+ <span class="dv">109154</span> [”]       <span class="dv">48115</span> [—]         <span class="dv">26895</span> [”]        <span class="dv">718</span> [«]
+ <span class="dv">108769</span> [“]       <span class="dv">47090</span> [“]         <span class="dv">11419</span> [’]        <span class="dv">715</span> [😔]
+  <span class="dv">50176</span> [–]       <span class="dv">43992</span> [”]          <span class="dv">5746</span> [♥]        <span class="dv">686</span> [😉]
+  <span class="dv">41129</span> […]        <span class="dv">8650</span> [–]          <span class="dv">5241</span> […]        <span class="dv">680</span> [😳]
+  <span class="dv">23836</span> [‘]        <span class="dv">6991</span> [ø]          <span class="dv">3838</span> [|]        <span class="dv">639</span> [{]
+  <span class="dv">18757</span> [—]        <span class="dv">6723</span> []          <span class="dv">2353</span> [❤]        <span class="dv">617</span> [•]
+   <span class="dv">3963</span> [é]        <span class="dv">6544</span> []          <span class="dv">2314</span> [–]        <span class="dv">593</span> [‘]
+   <span class="dv">2668</span> [£]        <span class="dv">6267</span> []          <span class="dv">1799</span> [—]        <span class="dv">578</span> [�]
+   <span class="dv">1301</span> [′]        <span class="dv">4898</span> [‘]          <span class="dv">1333</span> [😊]        <span class="dv">561</span> [💜]
+    <span class="dv">914</span> [´]        <span class="dv">3641</span> []          <span class="dv">1211</span> [👍]        <span class="dv">560</span> [😃]
+    <span class="dv">755</span> [″]        <span class="dv">3319</span> [é]          <span class="dv">1149</span> [😂]        <span class="dv">544</span> [😏]
+    <span class="dv">643</span> [€]        <span class="dv">3062</span> […]           <span class="dv">977</span> [é]        <span class="dv">506</span> [☀]
+    <span class="dv">624</span> [ā]        <span class="dv">2056</span> []           <span class="dv">963</span> [😁]        <span class="dv">503</span> [😜]
+    <span class="dv">605</span> [½]        <span class="dv">1408</span> []           <span class="dv">955</span> [☺]
+    <span class="dv">598</span> [á]        <span class="dv">1152</span> [�]           <span class="dv">926</span> [😒]
+    <span class="dv">582</span> [ö]         <span class="dv">971</span> [•]           <span class="dv">802</span> [<span class="st">`</span><span class="dt">]</span>
+<span class="dt">    555 [è]         837 [½]           758 [😍]</span>
+<span class="dt">    518 [°]         711 [</span><span class="st">`</span>]           <span class="dv">751</span> [😘]
+                    <span class="dv">537</span> [ñ]           <span class="dv">741</span> [}]</code></pre>
+<p><a name="Homogeneization"></a></p>
+<div id="homogeneization-of-characters" class="section level3">
+<h3>Homogeneization of Characters</h3>
+<p><a href="#CONTENT">Back to TOC</a></p>
+<p>For this preliminary stage I decided to not worry about accented letters, and characters from non-latin alphabet (<em>e.g.</em> asian, emoticons), but I thought it would be helpful to standardize a small set of very frequent characters, whose “meaning” is substantially equivalent</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="center"></th>
+<th align="right">blogs</th>
+<th align="right">news</th>
+<th align="right">twitter</th>
+<th align="right">TOTAL</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">quotes</td>
+<td align="center">[‘]</td>
+<td align="right">23836</td>
+<td align="right">4898</td>
+<td align="right">593</td>
+<td align="right">29327</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="center">[’]</td>
+<td align="right">387317</td>
+<td align="right">102911</td>
+<td align="right">11419</td>
+<td align="right">501647</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="center">[“]</td>
+<td align="right">108769</td>
+<td align="right">47090</td>
+<td align="right">27440</td>
+<td align="right">183299</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="center">[”]</td>
+<td align="right">109154</td>
+<td align="right">43992</td>
+<td align="right">26895</td>
+<td align="right">180041</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="center">[«]</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">718</td>
+<td align="right">718</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="center">[»]</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">726</td>
+<td align="right">726</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="center"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left">dashes</td>
+<td align="center">[–]</td>
+<td align="right">50176</td>
+<td align="right">8650</td>
+<td align="right">2314</td>
+<td align="right">61140</td>
+</tr>
+<tr class="odd">
+<td align="left"></td>
+<td align="center">[—]</td>
+<td align="right">48115</td>
+<td align="right">18757</td>
+<td align="right">1799</td>
+<td align="right">68671</td>
+</tr>
+<tr class="even">
+<td align="left"></td>
+<td align="center"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left">ellipsis</td>
+<td align="center">[…]</td>
+<td align="right">41129</td>
+<td align="right">5241</td>
+<td align="right">3062</td>
+<td align="right">49432</td>
+</tr>
+</tbody>
+</table>
+<p>The dataset where cleaned with this perl commands and saved.</p>
+<pre class="sourceCode bash"><code class="sourceCode bash">  <span class="kw">perl</span> -pe <span class="st">&quot;s|’|\&#39;|g; s|…|...|g; s|–|\-|g; s|—|\-|g; s|‘|\&#39;|g;&quot;</span> <span class="ot">$1</span> <span class="kw">|</span>  <span class="kw">\</span>
+        <span class="kw">perl</span> -pe <span class="st">&#39;s|«|&quot;|g; s|»|&quot;|g; s|”|&quot;|g; s|“|&quot;|g;&#39;</span> </code></pre>
+<p><a name="Contractions"></a></p>
+</div>
+<div id="contractions-profanities-emoticons-hashtags-etc" class="section level3">
+<h3>Contractions, Profanities, Emoticons, Hashtags, etc…</h3>
+<p><a href="#CONTENT">Back to TOC</a></p>
+<p>I have put a major effort into understanding the idiosyncrasies of the textual data, with the expectation that a deep cleaning would make a difference in the prediction context.</p>
+<p>One example of what I have in mind is that transforming to categorical generic “tag” frequent “items” with a lot of variations but broadly similar meaning (e.g. dates, money, possessive pronouns), could strengthen the predictive ability of any algorithm.</p>
+<p>Most of the work was done with <code>perl</code> “offline” (can’t beat it for <code>regex</code> work).<br />To match the application input with the data on which the application is built, all operations were ported to <code>R</code> either directly or by relying on an external perl script. Among the main transformations applied to the text:</p>
+<ul>
+<li><strong>Contractions</strong> (<em>e.g.</em> don’t, isn’t, I’ll): this seem to be more commonly regarded as stopword, hence removed. My take has been that they can provide meaning and it was worth preserving them, as well as they non-contracted counterparts. I homogeneized all of them in forms like “I_will”, “do_not”, with an underscore gluing them together.</li>
+<li><strong>Profanity filtering</strong>: I based my cleaning on the “7 dirt words”, and some words rooted on them.
+<ul>
+<li>To preserve their potential predictive value, I replace them with a tag <code>&lt;PROFANITY&gt;</code>.</li>
+<li>User input is also filtered, but the information carried by a possible profanity can be used.</li>
+</ul></li>
+<li><strong>Emoticons</strong>: Recognized them with regex. Marked with a tag, <code>&lt;EMOJ&gt;</code>.</li>
+</ul>
+<p>Other transformations done on the text before loading the data into R:</p>
+<ul>
+<li><strong>Regularization/ Homogeneization of Characters</strong>
+<ul>
+<li>Mostly cleaning (not necessarily removing) <em>odd characters</em> e.g. apostrophes, quotes, etc.</li>
+<li>Sequences of characters: inline and End-Of-Line <em>ellipsis</em>, and other “non-sense”.</li>
+<li>Substitution on “|” that seem to be equivalent to end of sentences (i.e. a period).</li>
+<li>Substitution of <code>&lt;==/&lt;--</code> and <code>==&gt;/--&gt;</code> with <code>;</code>.</li>
+<li>Cleaning sequences of <code>!</code> and <code>?</code>.</li>
+</ul></li>
+<li><strong>Hashtags</strong>: Recognized and replaced with a generic tag <code>HASHTAG</code></li>
+<li><strong>Acronyms</strong>: limited to variations of <code>U.S.</code>, also replaced with a tag, <code>&lt;USA&gt;</code>.</li>
+<li><strong>Number-related</strong>:
+<ul>
+<li>(likely) <strong>dollar amounts</strong> by the presence of <code>$</code>: marked with <code>&lt;MONEY&gt;</code> tag.</li>
+<li><strong>dates</strong> (<em>e.g. 12/34/5678</em>): marked with <code>&lt;DATE&gt;</code> tag.</li>
+<li><strong>hours</strong> (<em>e.g. 1:30 p.m.</em>): marked with <code>&lt;HOUR&gt;</code> tag.</li>
+<li><em>percentages</em>: marked with <code>&lt;PERCENTAGE&gt;</code> tag.</li>
+</ul></li>
+<li><strong>Repeated Consecutive Characters</strong>: handled by type.
+<ul>
+<li><code>$</code> signs, assumed to stand for a money: replaced with tag <code>&lt;MONEY&gt;</code>.</li>
+<li><code>*</code>, within words usually are disguised profanities: replaced with <code>&lt;PROFANITY&gt;</code> tag.</li>
+<li><code>-</code>: context/surroundings dependent replacement with regular punctuation.</li>
+<li>Some character sequences were entirely deleted: multiple <code>&lt;</code>, <code>&gt;</code>, <code>=</code>, <code>#</code>.</li>
+</ul></li>
+</ul>
+<p>The rest of the analysis presented here is based on these <em>cleaned</em> datasets.</p>
+<hr class="thin_separator">
+<p><a name="LOADING"></a></p>
+</div>
+</div>
+</div>
+<div id="moving-to-r" class="section level1">
+<h1>MOVING TO R</h1>
+<p><a name="LOADING_THE_DATA"></a></p>
+<div id="loading-the-data" class="section level2">
+<h2>Loading the data</h2>
+<p><a href="#CONTENT">Back to TOC</a></p>
+<p>The datasets are read-in separately into character vectors, using a user-defined compact function (<code>readByLine()</code>) (see <a href="#APPENDIX-my_functions"><strong>Appendix</strong></a> for the short source).</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># NOT EVALUATED because too computationally heavy (loading saved products)</span>
+in.blogs.CL &lt;-<span class="st"> </span><span class="kw">readByLine</span>(<span class="st">&quot;./data/en_US.blogs.CLEANED1.txt.gz&quot;</span>, <span class="dt">check_nl =</span> <span class="ot">FALSE</span>, <span class="dt">skipNul =</span> <span class="ot">TRUE</span>)
+in.news.CL &lt;-<span class="st"> </span><span class="kw">readByLine</span>(<span class="st">&quot;./data/en_US.news.CLEANED1.txt.gz&quot;</span>, <span class="dt">check_nl =</span> <span class="ot">FALSE</span>, <span class="dt">skipNul =</span> <span class="ot">TRUE</span>)
+in.twitter.CL &lt;-<span class="st"> </span><span class="kw">readByLine</span>(<span class="st">&quot;./data/en_US.twitter.CLEANED1.txt.gz&quot;</span>, <span class="dt">check_nl =</span> <span class="ot">FALSE</span>, <span class="dt">skipNul =</span> <span class="ot">TRUE</span>)</code></pre>
+<p>Some basic statistics of the three datasets:</p>
+<button class="toggle_code">
+show code
+</button>
+<pre class="sourceCode r"><code class="sourceCode r">stats.blogs   &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(<span class="kw">system</span>(<span class="st">&quot;gzip -dc ./data/en_US.blogs.CLEANED1.txt.gz | wc | awk &#39;{print $1; print $2; print $3}&#39;&quot;</span>, <span class="dt">intern =</span> <span class="ot">TRUE</span>))
+stats.news    &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(<span class="kw">system</span>(<span class="st">&quot;gzip -dc ./data/en_US.news.CLEANED1.txt.gz | wc | awk &#39;{print $1; print $2; print $3}&#39;&quot;</span>, <span class="dt">intern =</span> <span class="ot">TRUE</span>))
+stats.twitter &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(<span class="kw">system</span>(<span class="st">&quot;gzip -dc ./data/en_US.twitter.CLEANED1.txt.gz | wc | awk &#39;{print $1; print $2; print $3}&#39;&quot;</span>, <span class="dt">intern =</span> <span class="ot">TRUE</span>))
+
+stats.df &lt;-<span class="st"> </span><span class="kw">data.frame</span>( <span class="dt">blogs =</span> stats.blogs, <span class="dt">news =</span> stats.news, <span class="dt">twitter =</span> stats.twitter, 
+                        <span class="dt">row.names =</span> <span class="kw">c</span>(<span class="st">&quot;lines&quot;</span>, <span class="st">&quot;words&quot;</span>, <span class="st">&quot;characters&quot;</span>), <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">blogs</th>
+<th align="right">news</th>
+<th align="right">twitter</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">lines</td>
+<td align="right">899288</td>
+<td align="right">1010242</td>
+<td align="right">2360148</td>
+</tr>
+<tr class="even">
+<td align="left">words</td>
+<td align="right">37334114</td>
+<td align="right">34365936</td>
+<td align="right">30359804</td>
+</tr>
+<tr class="odd">
+<td align="left">characters</td>
+<td align="right">208763813</td>
+<td align="right">205300313</td>
+<td align="right">166962974</td>
+</tr>
+</tbody>
+</table>
+<p><a name="FURTHER_CLEANING"></a></p>
+</div>
+<div id="further-data-cleaning-in-r" class="section level2">
+<h2>Further Data Cleaning in R</h2>
+<p><a href="#CONTENT">Back to TOC</a></p>
+<p>There are some common, customary, operations performed on a text dataset before proceeding to analyze it.</p>
+<ul>
+<li><strong>Make text lowercase</strong>.</li>
+<li><strong>Strip extra white spaces</strong>.</li>
+<li><strong>Remove numbers</strong>.</li>
+<li>Remove punctuation.</li>
+<li>Remove <em>stopwords</em>.</li>
+</ul>
+<p>Given that the goal is to <strong>predict words in a typing context</strong> I think that removing <em>stopwords</em> does not make much sense.<br />Working with a text without <em>stopwords</em> may be useful if one wanted to use in the prediction algorithm some information about words’ association in sentences, which may help improve meaningful discrimination between different <em>next word</em> possibilities “proposed” by an algorithm based on <em>n-grams</em>.</p>
+<p>Because of the context, I also do not think that removing punctuation would be wise, nor make sense.</p>
+<p><a name="text_transformations"></a></p>
+<div id="text-transformations" class="section level3">
+<h3>Text transformations</h3>
+<p><a href="#CONTENT">Back to TOC</a></p>
+<p>The next step is applying the additional following three transformations:</p>
+<ul>
+<li>conversion to lower case.</li>
+<li>removal of numbers.</li>
+<li>removal of redundant white spaces.</li>
+</ul>
+<p>Done as follows (with big obligatory acknowledgement and thank you to Hadley Wickham and Stefan Bache for bringing us <em>the pipe</em> <code>%&gt;%</code>!).</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># NOT EVALUATED because too computationally heavy (loading saved products)</span>
+in.blogs.CL.cleaned &lt;-<span class="st"> </span><span class="kw">tolower</span>(in.blogs.CL) %&gt;%<span class="st"> </span><span class="kw">removeNumbers</span>() %&gt;%<span class="st"> </span><span class="kw">stripWhitespace</span>()
+in.news.CL.cleaned &lt;-<span class="st"> </span><span class="kw">tolower</span>(in.news.CL) %&gt;%<span class="st"> </span><span class="kw">removeNumbers</span>() %&gt;%<span class="st"> </span><span class="kw">stripWhitespace</span>()
+in.twitter.CL.cleaned &lt;-<span class="st"> </span><span class="kw">tolower</span>(in.twitter.CL) %&gt;%<span class="st"> </span><span class="kw">removeNumbers</span>() %&gt;%<span class="st"> </span><span class="kw">stripWhitespace</span>()</code></pre>
+<p><a name="few_chars"></a></p>
+</div>
+<div id="excluding-rows-with-too-few-characters" class="section level3">
+<h3>Excluding rows with too few characters</h3>
+<p><a href="#CONTENT">Back to TOC</a></p>
+<p>During my initial attempts it immediately emerged the problem of excessively short rows of text. In particular, because I decided to perform tokenization on individual sentences, not directly on individual rows, the tokenizer tripped and failed on empty “sentences” resulting from short rows.</p>
+<p>I have then decided to set a cutoff to the minimum acceptable length of rows. After some empirical testing and row-length analysis with command line tools (<em>e.g.</em> something like <code>awk '{if(length &lt;= 8){printf &quot;%6d - %-s\n&quot;,NR,$0}}'</code>) I have set a threshold at 6 characters.</p>
+<pre class="sourceCode r"><code class="sourceCode r">nchar.min &lt;-<span class="st"> </span><span class="dv">6</span>
+
+nchar.blogs.CL &lt;-<span class="st"> </span><span class="kw">nchar</span>(in.blogs.CL.cleaned)
+in.blogs.CL.cleaned &lt;-<span class="st"> </span>in.blogs.CL.cleaned[nchar.blogs.CL &gt;<span class="st"> </span>nchar.min]
+
+nchar.news.CL &lt;-<span class="st"> </span><span class="kw">nchar</span>(in.news.CL.cleaned)
+in.news.CL.cleaned &lt;-<span class="st"> </span>in.news.CL.cleaned[nchar.news.CL &gt;<span class="st"> </span>nchar.min]
+
+nchar.twitter.CL &lt;-<span class="st"> </span><span class="kw">nchar</span>(in.twitter.CL.cleaned)
+in.twitter.CL.cleaned &lt;-<span class="st"> </span>in.twitter.CL.cleaned[nchar.twitter.CL &gt;<span class="st"> </span>nchar.min]</code></pre>
+<p><a name="subsetting"></a></p>
+</div>
+<div id="subsetting-of-the-data" class="section level3">
+<h3>Subsetting of the data</h3>
+<p><a href="#CONTENT">Back to TOC</a></p>
+<p>It immediately became clear that analyzing the entire dataset requires fairly powerful computing resources and time, even on a very high-end laptop and workstation.</p>
+<p>Therefore, for exploration and prototyping I have been working with a subset of 20% of the data of each type.</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># NOT EVALUATED</span>
+fraction &lt;-<span class="st"> </span><span class="fl">0.2</span>
+
+<span class="co"># for reproducibility set seed!</span>
+<span class="kw">set.seed</span>(<span class="dv">6420</span>)
+idx.blogs   &lt;-<span class="st"> </span><span class="kw">sample</span>(<span class="dv">1</span>:<span class="kw">length</span>(in.blogs), <span class="kw">ceiling</span>(fraction*<span class="kw">length</span>(in.blogs)))
+idx.news    &lt;-<span class="st"> </span><span class="kw">sample</span>(<span class="dv">1</span>:<span class="kw">length</span>(in.news), <span class="kw">ceiling</span>(fraction*<span class="kw">length</span>(in.news)))
+idx.twitter &lt;-<span class="st"> </span><span class="kw">sample</span>(<span class="dv">1</span>:<span class="kw">length</span>(in.twitter), <span class="kw">ceiling</span>(fraction*<span class="kw">length</span>(in.twitter)))
+
+sel.blogs   &lt;-<span class="st"> </span>in.blogs[idx.blogs]
+sel.news    &lt;-<span class="st"> </span>in.news[idx.news]
+sel.twitter &lt;-<span class="st"> </span>in.twitter[idx.twitter]</code></pre>
+<hr class="thin_separator">
+<p><a name="ANALYSIS"></a></p>
+</div>
+</div>
+</div>
+<div id="analysis" class="section level1">
+<h1>ANALYSIS</h1>
+<p><a name="ANALYSIS-STEP1"></a></p>
+<div id="step-1-sentence-annotation" class="section level2">
+<h2>Step 1 : Sentence Annotation</h2>
+<p><a href="#CONTENT">Back to TOC</a></p>
+<p>As noted, after some tests, I settled on an approach whereby <em>n-grams tokenization</em> is performed on separate individual sentences, instead of directly on individual rows as loaded from the dataset.</p>
+<p>This is motivated by the fact that the <em>tokenizer</em> I have adopted because I found its performance to be more satisfactory, the <em>NGramTokenizer</em> of the <em>RWeka</em> package, does not seem to interrupt its construction of <em>n-grams</em> at what are very likely sentence boundaries.</p>
+<p>With <em>next word prediction</em> in mind, it makes a lot of sense to restrict <em>n-grams</em> to sequences of words within the boundaries of a sentence.</p>
+<p>Therefore, after cleaning, transforming and filtering the data, the first real operation I perform is the annotation of sentences, for which I have been using the <strong>openNLP</strong> sentence annotator <code>Maxent_Sent_Token_Annotator()</code>, with its default settings.</p>
+<pre class="sourceCode r"><code class="sourceCode r">sent_token_annotator &lt;-<span class="st"> </span><span class="kw">Maxent_Sent_Token_Annotator</span>()
+sent_token_annotator
+<span class="co"># An annotator inheriting from classes</span>
+<span class="co">#   Simple_Sent_Token_Annotator Annotator</span>
+<span class="co"># with description</span>
+<span class="co">#   Computes sentence annotations using the Apache OpenNLP Maxent sentence detector</span>
+<span class="co">#   employing the default model for language &#39;en&#39;.</span></code></pre>
+<p>I want the data in the form of a <em>vector with individual sentences</em>, and so I opted for <code>sapply()</code> combined with a function wrapping the operations necessary to prepare a row of data for annotation, the annotation itself and finally return a vector of sentences (the short function is shown in the <a href="#APPENDIX-my_functions"><strong>Appendix</strong></a>).</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># NOT EVALUATED because too computationally heavy (loading saved products)</span>
+sel.blogs.sentences &lt;-<span class="st"> </span><span class="kw">sapply</span>(sel.blogs, <span class="dt">FUN =</span> find_sentences, <span class="dt">USE.NAMES =</span> <span class="ot">FALSE</span>) %&gt;%<span class="st"> </span>unlist 
+sel.news.sentences &lt;-<span class="st"> </span><span class="kw">sapply</span>(sel.news, <span class="dt">FUN =</span> find_sentences, <span class="dt">USE.NAMES =</span> <span class="ot">FALSE</span>) %&gt;%<span class="st"> </span>unlist 
+sel.twitter.sentences &lt;-<span class="st"> </span><span class="kw">sapply</span>(sel.twitter, <span class="dt">FUN =</span> find_sentences, <span class="dt">USE.NAMES =</span> <span class="ot">FALSE</span>) %&gt;%<span class="st"> </span>unlist </code></pre>
+<pre class="sourceCode r"><code class="sourceCode r">N.sentences &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="kw">length</span>(sel.blogs.sentences), <span class="kw">length</span>(sel.news.sentences), <span class="kw">length</span>(sel.twitter.sentences))
+stats.df[<span class="dv">4</span>, ] &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(<span class="dv">5</span>*N.sentences)
+stats.df[<span class="dv">5</span>, ] &lt;-<span class="st"> </span><span class="kw">round</span>(stats.df[<span class="dv">4</span>, ]/stats.df[<span class="dv">1</span>, ], <span class="dv">3</span>)
+<span class="kw">row.names</span>(stats.df)[<span class="dv">4</span>] &lt;-<span class="st"> &quot;sentences&quot;</span>
+<span class="kw">row.names</span>(stats.df)[<span class="dv">5</span>] &lt;-<span class="st"> &quot;sentences_per_line&quot;</span></code></pre>
+<p>The stats table, with the added <em>estimated number of sentences</em> (because the analysis is on just 20% of the data, the number tabulated is <code>5*N.sentences</code>) is as follows:</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">blogs</th>
+<th align="right">news</th>
+<th align="right">twitter</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">lines</td>
+<td align="right">899288</td>
+<td align="right">1010242</td>
+<td align="right">2360148</td>
+</tr>
+<tr class="even">
+<td align="left">words</td>
+<td align="right">37334114</td>
+<td align="right">34365936</td>
+<td align="right">30359804</td>
+</tr>
+<tr class="odd">
+<td align="left">characters</td>
+<td align="right">208763813</td>
+<td align="right">205300313</td>
+<td align="right">166962974</td>
+</tr>
+<tr class="even">
+<td align="left">sentences</td>
+<td align="right">2209980</td>
+<td align="right">1956430</td>
+<td align="right">3682545</td>
+</tr>
+<tr class="odd">
+<td align="left">sentences_per_line</td>
+<td align="right">2.457</td>
+<td align="right">1.937</td>
+<td align="right">1.56</td>
+</tr>
+</tbody>
+</table>
+<p><a name="ANALYSIS-STEP2"></a></p>
+</div>
+<div id="step-2-n-grams-tokenization" class="section level2">
+<h2>Step 2 : <em>n-grams</em> Tokenization</h2>
+<p><a href="#CONTENT">Back to TOC</a></p>
+<p>For the <em>n-grams</em> tokenization I have been using the <strong>RWeka Tokenizer</strong> <code>NGramTokenizer</code>, passing to it a list of <em>token delimiters</em>.</p>
+<p>I have been extracting <em>n-grams</em> for <span class="math">\(n = 3, 4, 5\)</span>.<br />I have not been able to run <code>NGramTokenizer</code> on the full vector of sentences for each data set. It fails on some variation of memory-allocation related error (that honestly does not make much sense to me considering that I am running it on machines with 12GB of RAM).</p>
+<p>So, I am processing data in chunks of 100,000 sentences, as <em>exemplified</em> by this block of code (the <em>n-grams</em> data for the following section are loaded from saved previous analysis).</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># NOT EVALUATED because too computationally heavy (loading saved products)</span>
+token_delim &lt;-<span class="st"> &quot; </span><span class="ch">\\</span><span class="st">t</span><span class="ch">\\</span><span class="st">r</span><span class="ch">\\</span><span class="st">n.!?,;</span><span class="ch">\&quot;</span><span class="st">()&quot;</span>
+nl.chunk &lt;-<span class="st"> </span><span class="dv">100000</span>
+N &lt;-<span class="st"> </span><span class="kw">ceiling</span>(<span class="kw">length</span>(sel.blogs.sentences)/nl.chunk)
+
+<span class="co">#----- BLOGS ------------------------------------</span>
+end.blogs &lt;-<span class="st"> </span><span class="kw">length</span>(sel.blogs.sentences)
+
+<span class="co">#----- 3-grams -----</span>
+<span class="kw">cat</span>(<span class="st">&quot; *** Tokenizing : blogs : 3-grams ------------------------------------------------------------</span><span class="ch">\n</span><span class="st">&quot;</span>)
+n3grams.blogs<span class="fl">.1</span> &lt;-<span class="st"> </span><span class="kw">NGramTokenizer</span>(sel.blogs.sentences[<span class="dv">1</span>:<span class="dv">100000</span>], 
+                                  <span class="kw">Weka_control</span>(<span class="dt">min =</span> <span class="dv">3</span>, <span class="dt">max =</span> <span class="dv">3</span>, <span class="dt">delimiters =</span> token_delim))
+n3grams.blogs<span class="fl">.2</span> &lt;-<span class="st"> </span><span class="kw">NGramTokenizer</span>(sel.blogs.sentences[<span class="dv">100001</span>:<span class="dv">200000</span>], 
+                                  <span class="kw">Weka_control</span>(<span class="dt">min =</span> <span class="dv">3</span>, <span class="dt">max =</span> <span class="dv">3</span>, <span class="dt">delimiters =</span> token_delim))
+n3grams.blogs<span class="fl">.3</span> &lt;-<span class="st"> </span><span class="kw">NGramTokenizer</span>(sel.blogs.sentences[<span class="dv">200001</span>:<span class="dv">300000</span>], 
+                                  <span class="kw">Weka_control</span>(<span class="dt">min =</span> <span class="dv">3</span>, <span class="dt">max =</span> <span class="dv">3</span>, <span class="dt">delimiters =</span> token_delim))
+n3grams.blogs<span class="fl">.4</span> &lt;-<span class="st"> </span><span class="kw">NGramTokenizer</span>(sel.blogs.sentences[<span class="dv">300001</span>:<span class="dv">400000</span>], 
+                                  <span class="kw">Weka_control</span>(<span class="dt">min =</span> <span class="dv">3</span>, <span class="dt">max =</span> <span class="dv">3</span>, <span class="dt">delimiters =</span> token_delim))
+n3grams.blogs<span class="fl">.5</span> &lt;-<span class="st"> </span><span class="kw">NGramTokenizer</span>(sel.blogs.sentences[<span class="dv">400001</span>:end.blogs], 
+                                  <span class="kw">Weka_control</span>(<span class="dt">min =</span> <span class="dv">3</span>, <span class="dt">max =</span> <span class="dv">3</span>, <span class="dt">delimiters =</span> token_delim))</code></pre>
+<p>The chunks of n-grams are then combined with a script:</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">source</span>(<span class="st">&quot;./scripts/combine_nXgrams_blogs.R&quot;</span>)</code></pre>
+<button class="toggle_code">
+show script code
+</button>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co">#=--------------------------------------------------------------------------------------------------</span>
+<span class="co"># BLOGS</span>
+<span class="co">#=--------------------------------------------------------------------------------------------------</span>
+nl.chunk &lt;-<span class="st"> </span><span class="dv">100000</span>
+N &lt;-<span class="st"> </span><span class="kw">ceiling</span>(<span class="kw">length</span>(sel.blogs.sentences)/nl.chunk)
+
+<span class="co">#=-- n3 ---#</span>
+size.n3g.blogs &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="dv">0</span>, N)
+
+for( i in <span class="dv">1</span>:N ) {
+    name &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="st">&quot;n3grams.blogs.&quot;</span>, i, <span class="dt">collapse =</span> <span class="st">&quot;&quot;</span>)
+    size.n3g.blogs[i] &lt;-<span class="st"> </span><span class="kw">length</span>(<span class="kw">get</span>(name))
+    <span class="kw">cat</span>(<span class="st">&quot; Number of 3-grams in set&quot;</span>, i, <span class="st">&quot; : &quot;</span>, size.n3g.blogs[i], <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
+}
+
+n3grams.blogs.all &lt;-<span class="st"> </span><span class="kw">vector</span>(<span class="dt">mode =</span> <span class="st">&quot;character&quot;</span>, <span class="dt">length =</span> <span class="kw">sum</span>(size.n3g.blogs))
+ivec &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">0</span>, <span class="kw">cumsum</span>(size.n3g.blogs))
+for( i in <span class="dv">1</span>:N ) {
+    n1 &lt;-<span class="st"> </span>ivec[i] +<span class="st"> </span><span class="dv">1</span>
+    n2 &lt;-<span class="st"> </span>ivec[i<span class="dv">+1</span>]
+    name &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="st">&quot;n3grams.blogs.&quot;</span>, i, <span class="dt">collapse =</span> <span class="st">&quot;&quot;</span>)
+    <span class="kw">cat</span>(<span class="st">&quot; &quot;</span>, i, n1, n2, name, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
+    n3grams.blogs.all[n1:n2] &lt;-<span class="st"> </span><span class="kw">get</span>(name)
+}
+
+<span class="kw">rm</span>(<span class="dt">list=</span><span class="kw">ls</span>(<span class="dt">pattern =</span> <span class="st">&quot;^n3grams.blogs.[1-5]&quot;</span>))
+
+<span class="co">#=-- n4 ---#</span>
+size.n4g.blogs &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="dv">0</span>, N)
+
+for( i in <span class="dv">1</span>:N ) {
+    name &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="st">&quot;n4grams.blogs.&quot;</span>, i, <span class="dt">collapse =</span> <span class="st">&quot;&quot;</span>)
+    size.n4g.blogs[i] &lt;-<span class="st"> </span><span class="kw">length</span>(<span class="kw">get</span>(name))
+    <span class="kw">cat</span>(<span class="st">&quot; Number of 4-grams in set&quot;</span>, i, <span class="st">&quot; : &quot;</span>, size.n4g.blogs[i], <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
+}
+
+n4grams.blogs.all &lt;-<span class="st"> </span><span class="kw">vector</span>(<span class="dt">mode =</span> <span class="st">&quot;character&quot;</span>, <span class="dt">length =</span> <span class="kw">sum</span>(size.n4g.blogs))
+ivec &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">0</span>, <span class="kw">cumsum</span>(size.n4g.blogs))
+for( i in <span class="dv">1</span>:N ) {
+    n1 &lt;-<span class="st"> </span>ivec[i] +<span class="st"> </span><span class="dv">1</span>
+    n2 &lt;-<span class="st"> </span>ivec[i<span class="dv">+1</span>]
+    name &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="st">&quot;n4grams.blogs.&quot;</span>, i, <span class="dt">collapse =</span> <span class="st">&quot;&quot;</span>)
+    <span class="kw">cat</span>(<span class="st">&quot; &quot;</span>, i, n1, n2, name, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
+    n4grams.blogs.all[n1:n2] &lt;-<span class="st"> </span><span class="kw">get</span>(name)
+}
+
+<span class="kw">rm</span>(<span class="dt">list=</span><span class="kw">ls</span>(<span class="dt">pattern =</span> <span class="st">&quot;^n4grams.blogs.[1-5]&quot;</span>))
+
+<span class="co">#=-- n5 ---#</span>
+size.n5g.blogs &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="dv">0</span>, N)
+
+for( i in <span class="dv">1</span>:N ) {
+    name &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="st">&quot;n5grams.blogs.&quot;</span>, i, <span class="dt">collapse =</span> <span class="st">&quot;&quot;</span>)
+    size.n5g.blogs[i] &lt;-<span class="st"> </span><span class="kw">length</span>(<span class="kw">get</span>(name))
+    <span class="kw">cat</span>(<span class="st">&quot; Number of 5-grams in set&quot;</span>, i, <span class="st">&quot; : &quot;</span>, size.n5g.blogs[i], <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
+}
+
+n5grams.blogs.all &lt;-<span class="st"> </span><span class="kw">vector</span>(<span class="dt">mode =</span> <span class="st">&quot;character&quot;</span>, <span class="dt">length =</span> <span class="kw">sum</span>(size.n5g.blogs))
+ivec &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">0</span>, <span class="kw">cumsum</span>(size.n5g.blogs))
+for( i in <span class="dv">1</span>:N ) {
+    n1 &lt;-<span class="st"> </span>ivec[i] +<span class="st"> </span><span class="dv">1</span>
+    n2 &lt;-<span class="st"> </span>ivec[i<span class="dv">+1</span>]
+    name &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="st">&quot;n5grams.blogs.&quot;</span>, i, <span class="dt">collapse =</span> <span class="st">&quot;&quot;</span>)
+    <span class="kw">cat</span>(<span class="st">&quot; &quot;</span>, i, n1, n2, name, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
+    n5grams.blogs.all[n1:n2] &lt;-<span class="st"> </span><span class="kw">get</span>(name)
+}
+
+<span class="kw">rm</span>(<span class="dt">list=</span><span class="kw">ls</span>(<span class="dt">pattern =</span> <span class="st">&quot;^n5grams.blogs.[1-5]&quot;</span>))
+
+<span class="co">#=--------------------------------------------------------------------------------------------------</span></code></pre>
+<p><a name="ngrams_tables"></a></p>
+<div id="a-look-at-the-n-grams" class="section level3">
+<h3>A look at the n-grams</h3>
+<p><a href="#CONTENT">Back to TOC</a></p>
+<p>From the <em>n-grams</em> vectors we can compute frequencies, which will be an important basis for the prediction algorithms.</p>
+<p>For now we can take a peek at what are the most frequent <em>3-grams</em> and <em>4-grams</em> in the three datasets.</p>
+<button class="toggle_code">
+show code for blogs
+</button>
+<pre class="sourceCode r"><code class="sourceCode r">n3g.blogs.freq &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(<span class="kw">table</span>(n3grams.blogs.all), <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
+n3g.blogs.freq &lt;-<span class="st"> </span>n3g.blogs.freq[<span class="kw">order</span>(n3g.blogs.freq$Freq, <span class="dt">decreasing =</span> <span class="ot">TRUE</span>), ]
+<span class="kw">row.names</span>(n3g.blogs.freq) &lt;-<span class="st"> </span><span class="ot">NULL</span>
+
+n4g.blogs.freq &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(<span class="kw">table</span>(n4grams.blogs.all), <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
+n4g.blogs.freq &lt;-<span class="st"> </span>n4g.blogs.freq[<span class="kw">order</span>(n4g.blogs.freq$Freq, <span class="dt">decreasing =</span> <span class="ot">TRUE</span>), ]
+<span class="kw">row.names</span>(n4g.blogs.freq) &lt;-<span class="st"> </span><span class="ot">NULL</span>
+
+<span class="kw">colnames</span>(n3g.blogs.freq) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;ngram&quot;</span>, <span class="st">&quot;count&quot;</span>)
+<span class="kw">colnames</span>(n4g.blogs.freq) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;ngram&quot;</span>, <span class="st">&quot;count&quot;</span>)</code></pre>
+<button class="toggle_code">
+show code for news
+</button>
+<pre class="sourceCode r"><code class="sourceCode r">n3g.news.freq &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(<span class="kw">table</span>(n3grams.news.all), <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
+n3g.news.freq &lt;-<span class="st"> </span>n3g.news.freq[<span class="kw">order</span>(n3g.news.freq$Freq, <span class="dt">decreasing =</span> <span class="ot">TRUE</span>), ]
+<span class="kw">row.names</span>(n3g.news.freq) &lt;-<span class="st"> </span><span class="ot">NULL</span>
+
+n4g.news.freq &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(<span class="kw">table</span>(n4grams.news.all), <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
+n4g.news.freq &lt;-<span class="st"> </span>n4g.news.freq[<span class="kw">order</span>(n4g.news.freq$Freq, <span class="dt">decreasing =</span> <span class="ot">TRUE</span>), ]
+<span class="kw">row.names</span>(n4g.news.freq) &lt;-<span class="st"> </span><span class="ot">NULL</span>
+
+<span class="kw">colnames</span>(n3g.news.freq) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;ngram&quot;</span>, <span class="st">&quot;count&quot;</span>)
+<span class="kw">colnames</span>(n4g.news.freq) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;ngram&quot;</span>, <span class="st">&quot;count&quot;</span>)</code></pre>
+<button class="toggle_code">
+show code for twitter
+</button>
+<pre class="sourceCode r"><code class="sourceCode r">n3g.twitter.freq &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(<span class="kw">table</span>(n3grams.twitter.all), <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
+n3g.twitter.freq &lt;-<span class="st"> </span>n3g.twitter.freq[<span class="kw">order</span>(n3g.twitter.freq$Freq, <span class="dt">decreasing =</span> <span class="ot">TRUE</span>), ]
+<span class="kw">row.names</span>(n3g.twitter.freq) &lt;-<span class="st"> </span><span class="ot">NULL</span>
+
+n4g.twitter.freq &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(<span class="kw">table</span>(n4grams.twitter.all), <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
+n4g.twitter.freq &lt;-<span class="st"> </span>n4g.twitter.freq[<span class="kw">order</span>(n4g.twitter.freq$Freq, <span class="dt">decreasing =</span> <span class="ot">TRUE</span>), ]
+<span class="kw">row.names</span>(n4g.twitter.freq) &lt;-<span class="st"> </span><span class="ot">NULL</span>
+
+<span class="kw">colnames</span>(n3g.twitter.freq) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;ngram&quot;</span>, <span class="st">&quot;count&quot;</span>)
+<span class="kw">colnames</span>(n4g.twitter.freq) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;ngram&quot;</span>, <span class="st">&quot;count&quot;</span>)</code></pre>
+<div id="grams" class="section level4">
+<h4><strong>3-grams</strong></h4>
+<button class="toggle_code">
+show code
+</button>
+<pre class="sourceCode r"><code class="sourceCode r">tmp3.df &lt;-<span class="st"> </span><span class="kw">cbind</span>(<span class="kw">head</span>(n3g.blogs.freq, <span class="dv">20</span>), <span class="kw">head</span>(n3g.news.freq, <span class="dv">20</span>), <span class="kw">head</span>(n3g.twitter.freq, <span class="dv">20</span>)) 
+tmp4.df &lt;-<span class="st"> </span><span class="kw">cbind</span>(<span class="kw">head</span>(n4g.blogs.freq, <span class="dv">20</span>), <span class="kw">head</span>(n4g.news.freq, <span class="dv">20</span>), <span class="kw">head</span>(n4g.twitter.freq, <span class="dv">20</span>)) 
+<span class="kw">colnames</span>(tmp4.df) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;ngram_blogs&quot;</span>, <span class="st">&quot;count&quot;</span>, <span class="st">&quot;ngram_news&quot;</span>, <span class="st">&quot;count&quot;</span>, <span class="st">&quot;ngram_twitter&quot;</span>, <span class="st">&quot;count&quot;</span>)
+<span class="kw">colnames</span>(tmp4.df) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;ngram_blogs&quot;</span>, <span class="st">&quot;count&quot;</span>, <span class="st">&quot;ngram_news&quot;</span>, <span class="st">&quot;count&quot;</span>, <span class="st">&quot;ngram_twitter&quot;</span>, <span class="st">&quot;count&quot;</span>)
+<span class="co"># saveRDS(tmp3.df, file = &quot;tmp_n3g_table.RDS&quot;)</span></code></pre>
+<ul>
+<li><strong>blogs</strong></li>
+</ul>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(tmp3.df[, <span class="dv">1</span>:<span class="dv">2</span>], <span class="dt">print.gap =</span> <span class="dv">3</span>, <span class="dt">right =</span> <span class="ot">FALSE</span>)
+<span class="co">#      ngram           count</span>
+<span class="co"># 1    one of the      4416 </span>
+<span class="co"># 2    a lot of        3613 </span>
+<span class="co"># 3    to be a         2078 </span>
+<span class="co"># 4    it was a        2076 </span>
+<span class="co"># 5    as well as      2067 </span>
+<span class="co"># 6    some of the     1988 </span>
+<span class="co"># 7    the end of      1974 </span>
+<span class="co"># 8    out of the      1954 </span>
+<span class="co"># 9    be able to      1927 </span>
+<span class="co"># 10   i want to       1882 </span>
+<span class="co"># 11   a couple of     1828 </span>
+<span class="co"># 12   the fact that   1596 </span>
+<span class="co"># 13   this is a       1592 </span>
+<span class="co"># 14   the rest of     1539 </span>
+<span class="co"># 15   going to be     1521 </span>
+<span class="co"># 16   part of the     1478 </span>
+<span class="co"># 17   i_am going to   1448 </span>
+<span class="co"># 18   i do_not know   1425 </span>
+<span class="co"># 19   one of my       1408 </span>
+<span class="co"># 20   i had to        1373</span></code></pre>
+<ul>
+<li><strong>news</strong></li>
+</ul>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(tmp3.df[, <span class="dv">3</span>:<span class="dv">4</span>], <span class="dt">print.gap =</span> <span class="dv">3</span>, <span class="dt">right =</span> <span class="ot">FALSE</span>)
+<span class="co">#      ngram                             count</span>
+<span class="co"># 1    the united states                 1324 </span>
+<span class="co"># 2    the first time                    1249 </span>
+<span class="co"># 3    for the first                     1021 </span>
+<span class="co"># 4    more than &lt;DOLLARAMOUNT&gt;          1000 </span>
+<span class="co"># 5    the end the                        896 </span>
+<span class="co"># 6    it would be                        751 </span>
+<span class="co"># 7    it was the                         722 </span>
+<span class="co"># 8    the fact that                      690 </span>
+<span class="co"># 9    &lt;DOLLARAMOUNT&gt; - &lt;DOLLARAMOUNT&gt;    680 </span>
+<span class="co"># 10   this is the                        679 </span>
+<span class="co"># 11   the rest the                       676 </span>
+<span class="co"># 12   said he was                        667 </span>
+<span class="co"># 13   he said he                         655 </span>
+<span class="co"># 14   i do_not think                     652 </span>
+<span class="co"># 15   the new york                       651 </span>
+<span class="co"># 16   he said the                        628 </span>
+<span class="co"># 17   i do_not know                      626 </span>
+<span class="co"># 18   for more than                      622 </span>
+<span class="co"># 19   the same time                      578 </span>
+<span class="co"># 20   when he was                        565</span></code></pre>
+<ul>
+<li><strong>twitter</strong></li>
+</ul>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(tmp3.df[, <span class="dv">5</span>:<span class="dv">6</span>], <span class="dt">print.gap =</span> <span class="dv">3</span>, <span class="dt">right =</span> <span class="ot">FALSE</span>)
+<span class="co">#      ngram                           count</span>
+<span class="co"># 1    thanks for the                  7135 </span>
+<span class="co"># 2    thank you for                   2590 </span>
+<span class="co"># 3    i love you                      2474 </span>
+<span class="co"># 4    for the follow                  2334 </span>
+<span class="co"># 5    for the rt                      1311 </span>
+<span class="co"># 6    let me know                     1301 </span>
+<span class="co"># 7    i do_not know                   1265 </span>
+<span class="co"># 8    i feel like                     1179 </span>
+<span class="co"># 9    i wish i                        1154 </span>
+<span class="co"># 10   thanks for following            1048 </span>
+<span class="co"># 11   you for the                     1013 </span>
+<span class="co"># 12   i can_not wait                   968 </span>
+<span class="co"># 13   &lt;HASHTAG&gt; &lt;HASHTAG&gt; &lt;HASHTAG&gt;    963 </span>
+<span class="co"># 14   how are you                      960 </span>
+<span class="co"># 15   for the &lt;HASHTAG&gt;                958 </span>
+<span class="co"># 16   can_not wait for                 919 </span>
+<span class="co"># 17   rt : i                           915 </span>
+<span class="co"># 18   i think i                        895 </span>
+<span class="co"># 19   if you want                      867 </span>
+<span class="co"># 20   what do you                      858</span></code></pre>
+</div>
+<div id="grams-1" class="section level4">
+<h4><strong>4-grams</strong></h4>
+<ul>
+<li><strong>blogs</strong></li>
+</ul>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(tmp4.df[, <span class="dv">1</span>:<span class="dv">2</span>], <span class="dt">print.gap =</span> <span class="dv">3</span>, <span class="dt">right =</span> <span class="ot">FALSE</span>)
+<span class="co">#      ngram_blogs          count</span>
+<span class="co"># 1    the end of the       1011 </span>
+<span class="co"># 2    the rest of the       913 </span>
+<span class="co"># 3    at the end of         872 </span>
+<span class="co"># 4    at the same time      700 </span>
+<span class="co"># 5    when it comes to      611 </span>
+<span class="co"># 6    one of the most       610 </span>
+<span class="co"># 7    to be able to         578 </span>
+<span class="co"># 8    for the first time    565 </span>
+<span class="co"># 9    in the middle of      519 </span>
+<span class="co"># 10   if you want to        469 </span>
+<span class="co"># 11   is one of the         462 </span>
+<span class="co"># 12   i do_not want to      461 </span>
+<span class="co"># 13   a bit of a            403 </span>
+<span class="co"># 14   i was going to        395 </span>
+<span class="co"># 15   on the other hand     393 </span>
+<span class="co"># 16   i would like to       375 </span>
+<span class="co"># 17   one of my favorite    350 </span>
+<span class="co"># 18   as well as the        325 </span>
+<span class="co"># 19   i was able to         304 </span>
+<span class="co"># 20   is going to be        302</span></code></pre>
+<ul>
+<li><strong>news</strong></li>
+</ul>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(tmp4.df[, <span class="dv">3</span>:<span class="dv">4</span>], <span class="dt">print.gap =</span> <span class="dv">3</span>, <span class="dt">right =</span> <span class="ot">FALSE</span>)
+<span class="co">#      ngram_news                                      count</span>
+<span class="co"># 1    for the first time                              791  </span>
+<span class="co"># 2    more than &lt;DOLLARAMOUNT&gt; million                398  </span>
+<span class="co"># 3    the first time since                            195  </span>
+<span class="co"># 4    more than &lt;DOLLARAMOUNT&gt; billion                150  </span>
+<span class="co"># 5    for more than years                             138  </span>
+<span class="co"># 6    feet &lt;DATE&gt; for &lt;DOLLARAMOUNT&gt;                  137  </span>
+<span class="co"># 7    square feet &lt;DATE&gt; for                          137  </span>
+<span class="co"># 8    &lt;DOLLARAMOUNT&gt; million &lt;DOLLARAMOUNT&gt; million   136  </span>
+<span class="co"># 9    for the most part                               133  </span>
+<span class="co"># 10   the past two years                              132  </span>
+<span class="co"># 11   told the associated press                       132  </span>
+<span class="co"># 12   the united states and                           131  </span>
+<span class="co"># 13   i do_not know if                                126  </span>
+<span class="co"># 14   the end the year                                126  </span>
+<span class="co"># 15   the end the day                                 124  </span>
+<span class="co"># 16   g fat g saturated                               118  </span>
+<span class="co"># 17   the new york times                              118  </span>
+<span class="co"># 18   dow jones industrial average                    114  </span>
+<span class="co"># 19   be reached for comment                          112  </span>
+<span class="co"># 20   i do_not know what                              112</span></code></pre>
+<ul>
+<li><strong>twitter</strong></li>
+</ul>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(tmp4.df[, <span class="dv">5</span>:<span class="dv">6</span>], <span class="dt">print.gap =</span> <span class="dv">3</span>, <span class="dt">right =</span> <span class="ot">FALSE</span>)
+<span class="co">#      ngram_twitter                             count</span>
+<span class="co"># 1    thanks for the follow                     1882 </span>
+<span class="co"># 2    thanks for the rt                         1031 </span>
+<span class="co"># 3    thank you for the                          916 </span>
+<span class="co"># 4    for the first time                         513 </span>
+<span class="co"># 5    i wish i could                             410 </span>
+<span class="co"># 6    thanks for the &lt;HASHTAG&gt;                   375 </span>
+<span class="co"># 7    rt : rt :                                  358 </span>
+<span class="co"># 8    thanks for the mention                     358 </span>
+<span class="co"># 9    let me know if                             330 </span>
+<span class="co"># 10   &lt;HASHTAG&gt; &lt;HASHTAG&gt; &lt;HASHTAG&gt; &lt;HASHTAG&gt;    322 </span>
+<span class="co"># 11   that awkward moment when                   299 </span>
+<span class="co"># 12   what do you think                          292 </span>
+<span class="co"># 13   thank you much for                         276 </span>
+<span class="co"># 14   hope all is well                           266 </span>
+<span class="co"># 15   can_not wait for the                       262 </span>
+<span class="co"># 16   thanks for the shout                       257 </span>
+<span class="co"># 17   for the shout out                          254 </span>
+<span class="co"># 18   i thought it was                           243 </span>
+<span class="co"># 19   thank you for following                    240 </span>
+<span class="co"># 20   thank you for your                         232</span></code></pre>
+<p>It is apparent that there some work will be necessary on the validation of the <em>n-grams</em>, or better still further text transformations, in particular of the <em>twitter</em> data set that “suffers” from the tendency of using <em>shorthand slang</em> (<em>e.g.</em> “rt” for “re-tweet”) that adds a lot of “noise” to the data.</p>
+<p><a name="ngrams_plots"></a></p>
+</div>
+</div>
+<div id="some-summary-plots-for-4-grams" class="section level3">
+<h3>Some Summary Plots for 4-grams</h3>
+<p><a href="#CONTENT">Back to TOC</a></p>
+<p><a name="top30_mixed"></a></p>
+<div id="top-30-all-mixed" class="section level4">
+<h4>Top-30 all mixed</h4>
+<button class="toggle_plot_code">
+show plot code
+</button>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># ECHO FALSE</span>
+mycolors &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;deepskyblue3&quot;</span>, <span class="st">&quot;firebrick2&quot;</span>, <span class="st">&quot;forestgreen&quot;</span>)
+data2pl &lt;-<span class="st"> </span>n4g.high.sorted[<span class="dv">1</span>:<span class="dv">30</span>, ]
+bp_mix &lt;-<span class="st"> </span><span class="kw">ggplot</span>(data2pl, <span class="kw">aes</span>(<span class="dt">x =</span> <span class="kw">reorder</span>(ngram, count), <span class="dt">y =</span> count)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span><span class="kw">coord_flip</span>() +<span class="st"> </span><span class="kw">xlab</span>(<span class="st">&quot;&quot;</span>) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">theme</span>(<span class="dt">plot.title =</span> <span class="kw">element_text</span>(<span class="dt">face =</span> <span class="st">&quot;bold&quot;</span>, <span class="dt">size =</span> <span class="dv">20</span>)) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">theme</span>(<span class="dt">axis.text =</span> <span class="kw">element_text</span>(<span class="dt">size =</span> <span class="dv">10</span>)) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">scale_fill_manual</span>(<span class="dt">values =</span> mycolors) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">ggtitle</span>(<span class="st">&quot;Top 30 4-grams : all sources&quot;</span>) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">geom_bar</span>(<span class="dt">stat =</span> <span class="st">&quot;identity&quot;</span>, <span class="kw">aes</span>(<span class="dt">fill =</span> flag)) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">geom_text</span>(<span class="kw">aes</span>(<span class="dt">label =</span> count, <span class="dt">hjust =</span> <span class="fl">1.1</span>, <span class="dt">size =</span> <span class="dv">10</span>), <span class="dt">col =</span> <span class="st">&quot;white&quot;</span>, <span class="dt">position =</span> <span class="kw">position_stack</span>())
+
+bp_mix</code></pre>
+<p><img src="figures/barplot_mix-1.png" title="" alt="" width="1000" style="display: block; margin: auto;" /></p>
+<p><a name="top20_separate"></a></p>
+</div>
+<div id="top-20-by-data-source" class="section level4">
+<h4>Top-20 by data source</h4>
+<button class="toggle_plot_code">
+show plot code
+</button>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># ECHO FALSE</span>
+data.blogs &lt;-<span class="st"> </span>n4g.blogs.freq[<span class="dv">1</span>:<span class="dv">20</span>, ]
+bp_blogs &lt;-<span class="st"> </span><span class="kw">ggplot</span>(data.blogs, <span class="kw">aes</span>(<span class="dt">x =</span> <span class="kw">reorder</span>(ngram, count), <span class="dt">y =</span> count)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span><span class="kw">coord_flip</span>() +<span class="st"> </span><span class="kw">xlab</span>(<span class="st">&quot;&quot;</span>) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">theme</span>(<span class="dt">plot.title =</span> <span class="kw">element_text</span>(<span class="dt">face =</span> <span class="st">&quot;bold&quot;</span>, <span class="dt">size =</span> <span class="dv">20</span>)) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">theme</span>(<span class="dt">axis.text =</span> <span class="kw">element_text</span>(<span class="dt">size =</span> <span class="dv">10</span>)) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">&quot;none&quot;</span>) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">ggtitle</span>(<span class="st">&quot;Top 20 4-grams : blogs&quot;</span>) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">geom_bar</span>(<span class="dt">stat =</span> <span class="st">&quot;identity&quot;</span>, <span class="dt">fill =</span> mycolors[<span class="dv">1</span>]) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">geom_text</span>(<span class="kw">aes</span>(<span class="dt">label =</span> count, <span class="dt">y =</span> <span class="dv">100</span>, <span class="dt">size =</span> <span class="dv">10</span>), <span class="dt">col =</span> <span class="st">&quot;white&quot;</span>) 
+
+data.news &lt;-<span class="st"> </span>n4g.news.freq[<span class="dv">1</span>:<span class="dv">20</span>, ]
+bp_news &lt;-<span class="st"> </span><span class="kw">ggplot</span>(data.news, <span class="kw">aes</span>(<span class="dt">x =</span> <span class="kw">reorder</span>(ngram, count), <span class="dt">y =</span> count)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span><span class="kw">coord_flip</span>() +<span class="st"> </span><span class="kw">xlab</span>(<span class="st">&quot;&quot;</span>) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">theme</span>(<span class="dt">plot.title =</span> <span class="kw">element_text</span>(<span class="dt">face =</span> <span class="st">&quot;bold&quot;</span>, <span class="dt">size =</span> <span class="dv">20</span>)) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">theme</span>(<span class="dt">axis.text =</span> <span class="kw">element_text</span>(<span class="dt">size =</span> <span class="dv">10</span>)) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">&quot;none&quot;</span>) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">ggtitle</span>(<span class="st">&quot;Top 20 4-grams : news&quot;</span>) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">geom_bar</span>(<span class="dt">stat =</span> <span class="st">&quot;identity&quot;</span>, <span class="dt">fill =</span> mycolors[<span class="dv">2</span>]) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">geom_text</span>(<span class="kw">aes</span>(<span class="dt">label =</span> count, <span class="dt">y =</span> <span class="dv">100</span>, <span class="dt">size =</span> <span class="dv">10</span>), <span class="dt">col =</span> <span class="st">&quot;white&quot;</span>) 
+
+data.twitter &lt;-<span class="st"> </span>n4g.twitter.freq[<span class="dv">1</span>:<span class="dv">20</span>, ]
+bp_twitter &lt;-<span class="st"> </span><span class="kw">ggplot</span>(data.twitter, <span class="kw">aes</span>(<span class="dt">x =</span> <span class="kw">reorder</span>(ngram, count), <span class="dt">y =</span> count)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span><span class="kw">coord_flip</span>() +<span class="st"> </span><span class="kw">xlab</span>(<span class="st">&quot;&quot;</span>) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">theme</span>(<span class="dt">plot.title =</span> <span class="kw">element_text</span>(<span class="dt">face =</span> <span class="st">&quot;bold&quot;</span>, <span class="dt">size =</span> <span class="dv">20</span>)) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">theme</span>(<span class="dt">axis.text =</span> <span class="kw">element_text</span>(<span class="dt">size =</span> <span class="dv">10</span>)) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">&quot;none&quot;</span>) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">ggtitle</span>(<span class="st">&quot;Top 20 4-grams : twitter&quot;</span>) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">geom_bar</span>(<span class="dt">stat =</span> <span class="st">&quot;identity&quot;</span>, <span class="dt">fill =</span> mycolors[<span class="dv">3</span>]) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">geom_text</span>(<span class="kw">aes</span>(<span class="dt">label =</span> count, <span class="dt">y =</span> <span class="dv">100</span>, <span class="dt">size =</span> <span class="dv">10</span>), <span class="dt">col =</span> <span class="st">&quot;white&quot;</span>) 
+
+<span class="kw">grid.arrange</span>(bp_blogs, bp_news, bp_twitter, <span class="dt">nrow =</span> <span class="dv">3</span>)</code></pre>
+<p><img src="figures/barplot_together-1.png" title="" alt="" width="700" style="display: block; margin: auto;" /></p>
+<hr class="thin_separator">
+<p><a name="APPENDIX"></a></p>
+</div>
+</div>
+</div>
+</div>
+<div id="appendix" class="section level1">
+<h1>APPENDIX</h1>
+<p><a href="#TOP">Back to the Top</a></p>
+<p><a name="APPENDIX-my_functions"></a></p>
+<div id="user-defined-functions" class="section level2">
+<h2>User Defined Functions</h2>
+<p>These are two handy functions used in the analysis.</p>
+<ul>
+<li>The first for reading the data.</li>
+<li>The second is passed to <code>sapply()</code> to annotate sentences, allowing to work by row instead of converting the whole dataset into one document.</li>
+</ul>
+<button class="toggle_code">
+show code
+</button>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co">#===================================================================================================</span>
+<span class="co"># modified readLines</span>
+
+readByLine &lt;-<span class="st"> </span>function(fname, <span class="dt">check_nl =</span> <span class="ot">TRUE</span>, <span class="dt">skipNul =</span> <span class="ot">TRUE</span>) {
+    if( check_nl ) {
+        cmd.nl   &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&quot;gzip -dc&quot;</span>, fname, <span class="st">&quot;| wc -l | awk &#39;{print $1}&#39;&quot;</span>, <span class="dt">sep =</span> <span class="st">&quot; &quot;</span>)
+        nl   &lt;-<span class="st"> </span><span class="kw">system</span>(cmd.nl, <span class="dt">intern =</span> <span class="ot">TRUE</span>)
+    } else {
+        nl   &lt;-<span class="st"> </span>-1L
+    }
+    con &lt;-<span class="st"> </span><span class="kw">gzfile</span>(fname, <span class="dt">open =</span> <span class="st">&quot;r&quot;</span>)
+    <span class="kw">on.exit</span>(<span class="kw">close</span>(con))
+    <span class="kw">readLines</span>(con, <span class="dt">n =</span> nl, <span class="dt">skipNul =</span> skipNul) 
+}
+
+<span class="co">#===================================================================================================</span>
+<span class="co"># to use w/ sapply for finer sentence splitting.</span>
+
+find_sentences &lt;-<span class="st"> </span>function(x) {
+    s &lt;-<span class="st"> </span><span class="kw">paste</span>(x, <span class="dt">collapse =</span> <span class="st">&quot; &quot;</span>) %&gt;%<span class="st"> </span><span class="kw">as.String</span>()
+    a &lt;-<span class="st"> </span>NLP::<span class="kw">annotate</span>(s , sent_token_annotator) 
+    <span class="kw">as.vector</span>(s[a])
+}
+
+<span class="co">#===================================================================================================</span></code></pre>
+<p>More functions can be reviewed directly from the repository:</p>
+<ul>
+<li><a href="./scripts/combine_nXgrams_blogs.R">scripts/combine_nXgrams_blogs.R</a></li>
+<li><a href="./scripts/combine_nXgrams_news.R">scripts/combine_nXgrams_news.R</a></li>
+<li><a href="./scripts/combine_nXgrams_twitter.R">scripts/combine_nXgrams_twitter.R</a></li>
+</ul>
+<p><a name="APPENDIX-tokenization_issue"></a></p>
+<div id="mysterious-issue-with-ngramtokenizer" class="section level3">
+<h3>Mysterious issue with <code>NGramTokenizer</code></h3>
+<p>Because the <code>NGramTokenizer</code> would fail with a <em>java memory error</em> if fed the full vector of sentences, but run when fed chunks of 100,000 sentences, I thought that turning this into a basic loop handling the splitting in chunks, collecting the output and finally return just one vector of <em>n-grams</em> would work, be compact and smarter.</p>
+<p>It turns out that it fails… and this puzzles me deeply.<br />Is R somehow handling the “stuff” in the loop in the same way it would if I run the tokenizer with the full vector?</p>
+<p>Any clue?</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># NOT EVALUATED</span>
+nl.chunk &lt;-<span class="st"> </span><span class="dv">100000</span>
+N &lt;-<span class="st"> </span><span class="kw">ceiling</span>(<span class="kw">length</span>(sel.blogs.sentences)/nl.chunk)
+alt.n3grams.blogs &lt;-<span class="st"> </span><span class="kw">vector</span>(<span class="st">&quot;list&quot;</span>, N)
+
+<span class="kw">system.time</span>({
+for( i in <span class="dv">1</span>:N ) {
+    i &lt;-<span class="st"> </span>i<span class="dv">+1</span>
+    n1 &lt;-<span class="st"> </span>(i<span class="dv">-1</span>)*nl.chunk +<span class="st"> </span><span class="dv">1</span>
+    n2 &lt;-<span class="st"> </span><span class="kw">min</span>(i*nl.chunk, end.blogs)
+    <span class="kw">cat</span>(<span class="st">&quot; &quot;</span>, i, n1, n2, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
+    alt.n3grams.blogs[[i]] &lt;-<span class="st"> </span><span class="kw">NGramTokenizer</span>(sel.blogs.sentences[n1:n2], 
+                                             <span class="kw">Weka_control</span>(<span class="dt">min =</span> <span class="dv">3</span>, <span class="dt">max =</span> <span class="dv">3</span>, 
+                                                          <span class="dt">delimiters =</span> token_delim)) 
+}
+})</code></pre>
+<hr />
+</div>
+</div>
+</div>
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+$(document).ready(function () {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+});
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
