@@ -33,8 +33,7 @@ A __report__ is available for some of them, hosted at [pedrosan.github.io](http:
   * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Human_Activity_1)
 
 * ML-based Assessment of the Quality of Weight-lifting Exercises:
-  * [REPORT](http://pedrosan.github.io/DataScienceExamples/Weight_Lifting/)
-  * [REPORT (alt)](http://pedrosan.github.io/DataScience/Weight_Lifting/)
+  * [REPORT](http://pedrosan.github.io/DataScience/Weight_Lifting/)
   * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Weight_Lifting)
 
 * Human and Economic Cost of Major Storm Events: An Analysis of the NOAA/NCDC Database:
