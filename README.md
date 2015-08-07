@@ -11,6 +11,11 @@ A __report__ is available for some of them, hosted at [pedrosan.github.io](http:
     (indices) to get a handle on how to include them in the _calculator_.
   * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Rent_vs_Buy)
 
+* myTextPredictr, a text prediction application (running on [pedrosan.shinyapps.io/myTextPredictr/](https://pedrosan.shinyapps.io/myTextPredictr/))
+  * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/myTextPredictr/)
+  * [Progress Report](http://pedrosan.github.io/DataScienceExamples/myTextPredictr/MilestoneReport/)
+  * ["pitch" slides](http://pedrosan.github.io/DataScienceExamples/myTextPredictr/Slides/)
+  
 * Bike Sharing Data: 
   * [REPORT](http://pedrosan.github.io/DataScience/Bike_Sharing/)
   * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Bike_Sharing)
@@ -36,11 +41,6 @@ A __report__ is available for some of them, hosted at [pedrosan.github.io](http:
   * [REPORT](http://pedrosan.github.io/DataScience/Impact_of_Major_Storm_Events/)
   * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Impact_of_Major_Storm_Events)
 
-* myTextPredictr, a text prediction application (running on [pedrosan.shinyapps.io/myTextPredictr/](https://pedrosan.shinyapps.io/myTextPredictr/)
-  * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/myTextPredictr/)
-  * [Progress Report](http://pedrosan.github.io/DataScienceExamples/myTextPredictr/MilestoneReport/)
-  * ["pitch" slides](http://pedrosan.github.io/DataScienceExamples/myTextPredictr/Slides/)
-  
 
 ### Note on the Reports' _Reproducible_ Format
 
