@@ -31,7 +31,7 @@ knit_print.tbl_df <- function(x, options) {
 
 <a name="SUMMARY"></a>
 
-# EXECUTIVE SUMMARY
+# SUMMARY
 
 In this report I briefly illustrate the exploratory analysis performed on a three datasets,
 comprising text from blogs, news and tweets.
@@ -86,23 +86,27 @@ The report is organized in the following sections:
 * [EXECUTIVE SUMMARY](#SUMMARY)
 * [PRELIMINARIES](#PRELIMINARIES)
     * [Preprocessing (before loading into R)](#PREPROCESSING)
-        * [Homogeneization of Characters](#Homogeneization)
-        * [Contractions, Profanities, Emoticons, Hashtags, etc...](#Contractions)
+        * [Removal of weird characters](#weird_characters)
+        * [Homogeneization of characters](#Homogeneization)
+        * [Contractions, profanities, emoticons, hashtags, etc...](#Contractions)
+        * [Excluding rows with less than 6 words](#exclude_short_rows)
 * [MOVING TO R](#LOADING)
     * [Loading the Data](#LOADING_THE_DATA)
     * [Further Data Cleaning in R](#FURTHER_CLEANING) 
         * [Text transformations](#text_transformations)
-        * [Excluding rows with too few characters](#few_chars)
         * [Subsetting of the data](#subsetting)
 * [ANALYSIS](#ANALYSIS)
     * [Step 1 : Sentence Annotation](#ANALYSIS-STEP1)
     * [Step 2 : _n-grams_ Tokenization](#ANALYSIS-STEP2)
+        * [Cleaning and _re-classification_ of n-grams](#ngrams-cleaning_and_reclassification)
         * [A look at the n-grams](#ngrams_tables)
         * [Some Summary Plots for 4-grams](#ngrams_plots)
             * [Top-30 all mixed](#top30_mixed)
             * [Top-20 by data source](#top20_separate)
 * [APPENDIX](#APPENDIX)
     * [User Defined Functions](#APPENDIX-my_functions)
+    * [Summary of regularization done with _perl scripts_](#APPENDIX-regularize)
+    * [Summary of post-sentence-tokenization cleaning (with _perl scripts_)](#APPENDIX-post_sentence_cleaning)
     * [Mysterious issue with `NGramTokenizer`](#APPENDIX-tokenization_issue)
 
 
@@ -146,6 +150,43 @@ source("./scripts/my_functions.R")
 #-----------------------------
 ```
 
+## THE DATA
+
+[Back to TOC](#CONTENT)
+
+The datasets are read-in separately into character vectors, using a user-defined compact function
+(`readByLine()`) (see [__Appendix__](#APPENDIX-my_functions) for the short source).
+
+```{r load_data, eval = FALSE, cache = TRUE}
+# NOT EVALUATED because too computationally heavy (loading saved products)
+in.blogs.ORIG <- readByLine("./data/en_US.blogs.ORIGINAL.txt.gz", check_nl = FALSE, skipNul = TRUE)
+in.news.ORIG <- readByLine("./data/en_US.news.ORIGINAL.txt.gz", check_nl = FALSE, skipNul = TRUE)
+in.twitter.ORIG <- readByLine("./data/en_US.twitter.ORIGINAL.txt.gz", check_nl = FALSE, skipNul = TRUE)
+```
+
+Basic statistics of the three datasets in their original form:
+
+<button class="toggle_code">show code</button>
+```{r data-basic_stats, eval = FALSE, cache = TRUE, echo = TRUE}
+# NOT EVALUATED
+stats.blogs   <- as.numeric(system("gzip -dc ./data/en_US.blogs.ORIGINAL.txt.gz | wc | awk '{print $1; print $2; print $3}'", intern = TRUE))
+stats.news    <- as.numeric(system("gzip -dc ./data/en_US.news.ORIGINAL.txt.gz | wc | awk '{print $1; print $2; print $3}'", intern = TRUE))
+stats.twitter <- as.numeric(system("gzip -dc ./data/en_US.twitter.ORIGINAL.txt.gz | wc | awk '{print $1; print $2; print $3}'", intern = TRUE))
+
+stats.ORIG.df <- data.frame( blogs = stats.blogs, news = stats.news, twitter = stats.twitter, 
+                             row.names = c("lines", "words", "characters"), stringsAsFactors = FALSE)
+saveRDS(stats.ORIG.df, "data/stats_ORIGINAL.RDS")
+```
+
+```{r data-basic_stats-read, eval = TRUE, echo = FALSE}
+stats.ORIG.df <- readRDS("data/stats_ORIGINAL.RDS")
+```
+
+```{r data-basic_stats-kable, eval = TRUE, echo = FALSE}
+kable(stats.ORIG.df)
+```
+
+
 <a name="PREPROCESSING"></a>
 
 ## PREPROCESSING (before loading into R)
@@ -153,9 +194,22 @@ source("./scripts/my_functions.R")
 [Back to TOC](#CONTENT)
 
 After a quick review of the data with various R functions and packages, 
-I decided to perform some cleaning of the text with standard _Linux_ command line tools.
+I decided to perform some cleaning of the text with standard _Linux_ command line tools,
+mostly __perl__ scripts.
+Broadly speaking I performed three categories of transformations:
 
-The main task was to analyze the mix of invidual characters present in the three datasets
+* Removal of "weird" characters.
+* Homogeneization of characters.
+* Regularization of text, _e.g._ dealing with hashtags, profanities, emoticons, acronyms, numbers, "messy punctuation"
+
+which I will describe below.
+
+
+<a name="weird_characters"></a>
+
+### _Weird_ Characters
+
+The first task was to analyze the mix of invidual characters present in the three datasets
 with the goal of doing some homogeneization and tidying up of non-alphanumeric characters,
 such as quotes that can come in different forms.
 
@@ -280,13 +334,6 @@ tab2 <- "
 cat(tab2)
 ```
 
-The dataset where cleaned with this perl commands and saved.
-
-```{r perl_example_2, engine = "bash", eval = FALSE}
-  perl -pe "s|’|\'|g; s|…|...|g; s|–|\-|g; s|—|\-|g; s|‘|\'|g;" $1 |  \
-        perl -pe 's|«|"|g; s|»|"|g; s|”|"|g; s|“|"|g;' 
-```
-
 
 <a name="Contractions"></a>
 
@@ -337,7 +384,26 @@ Other transformations done on the text before loading the data into R:
     + Some character sequences were entirely deleted: multiple `<`, `>`, `=`, `#`.
         
 
-The rest of the analysis presented here is based on these _cleaned_ datasets.
+The dataset where cleaned with __perl scripts__, available on
+[GitHub](https://github.com/pedrosan/DataScienceExamples/tree/master/myTextPredictr/MilestoneReport/scripts)
+(look for `regularize_text-pass[1-5].pl` and `remove_tags_content.pl` scripts).   
+A summary of what they do is listed in the [Appendix](#APPENDIX-regularize)
+
+
+<a name="exclude_short_rows"></a>
+
+### Excluding rows with less than 6 words
+
+[Back to TOC](#CONTENT)
+
+During my initial attempts it immediately emerged the problem of excessively short rows of text.
+In particular, because I decided to perform tokenization on individual sentences, not directly on
+individual rows, the tokenizer tripped and failed on empty "sentences" resulting from short 
+rows.
+
+I have then decided to set a cutoff to the minimum acceptable length of rows. 
+After some empirical testing and row-length analysis with command line tools I have set a
+threshold at $\ge6$ words.
 
 
 <hr class="thin_separator">
@@ -352,36 +418,38 @@ The rest of the analysis presented here is based on these _cleaned_ datasets.
 
 [Back to TOC](#CONTENT)
 
-The datasets are read-in separately into character vectors, using a user-defined compact function
-(`readByLine()`) (see [__Appendix__](#APPENDIX-my_functions) for the short source).
+The rest of the analysis presented here is based on the _cleaned_ datasets resulting from
+the processing described in the previous sections.
 
-```{r load_data, eval = FALSE, cache = TRUE}
+```{r load_REG_data, eval = FALSE, cache = TRUE}
 # NOT EVALUATED because too computationally heavy (loading saved products)
-in.blogs.CL <- readByLine("./data/en_US.blogs.CLEANED1.txt.gz", check_nl = FALSE, skipNul = TRUE)
-in.news.CL <- readByLine("./data/en_US.news.CLEANED1.txt.gz", check_nl = FALSE, skipNul = TRUE)
-in.twitter.CL <- readByLine("./data/en_US.twitter.CLEANED1.txt.gz", check_nl = FALSE, skipNul = TRUE)
+in.blogs.REG   <- readByLine("./data/blogs_REG.txt.gz", check_nl = FALSE, skipNul = TRUE)
+in.news.REG    <- readByLine("./data/news_REG.txt.gz", check_nl = FALSE, skipNul = TRUE)
+in.twitter.REG <- readByLine("./data/twitter_REG.txt.gz", check_nl = FALSE, skipNul = TRUE)
 ```
 
-Some basic statistics of the three datasets:
+Basic statistics of the three datasets in their original form:
 
 <button class="toggle_code">show code</button>
-```{r data-basic_stats, eval = TRUE, cache = TRUE, echo = TRUE}
-stats.blogs   <- as.numeric(system("gzip -dc ./data/en_US.blogs.CLEANED1.txt.gz | wc | awk '{print $1; print $2; print $3}'", intern = TRUE))
-stats.news    <- as.numeric(system("gzip -dc ./data/en_US.news.CLEANED1.txt.gz | wc | awk '{print $1; print $2; print $3}'", intern = TRUE))
-stats.twitter <- as.numeric(system("gzip -dc ./data/en_US.twitter.CLEANED1.txt.gz | wc | awk '{print $1; print $2; print $3}'", intern = TRUE))
-
-stats.df <- data.frame( blogs = stats.blogs, news = stats.news, twitter = stats.twitter, 
-                        row.names = c("lines", "words", "characters"), stringsAsFactors = FALSE)
-```
-
-```{r data-basic_stats-print, eval = FALSE, echo = FALSE}
+```{r data_REG-basic_stats, eval = FALSE, cache = TRUE, echo = TRUE}
 # NOT EVALUATED
-# NOT ECHOED
-stats.df
+stats.blogs   <- as.numeric(system("gzip -dc ./data/blogs_REG.txt.gz | wc | awk '{print $1; print $2; print $3}'", intern = TRUE))
+stats.news    <- as.numeric(system("gzip -dc ./data/news_REG.txt.gz | wc | awk '{print $1; print $2; print $3}'", intern = TRUE))
+stats.twitter <- as.numeric(system("gzip -dc ./data/twitter_REG.txt.gz | wc | awk '{print $1; print $2; print $3}'", intern = TRUE))
+
+stats.REG.df <- data.frame( blogs = stats.blogs, news = stats.news, twitter = stats.twitter, 
+                             row.names = c("lines", "words", "characters"), stringsAsFactors = FALSE)
+saveRDS(stats.REG.df, "data/stats_REG.RDS")
 ```
 
-```{r data-basic_stats-kable, eval = TRUE, echo = FALSE}
-kable(stats.df)
+```{r data_REG-basic_stats-read, eval = TRUE, echo = FALSE}
+stats.REG.df <- readRDS("data/stats_REG.RDS")
+```
+
+After preprocessing we have the following stats:
+
+```{r data_REG-basic_stats-kable, eval = TRUE, echo = FALSE}
+kable(stats.REG.df)
 ```
 
 
@@ -410,6 +478,14 @@ possibilities "proposed" by an algorithm based on _n-grams_.
 Because of the context, I also do not think that removing punctuation would be wise, nor make
 sense.  
 
+```{r load_cleaned_data, eval = FALSE, cache = TRUE, echo = FALSE}
+# LOADING SAVED PRODUCTS
+# NOT ECHOED
+in.blogs.REG <- readRDS("data/in.blogs.REG.RDS")
+in.news.REG <- readRDS("data/in.news.REG.RDS")
+in.twitter.REG <- readRDS("data/in.twitter.REG.RDS")
+```
+
 <a name="text_transformations"></a>
 
 ### Text transformations
@@ -427,82 +503,17 @@ Bache for bringing us _the pipe_ `%>%`!).
 
 ```{r preproc-transform, eval = FALSE, cache = TRUE}
 # NOT EVALUATED because too computationally heavy (loading saved products)
-in.blogs.CL.cleaned <- tolower(in.blogs.CL) %>% removeNumbers() %>% stripWhitespace()
-in.news.CL.cleaned <- tolower(in.news.CL) %>% removeNumbers() %>% stripWhitespace()
-in.twitter.CL.cleaned <- tolower(in.twitter.CL) %>% removeNumbers() %>% stripWhitespace()
-```
+in.blogs.REG <- tolower(in.blogs.REG) %>% removeNumbers() %>% stripWhitespace()
+in.news.REG <- tolower(in.news.REG) %>% removeNumbers() %>% stripWhitespace()
+in.twitter.REG <- tolower(in.twitter.REG) %>% removeNumbers() %>% stripWhitespace()
 
-```{r load_cleaned_data, eval = TRUE, cache = TRUE, echo = FALSE}
-# LOADING SAVED PRODUCTS
-# NOT ECHOED
-load("data/in.blogs.CL.cleaned.RData")
-load("data/in.news.CL.cleaned.RData")
-load("data/in.twitter.CL.cleaned.RData")
-```
-
-
-<a name="few_chars"></a>
-
-### Excluding rows with too few characters
-
-[Back to TOC](#CONTENT)
-
-During my initial attempts it immediately emerged the problem of excessively short rows of text.
-In particular, because I decided to perform tokenization on individual sentences, not directly on
-individual rows, the tokenizer tripped and failed on empty "sentences" resulting from short 
-rows.
-
-I have then decided to set a cutoff to the minimum acceptable length of rows. 
-After some empirical testing and row-length analysis with command line tools (_e.g._ something 
-like `awk '{if(length <= 8){printf "%6d - %-s\n",NR,$0}}' `) I have set a threshold at 6 characters.
-
-```{r preproc-short_rows, eval = TRUE, cache = TRUE}
-nchar.min <- 6
-
-nchar.blogs.CL <- nchar(in.blogs.CL.cleaned)
-in.blogs.CL.cleaned <- in.blogs.CL.cleaned[nchar.blogs.CL > nchar.min]
-
-nchar.news.CL <- nchar(in.news.CL.cleaned)
-in.news.CL.cleaned <- in.news.CL.cleaned[nchar.news.CL > nchar.min]
-
-nchar.twitter.CL <- nchar(in.twitter.CL.cleaned)
-in.twitter.CL.cleaned <- in.twitter.CL.cleaned[nchar.twitter.CL > nchar.min]
-```
-
-```{r preproc-assign_working_files, eval = TRUE, cache = TRUE, echo = FALSE}
-# ECHO FALSE
-in.blogs <- in.blogs.CL.cleaned
-in.news <- in.news.CL.cleaned
-in.twitter <- in.twitter.CL.cleaned
-```
-
-
-<a name="subsetting"></a>
-
-### Subsetting of the data
-
-[Back to TOC](#CONTENT)
-
-It immediately became clear that analyzing the entire dataset requires fairly powerful computing
-resources and time, even on a very high-end laptop and workstation.
-
-Therefore, for exploration and prototyping I have been working with a subset of 20% of
-the data of each type.  
-
-
-```{r data-subsetting, eval = FALSE, cache = TRUE}
-# NOT EVALUATED
-fraction <- 0.2
-
-# for reproducibility set seed!
-set.seed(6420)
-idx.blogs   <- sample(1:length(in.blogs), ceiling(fraction*length(in.blogs)))
-idx.news    <- sample(1:length(in.news), ceiling(fraction*length(in.news)))
-idx.twitter <- sample(1:length(in.twitter), ceiling(fraction*length(in.twitter)))
-
-sel.blogs   <- in.blogs[idx.blogs]
-sel.news    <- in.news[idx.news]
-sel.twitter <- in.twitter[idx.twitter]
+# re-uppercases TAGS
+in.blogs.REG <- gsub('<(emoticon|hashtag|dollaramount|period|hour|profanity|usa|percentage|date|money|ass|space|decade|ordinal|number|telephonenumber|timeinterval)>', 
+                  '<\\U\\1>', in.blogs.REG, ignore.case = TRUE, perl = TRUE)
+in.news.REG <- gsub('<(emoticon|hashtag|dollaramount|period|hour|profanity|usa|percentage|date|money|ass|space|decade|ordinal|number|telephonenumber|timeinterval)>', 
+                  '<\\U\\1>', in.news.REG, ignore.case = TRUE, perl = TRUE)
+in.twitter.REG <- gsub('<(emoticon|hashtag|dollaramount|period|hour|profanity|usa|percentage|date|money|ass|space|decade|ordinal|number|telephonenumber|timeinterval)>', 
+                  '<\\U\\1>', in.twitter.REG, ignore.case = TRUE, perl = TRUE)
 ```
 
 
@@ -514,7 +525,7 @@ sel.twitter <- in.twitter[idx.twitter]
 
 <a name="ANALYSIS-STEP1"></a>
 
-## Step 1 : Sentence Annotation
+## Step 1 : Sentence Annotation (R)
 
 [Back to TOC](#CONTENT)
 
@@ -522,15 +533,16 @@ As noted, after some tests, I settled on an approach whereby _n-grams tokenizati
 on separate individual sentences, instead of directly on individual rows as loaded from the dataset.
 
 This is motivated by the fact that the _tokenizer_ I have adopted because I found its performance
-to be more satisfactory, the _NGramTokenizer_ of the _RWeka_ package, does not seem to interrupt 
+to be more satisfactory, the `NGramTokenizer()` of the __RWeka__ package, does not seem to interrupt 
 its construction of _n-grams_ at what are very likely sentence boundaries.
 
 With _next word prediction_ in mind, it makes a lot of sense to restrict _n-grams_ to sequences
-of words within the boundaries of a sentence.
+of words _within the boundaries of a sentence_.
 
 Therefore, after cleaning, transforming and filtering the data, the first real operation 
 I perform is the annotation of sentences, for which I have been using the __openNLP__ sentence
-annotator `Maxent_Sent_Token_Annotator()`, with its default settings.
+annotator `Maxent_Sent_Token_Annotator()`, with its default settings, and the function `annotate()` 
+from the __NLP__ package.
 
 ```{r sentence_annotation-setup, eval = TRUE, cache = TRUE}
 sent_token_annotator <- Maxent_Sent_Token_Annotator()
@@ -539,41 +551,146 @@ sent_token_annotator
 
 I want the data in the form of a _vector with individual sentences_, and so I opted for `sapply()`
 combined with a function wrapping the operations necessary to prepare a row of data for
-annotation, the annotation itself and finally return a vector of sentences (the short function
-is shown in the [__Appendix__](#APPENDIX-my_functions)).
+annotation, the annotation itself and finally return a vector of sentences.
 
-```{r sentence_annotation-read, eval = TRUE, cache = TRUE, echo = FALSE}
-# LOADING SAVED PRODUCTS
-# NOT ECHOED
-# load("data/sel.blogs.RData")
-# load("data/sel.news.RData")
-# load("data/sel.twitter.RData")
-load("data/sel.blogs.sentences.RData")
-load("data/sel.news.sentences.RData")
-load("data/sel.twitter.sentences.RData")
+```{r show_find_sentences_function, eval = FALSE, echo = TRUE}
+find_sentences <- function(x) {
+    s <- paste(x, collapse = " ") %>% as.String()
+    a <- NLP::annotate(s , sent_token_annotator) 
+    as.vector(s[a])
+}
 ```
+
+To work around not fully performance issues, the tokenization was done on subsets (chunk)
+of the data, comprising $100000$ lines.  Done this way was much faster than forcing the
+tokenization over the 
+The following code takes each dataset, and splits it into sentences chunk by chunk, writing out
+the sentences for each chunk to separate files, which were then concatenated outside of R.
 
 ```{r sentence_annotation-run, eval = FALSE, cache = TRUE, echo = TRUE}
 # NOT EVALUATED because too computationally heavy (loading saved products)
-sel.blogs.sentences <- sapply(sel.blogs, FUN = find_sentences, USE.NAMES = FALSE) %>% unlist 
-sel.news.sentences <- sapply(sel.news, FUN = find_sentences, USE.NAMES = FALSE) %>% unlist 
-sel.twitter.sentences <- sapply(sel.twitter, FUN = find_sentences, USE.NAMES = FALSE) %>% unlist 
+chunk_size <- 100000
+
+for( what in c("blogs", "news", "twitter")) {
+    
+    data.what <- get(paste0("in.", what, ".REG"))
+    len.what   <- length(data.what)
+    cat(" - length ", len.what, "\n")
+    
+    n_chunks <- floor(len.what/chunk_size) + 1
+    n1 <- ((1:n_chunks)-1)*chunk_size + 1
+    n2 <- (1:n_chunks)*chunk_size
+    n2[n_chunks] <- len.what
+    Ns_by_chunk <- rep(0, n_chunks)
+    print(n1)
+    print(n2)
+    
+    names <- paste(what, "sentences", sprintf("%02d", (1:n_chunks)), sep = ".")
+    fnames <- paste(names, ".gz", sep = "")
+    print(names)
+    print(fnames)
+    
+    # loop over chunks of size 'chunk_size'
+    for(i in 1:n_chunks) {
+        name1 <- names[i]
+        fname1 <- fnames[i]
+        idx <- n1[i]:n2[i]
+        
+        cat("   ", name1, length(idx), idx[1], idx[length(idx)], "\n")
+
+        # find sentences
+        assign( name1, sapply(data.what[idx], FUN = find_sentences, USE.NAMES = FALSE) %>% unlist )
+        con <- gzfile(fname1, open = "w")
+
+        # write sentences for this chunk to file
+        writeLines(get(name1), con = con)
+        close(con)
+    }
+    rm(i, n1, n2, n_chunks)
+}
 ```
 
-```{r sentence_annotation-print_1, eval = TRUE, cache = TRUE}
-N.sentences <- c(length(sel.blogs.sentences), length(sel.news.sentences), length(sel.twitter.sentences))
-stats.df[4, ] <- as.numeric(5*N.sentences)
-stats.df[5, ] <- round(stats.df[4, ]/stats.df[1, ], 3)
-row.names(stats.df)[4] <- "sentences"
-row.names(stats.df)[5] <- "sentences_per_line"
+```{r load_sentences, eval = FALSE, cache = TRUE, echo = FALSE}
+# NOT EVALUATED because too computationally heavy (loading saved products)
+# NOT ECHOED
+blogs.sentences   <- readByLine("./data/blogs.sentences.all.gz", check_nl = FALSE, skipNul = TRUE)
+news.sentences    <- readByLine("./data/news.sentences.all.gz", check_nl = FALSE, skipNul = TRUE)
+twitter.sentences <- readByLine("./data/twitter.sentences.all.gz", check_nl = FALSE, skipNul = TRUE)
 ```
 
-The stats table, with the added _estimated number of sentences_ (because the analysis is on just
-20% of the data, the number tabulated is `5*N.sentences`) is as follows:
+```{r sentence_annotation-print_1, eval = TRUE, cache = TRUE, echo = FALSE}
+# NOT ECHOED
+N.sentences.blogs   <- as.numeric(system("gzip -dc ./data/blogs.sentences.ALL.gz | wc -l", intern = TRUE))
+N.sentences.news    <- as.numeric(system("gzip -dc ./data/news.sentences.ALL.gz | wc -l", intern = TRUE))
+N.sentences.twitter <- as.numeric(system("gzip -dc ./data/twitter.sentences.ALL.gz | wc -l", intern = TRUE))
+
+N.sentences <- c(N.sentences.blogs, N.sentences.news, N.sentences.twitter)
+stats.REG.df[4, ] <- N.sentences
+stats.REG.df[5, ] <- round(stats.REG.df[4, ]/stats.REG.df[1, ], 3)
+row.names(stats.REG.df)[4] <- "sentences"
+row.names(stats.REG.df)[5] <- "sentences_per_line"
+```
+
+The stats table, with the added _number of sentences_  is now as follows:
 
 ```{r sentence_annotation-print_2, eval = TRUE, cache = TRUE, echo = FALSE}
-for(i in 1:4){ stats.df[i, ] <- sprintf("%s", stats.df[i, ]) }
-kable(stats.df, align = "r", row.names = TRUE)
+for(i in 1:4){ stats.REG.df[i, ] <- sprintf("%s", stats.REG.df[i, ]) }
+kable(stats.REG.df, align = "r", row.names = TRUE)
+```
+
+The list of sentences by dataset were then merged into a single master list.
+
+### Some further cleaning of text (_perl_)
+
+After the tokenization into sentences, some more fixes were applied with _perl scripts_ 
+(sources posted on [GitHub](https://github.com/pedrosan/DataScienceExamples/tree/master/myTextPredictr/MilestoneReport/scripts)
+
+```{r sentences_cleaning, engine = "bash", eval = FALSE}
+gzip -dc all.sentences.ALL.gz | \
+    ./sentences_cleaning-v1.pl | \
+    awk '{if(NF > 1){print $0}}' | \
+    ./sentences_cleaning-v2.pl | \
+    ./sentences_cleaning-v2.pl | \
+    ./sentences_cleaning-v2.pl | \
+    ./sentences_cleaning-v3.pl | \
+    ./sentences_cleaning-v2.pl
+```
+
+The repetition of script #2 turned out to be an easier approach instead of writing more
+complex regular expressions.
+
+The processed sentences were then filtered based on
+
+* Number of words $\ge 3$ (`NF` in _awk_).
+    * This criterion is simply due to the fact that we want sentences long enough to yield 3-grams.
+* A _maximum_ value of a ratio variable defined as $\frac{(length - NF + 1)}{NF} \le 7.0$
+    * This ratio cuts out particularly pathological sentences, including non-sense "words" (typically from twitter text).
+
+```{r sentences_filtering_on_ratio, engine = "bash", eval = FALSE}
+awk '{if(NF < 3){next}; ratio = (length - NF + 1)/NF; if(ratio > 7.0){next}; print $0}' 
+```
+
+
+### Removing _stop words_ (R)
+
+
+```{r load_all_sentences, eval = FALSE, cache = TRUE, echo = FALSE}
+# NOT ECHOED
+all.sentences.ALL <- readByLine("./all.sentences.GO.gz", check_nl = FALSE, skipNul = TRUE)
+```
+
+After more thinking I decided to partially reconsider my decision against removal of _stop words_
+and remove a controlled, selected list of them.
+
+```{r remove_stopwords_from_sentences, eval = FALSE, cache = TRUE, echo = TRUE}
+my_stop_words <- c("a", "an", "as", "at", "no", "of", "on", "or", 
+                   "by", "so", "up", "or", "no", "in", "to", "rt")
+
+# fixing extra spaces left by removing stop words
+all.sentences <- removeWords(all.sentences.ALL, my_stop_words) %>% 
+                        gsub(" +", " ", . , perl = TRUE) %>% 
+                        gsub("^ +", "", . , perl = TRUE) %>% 
+                        gsub(" +$", "", . , perl = TRUE)
 ```
 
 
@@ -583,55 +700,147 @@ kable(stats.df, align = "r", row.names = TRUE)
 
 [Back to TOC](#CONTENT)
 
-For the _n-grams_ tokenization I have been using the __RWeka Tokenizer__ `NGramTokenizer`, passing
+For the _n-grams_ tokenization I used the __RWeka Tokenizer__ `NGramTokenizer`, passing
 to it a list of _token delimiters_.
 
-I have been extracting _n-grams_ for $n = 3, 4, 5$.   
-I have not been able to run `NGramTokenizer` on the full vector of sentences for each data set.
+I have not been able to run `NGramTokenizer()` on the full vector of sentences for each data set.
 It fails on some variation of memory-allocation related error (that honestly does not make much
 sense to me considering that I am running it on machines with 12GB of RAM).
 
-So, I am processing data in chunks of 100,000 sentences, as _exemplified_ by this block of code
+So, I am processing data in chunks of 25,000 sentences, as _exemplified_ by this block of code
 (the _n-grams_ data for the following section are loaded from saved previous analysis).
 
+I extracted _n-grams_ for $n = 3, 4, 5$, with the code shown below:
 
-```{r ngrams-1, eval = FALSE, cache = TRUE, echo = TRUE}
-# NOT EVALUATED because too computationally heavy (loading saved products)
-token_delim <- " \\t\\r\\n.!?,;\"()"
-nl.chunk <- 100000
-N <- ceiling(length(sel.blogs.sentences)/nl.chunk)
+<button class="toggle_code"><strong>show n-grams tokenization code</strong></button>
+```{r tokenizing_ngrams, eval = FALSE, cache = TRUE, echo = TRUE}
+token_delim <- " \\r\\n\\t.,;:\"()?!"
+nl.chunk <- 25000
 
-#----- BLOGS ------------------------------------
-end.blogs <- length(sel.blogs.sentences)
+gc()
+cat(" *** Tokenizing n-grams in WHOLE dataset [", my_date(), "]----------------------------------------\n")
 
-#----- 3-grams -----
-cat(" *** Tokenizing : blogs : 3-grams ------------------------------------------------------------\n")
-n3grams.blogs.1 <- NGramTokenizer(sel.blogs.sentences[1:100000], 
-                                  Weka_control(min = 3, max = 3, delimiters = token_delim))
-n3grams.blogs.2 <- NGramTokenizer(sel.blogs.sentences[100001:200000], 
-                                  Weka_control(min = 3, max = 3, delimiters = token_delim))
-n3grams.blogs.3 <- NGramTokenizer(sel.blogs.sentences[200001:300000], 
-                                  Weka_control(min = 3, max = 3, delimiters = token_delim))
-n3grams.blogs.4 <- NGramTokenizer(sel.blogs.sentences[300001:400000], 
-                                  Weka_control(min = 3, max = 3, delimiters = token_delim))
-n3grams.blogs.5 <- NGramTokenizer(sel.blogs.sentences[400001:end.blogs], 
-                                  Weka_control(min = 3, max = 3, delimiters = token_delim))
+len.all.sentences <- length(all.sentences)
+cat(" *** Number of sentences in the WHOLE data set : ", len.all.sentences, "\n")
+
+# define variable used to filter sentences long enough for n-grams of length N
+subs <- strsplit(all.sentences, split = "[ ;,.\"\t\r\n()!?]+")
+nstr.subs  <- sapply(subs, FUN = function(x) { length(unlist(x)) }, USE.NAMES = FALSE)
+rm(subs)
+
+for( ngram_size in 3:5 ) {
+    cat(" *** Tokenizing : WHOLE : ", ngram_size, "-grams ----------------------------------------\n")
+    
+    good.sentences <- all.sentences[nstr.subs >= ngram_size]
+    len.good <- length(good.sentences)
+    cat("   Sentences with good length ( >=", ngram_size, ") : ", sprintf("%7d", len.good), "\n")
+    cat("   Sentences with good length ( >=", ngram_size, ") : ", sprintf("%7d", len.good), 
+           "(of ", sprintf("%7d", len.all.sentences), ")\n")
+
+    n_chunks <- floor(len.good/nl.chunk) + 1
+    n1 <- ((1:n_chunks)-1)*nl.chunk + 1
+    n2 <- (1:n_chunks)*nl.chunk
+    n2[n_chunks] <- len.good
+
+    names <- paste("n", sprintf("%1d", ngram_size), "grams.blogs.", sprintf("%03d", (1:n_chunks)), sep = "")
+    fnames <- paste("output/", names, ".gz", sep = "")
+    
+    for(i in 1:n_chunks) {
+        name1 <- names[i]
+        fname1 <- fnames[i]
+        idx <- n1[i]:n2[i]
+    
+        cat("  [", sprintf("%3d", i), "/", sprintf("%3d", n_chunks), "]  ", 
+               name1, length(idx), idx[1], idx[length(idx)], "\n")
+    
+        # tokenize to n-grams
+        assign( name1, NGramTokenizer(good.sentences[idx], 
+                Weka_control(min = ngram_size, max = ngram_size, delimiters = token_delim)) )
+    
+        # write to file n-grams from this chunk
+        con <- gzfile(fname1, open = "w")
+        writeLines(get(name1), con = con)
+        close(con)
+
+        gc()
+    }
+
+    # Combining chunks into one n-gram vector
+    size.ngrams <- rep(0, n_chunks)
+    total_length <- 0 
+    for(i in 1:n_chunks) {
+        name1 <- names[i]
+        this_length <- length(get(name1))
+        size.ngrams[i] <- this_length
+        total_length <- total_length + this_length
+        cat("  [", sprintf("%3d", i), "/", sprintf("%3d", n_chunks), 
+               "]  length of ", name1, " = ", this_length, "\n")
+    }
+    cat("    Total Length = ", total_length, "\n")
+    
+    name_for_all_ngrams <- paste("n", sprintf("%1d", ngram_size), "grams.blogs.all", sep = "")
+    temp_all_ngrams <- vector(mode = "character", length = total_length)
+    ivec <- c(0, cumsum(size.ngrams))
+    for(i in 1:n_chunks) {
+        i1 <- ivec[i] + 1
+        i2 <- ivec[i+1]
+        name <- names[i]
+        cat("   ", i, i1, i2, name, "\n")
+        temp_all_ngrams[i1:i2] <- get(name)
+    }
+
+    assign( name_for_all_ngrams, temp_all_ngrams )
+
+    # write to file all n-grams
+    fname <- paste("output/", "n", sprintf("%1d", ngram_size), "grams.blogs.all.gz", sep = "")
+    con <- gzfile(fname, open = "w")
+    writeLines(temp_all_ngrams, con = con)
+    close(con)
+
+    # cleaning
+    rm(good.sentences, len.good, temp_all_ngrams)
+    
+    rm(i, n1, n2, n_chunks)
+    ls(pattern = "^n[1-6]grams.blogs.[0-9]")
+    rm(list = ls(pattern = "^n[1-6]grams.blogs.[0-9]") )
+    gc()
+}
 ```
 
-The chunks of n-grams are then combined with a script:
+<a name="ngrams-cleaning_and_reclassification"></a>
 
-```{r combine_nXgrams, eval = FALSE, cache = TRUE, echo = TRUE}
-source("./scripts/combine_nXgrams_blogs.R")
+### Cleaning and _re-classification_ of n-grams
+
+A small fraction of the n-grams so produced contains no-ASCII characters, and it makes sense to
+simply drop these n-grams.   
+For instance with: 
+
+```{r ngrams-remove_non_ascii, engine = "bash", eval = FALSE, echo = TRUE}
+gzip -dc n5grams.all.gz | grep -P -v '([^\x00-\x7F]+)' 
 ```
 
-```{r read_combine_nXgrams, eval = TRUE, echo = FALSE, cache = FALSE}
-read_chunk("./scripts/combine_nXgrams_blogs.R")
+Another _perl script_ (`ngrams-reprocess_clean_and_classify.pl`, find it on
+[GitHub](https://github.com/pedrosan/DataScienceExamples/tree/master/myTextPredictr/MilestoneReport/scripts)) 
+then
+
+* Cleans up some problematic words or rejects some pathologically bad n-grams.
+* Reclassifies n-grams based on their true adjusted number of words.
+
+```{r ngrams-clean_and_reclassify, engine = "bash", eval = FALSE, echo = TRUE}
+gzip -dc n5grams.filtered_for_nonASCII.gz | ./scripts/ngrams-reprocess_clean_and_classify.pl -go -print
 ```
 
-<button class="toggle_code">show script code</button>
-```{r example_of_combine_nXgrams_script, eval = FALSE, echo = TRUE, cache = FALSE}
-<<combine_nXgrams_blogs>>
-```
+This script produces a set of 7 files (`tmp_n*`) containing:
+* good 1-grams
+* good 2-grams
+* good 3-grams
+* good 4-grams
+* good 5-grams
+* n > 5 grams 
+* Trashed n-grams (full of problem not worth dealing with)
+
+Finally, we merge the n-grams of each order produced by the above script reprocessing all original n-grams.
+
 
 <a name="ngrams_tables"></a>
 
@@ -639,13 +848,9 @@ read_chunk("./scripts/combine_nXgrams_blogs.R")
 
 [Back to TOC](#CONTENT)
 
-From the _n-grams_ vectors we can compute frequencies, which will be an important basis for
-the prediction algorithms.
+__NOTE:__ the following results refer to the analysis of a subset of sentences (20%).
 
-For now we can take a peek at what are the most frequent _3-grams_ and _4-grams_ 
-in the three datasets.
-
-```{r load_ngrams, echo = FALSE, eval = TRUE, cache = TRUE}
+```{r load_ngrams, eval = FALSE, cache = TRUE, echo = FALSE}
 # LOADING SAVED PRODUCTS
 # NOT ECHOED
  load("data/n3grams.blogs.all.RData")
@@ -658,18 +863,72 @@ in the three datasets.
  load("data/n4grams.twitter.all.RData")
 
 # load from scratch
-# n3grams.blogs.all <- readByLine("../output/n3grams.blogs.all.gz")
-# n4grams.blogs.all <- readByLine("../output/n4grams.blogs.all.gz")
+# n3grams.blogs.all <- readByLine("data/n3grams.blogs.all.gz")
+# n4grams.blogs.all <- readByLine("data/n4grams.blogs.all.gz")
 # 
-# n3grams.news.all <- readByLine("../output/n3grams.news.all.gz")
-# n4grams.news.all <- readByLine("../output/n4grams.news.all.gz")
+# n3grams.news.all <- readByLine("data/n3grams.news.all.gz")
+# n4grams.news.all <- readByLine("data/n4grams.news.all.gz")
 # 
-# n3grams.twitter.all <- readByLine("../output/n3grams.twitter.all.gz")
-# n4grams.twitter.all <- readByLine("../output/n4grams.twitter.all.gz")
+# n3grams.twitter.all <- readByLine("data/n3grams.twitter.all.gz")
+# n4grams.twitter.all <- readByLine("data/n4grams.twitter.all.gz")
 ```
 
+```{r ngrams_stats, eval = FALSE, cache = TRUE, echo = FALSE}
+n3grams.all <- c(n3grams.blogs.all, n3grams.news.all, n3grams.twitter.all)
+n4grams.all <- c(n4grams.blogs.all, n4grams.news.all, n4grams.twitter.all)
+
+N_n3g_blogs <- length(n3grams.blogs.all)
+N_n3g_news <- length(n3grams.news.all)
+N_n3g_twitter <- length(n3grams.twitter.all)
+N_n3g_all <- length(n3grams.all)
+N_n4g_blogs <- length(n4grams.blogs.all)
+N_n4g_news <- length(n4grams.news.all)
+N_n4g_twitter <- length(n4grams.twitter.all)
+N_n4g_all <- length(n4grams.all)
+
+N_unique_n3g_blogs <- length(unique(n3grams.blogs.all))
+N_unique_n3g_news <- length(unique(n3grams.news.all))
+N_unique_n3g_twitter <- length(unique(n3grams.twitter.all))
+N_unique_n3g_all <- length(unique(n3grams.all))
+N_unique_n4g_blogs <- length(unique(n4grams.blogs.all))
+N_unique_n4g_news <- length(unique(n4grams.news.all))
+N_unique_n4g_twitter <- length(unique(n4grams.twitter.all))
+N_unique_n4g_all <- length(unique(n4grams.all))
+```
+
+```{r ngrams_stats-debug, eval = TRUE, cache = TRUE, echo = FALSE}
+flag_debug <- FALSE
+if( flag_debug == TRUE ) {
+    N_n3g_blogs
+    N_n3g_news
+    N_n3g_twitter
+    N_n3g_blogs + N_n3g_news + N_n3g_twitter
+    N_unique_n3g_blogs
+    N_unique_n3g_news
+    N_unique_n3g_twitter
+    N_unique_n3g_blogs + N_unique_n3g_news + N_unique_n3g_twitter
+    N_unique_n3g_all
+    N
+    N_n4g_blogs
+    N_n4g_news
+    N_n4g_twitter
+    N_n4g_blogs + N_n4g_news + N_n4g_twitter
+    N_unique_n4g_blogs
+    N_unique_n4g_news
+    N_unique_n4g_twitter
+    N_unique_n4g_blogs + N_unique_n4g_news + N_unique_n4g_twitter
+    N_unique_n4g_all
+}
+```
+
+From the _n-grams_ vectors we can compute frequencies, which will be an important basis for
+the prediction algorithms.
+
+For now we can take a peek at what are the most frequent _3-grams_ and _4-grams_ 
+in the three datasets.
+
 <button class="toggle_code">show code for blogs</button>
-```{r ngrams_blogs_1, eval = TRUE, cache = TRUE, echo = TRUE}
+```{r ngrams_blogs_1, eval = FALSE, cache = TRUE, echo = TRUE}
 n3g.blogs.freq <- as.data.frame(table(n3grams.blogs.all), stringsAsFactors = FALSE)
 n3g.blogs.freq <- n3g.blogs.freq[order(n3g.blogs.freq$Freq, decreasing = TRUE), ]
 row.names(n3g.blogs.freq) <- NULL
@@ -682,8 +941,9 @@ colnames(n3g.blogs.freq) <- c("ngram", "count")
 colnames(n4g.blogs.freq) <- c("ngram", "count")
 ```
 
+<br />
 <button class="toggle_code">show code for news</button>
-```{r ngrams_news_1, eval = TRUE, cache = TRUE, echo = TRUE}
+```{r ngrams_news_1, eval = FALSE, cache = TRUE, echo = TRUE}
 n3g.news.freq <- as.data.frame(table(n3grams.news.all), stringsAsFactors = FALSE)
 n3g.news.freq <- n3g.news.freq[order(n3g.news.freq$Freq, decreasing = TRUE), ]
 row.names(n3g.news.freq) <- NULL
@@ -696,8 +956,9 @@ colnames(n3g.news.freq) <- c("ngram", "count")
 colnames(n4g.news.freq) <- c("ngram", "count")
 ```
 
+<br />
 <button class="toggle_code">show code for twitter</button>
-```{r ngrams_twitter_1, eval = TRUE, cache = TRUE, echo = TRUE}
+```{r ngrams_twitter_1, eval = FALSE, cache = TRUE, echo = TRUE}
 n3g.twitter.freq <- as.data.frame(table(n3grams.twitter.all), stringsAsFactors = FALSE)
 n3g.twitter.freq <- n3g.twitter.freq[order(n3g.twitter.freq$Freq, decreasing = TRUE), ]
 row.names(n3g.twitter.freq) <- NULL
@@ -710,12 +971,45 @@ colnames(n3g.twitter.freq) <- c("ngram", "count")
 colnames(n4g.twitter.freq) <- c("ngram", "count")
 ```
 
+```{r ngrams_top500, eval = FALSE, cache = TRUE, echo = FALSE}
+n3g.blogs.top500 <- head(n3g.blogs.freq, 500)
+n4g.blogs.top500 <- head(n4g.blogs.freq, 500)
+n3g.news.top500 <- head(n3g.news.freq, 500)
+n4g.news.top500 <- head(n4g.news.freq, 500)
+n3g.twitter.top500 <- head(n3g.twitter.freq, 500)
+n4g.twitter.top500 <- head(n4g.twitter.freq, 500)
+
+nXg.all.top500 <- list(n3g.blogs.top500   = n3g.blogs.top500,
+                       n4g.blogs.top500   = n4g.blogs.top500,
+                       n3g.news.top500    = n3g.news.top500,
+                       n4g.news.top500    = n4g.news.top500,
+                       n3g.twitter.top500 = n3g.twitter.top500,
+                       n4g.twitter.top500 = n4g.twitter.top500)
+
+saveRDS(nXg.all.top500, file = "data/nXg_all_top500.RDS")
+```
+
+```{r ngrams_top500-read, eval = TRUE, cache = TRUE, echo = FALSE}
+nXg.all.top500 <- readRDS("data/nXg_all_top500.RDS")
+
+n3g.blogs.top500   <- nXg.all.top500$n3g.blogs.top500
+n3g.news.top500    <- nXg.all.top500$n3g.news.top500
+n3g.twitter.top500 <- nXg.all.top500$n3g.twitter.top500
+n4g.blogs.top500   <- nXg.all.top500$n4g.blogs.top500
+n4g.news.top500    <- nXg.all.top500$n4g.news.top500
+n4g.twitter.top500 <- nXg.all.top500$n4g.twitter.top500
+```
+
 #### __3-grams__
 
 <button class="toggle_code">show code</button>
 ```{r top20_n3grams-prepare, eval = TRUE, cache = TRUE, echo = TRUE}
-tmp3.df <- cbind(head(n3g.blogs.freq, 20), head(n3g.news.freq, 20), head(n3g.twitter.freq, 20)) 
-tmp4.df <- cbind(head(n4g.blogs.freq, 20), head(n4g.news.freq, 20), head(n4g.twitter.freq, 20)) 
+tmp3.df <- cbind(head(n3g.blogs.top500, 20), 
+                 head(n3g.news.top500, 20), 
+                 head(n3g.twitter.top500, 20)) 
+tmp4.df <- cbind(head(n4g.blogs.top500, 20), 
+                 head(n4g.news.top500, 20), 
+                 head(n4g.twitter.top500, 20)) 
 colnames(tmp4.df) <- c("ngram_blogs", "count", "ngram_news", "count", "ngram_twitter", "count")
 colnames(tmp4.df) <- c("ngram_blogs", "count", "ngram_news", "count", "ngram_twitter", "count")
 # saveRDS(tmp3.df, file = "tmp_n3g_table.RDS")
@@ -801,11 +1095,11 @@ to the data.
 #### Top-30 all mixed
 
 ```{r rank_mixed, eval = TRUE, cache = TRUE, echo = FALSE}
-n4g.t <- subset(n4g.twitter.freq, count >= 50)
+n4g.t <- subset(n4g.twitter.top500, count >= 50)
 n4g.t$flag <- "twitter"
-n4g.b <- subset(n4g.blogs.freq, count >= 50)
+n4g.b <- subset(n4g.blogs.top500, count >= 50)
 n4g.b$flag <- "blogs"
-n4g.n <- subset(n4g.news.freq, count >= 50)
+n4g.n <- subset(n4g.news.top500, count >= 50)
 n4g.n$flag <- "news"
 
 n4g.high <- rbind(n4g.b, n4g.n, n4g.t)
@@ -815,7 +1109,7 @@ row.names(n4g.high.sorted) <- NULL
 ```
 
 <button class="toggle_plot_code">show plot code</button>
-```{r barplot_mix, eval = TRUE, cache = TRUE, echo = TRUE, fig.width = 10, fig.height = 7}
+```{r barplot_mix, eval = TRUE, cache = FALSE, echo = TRUE, fig.width = 10, fig.height = 7}
 # ECHO FALSE
 mycolors <- c("deepskyblue3", "firebrick2", "forestgreen")
 data2pl <- n4g.high.sorted[1:30, ]
@@ -835,9 +1129,9 @@ bp_mix
 #### Top-20 by data source
 
 <button class="toggle_plot_code">show plot code</button>
-```{r barplot_together, eval = TRUE, cache = TRUE, echo = TRUE, fig.width = 7, fig.height = 15}
+```{r barplot_together, eval = TRUE, cache = FALSE, echo = TRUE, fig.width = 7, fig.height = 15}
 # ECHO FALSE
-data.blogs <- n4g.blogs.freq[1:20, ]
+data.blogs <- n4g.blogs.top500[1:20, ]
 bp_blogs <- ggplot(data.blogs, aes(x = reorder(ngram, count), y = count)) + theme_bw() + coord_flip() + xlab("") + 
     theme(plot.title = element_text(face = "bold", size = 20)) + 
     theme(axis.text = element_text(size = 10)) + 
@@ -846,7 +1140,7 @@ bp_blogs <- ggplot(data.blogs, aes(x = reorder(ngram, count), y = count)) + them
     geom_bar(stat = "identity", fill = mycolors[1]) + 
     geom_text(aes(label = count, y = 100, size = 10), col = "white") 
 
-data.news <- n4g.news.freq[1:20, ]
+data.news <- n4g.news.top500[1:20, ]
 bp_news <- ggplot(data.news, aes(x = reorder(ngram, count), y = count)) + theme_bw() + coord_flip() + xlab("") + 
     theme(plot.title = element_text(face = "bold", size = 20)) + 
     theme(axis.text = element_text(size = 10)) + 
@@ -855,7 +1149,7 @@ bp_news <- ggplot(data.news, aes(x = reorder(ngram, count), y = count)) + theme_
     geom_bar(stat = "identity", fill = mycolors[2]) + 
     geom_text(aes(label = count, y = 100, size = 10), col = "white") 
 
-data.twitter <- n4g.twitter.freq[1:20, ]
+data.twitter <- n4g.twitter.top500[1:20, ]
 bp_twitter <- ggplot(data.twitter, aes(x = reorder(ngram, count), y = count)) + theme_bw() + coord_flip() + xlab("") + 
     theme(plot.title = element_text(face = "bold", size = 20)) + 
     theme(axis.text = element_text(size = 10)) + 
@@ -894,11 +1188,177 @@ read_chunk("./scripts/my_functions.R")
 <<my_functions>>
 ```
 
-More functions can be reviewed directly from the repository:
+More functions can be reviewed directly from the
+[repository](https://github.com/pedrosan/DataScienceExamples/tree/master/myTextPredictr/MilestoneReport/scripts)
 
-* [scripts/combine_nXgrams_blogs.R](./scripts/combine_nXgrams_blogs.R) 
-* [scripts/combine_nXgrams_news.R](./scripts/combine_nXgrams_news.R) 
-* [scripts/combine_nXgrams_twitter.R](./scripts/combine_nXgrams_twitter.R) 
+
+<a name="APPENDIX-regularize"></a>
+
+## Summary of regularization done with _perl scripts_
+
+Scripts source in [this GitHub folder](https://github.com/pedrosan/DataScienceExamples/tree/master/myTextPredictr/MilestoneReport/scripts)
+
+#### _regularize_text-pass1.pl_
+
+* CHARACTERS "HOMOGENEIZATION"
+    * Normalize odd characters
+    * Currency symbols
+    * HTML tags
+    * encoded apostrophe
+
+* CHARACTER SEQUENCES
+    * Cleaning of BEGIN / END of LINE
+    * EOL ellipsis
+    * EOL non-sense
+    * word bracketed by *
+    * substitution on "|" that seem to be equivalent to end of sentences (i.e. a period)
+    * substitution of <==/<-- and ==>/--> with ";"
+    * sequences of !, ? 
+
+* HASHTAGS
+    * recognized (most) hashtags
+
+
+#### _regularize_text-pass2.pl_
+
+* NUMBER RELATED
+    * dates
+    * hours am/pm
+    * hours a.m./p.m.
+    * dollar amounts
+    * percentages
+
+* ACRONYMS
+    * acronyms: US
+
+* EMOTICONS
+    * regular 
+    * (reverse) [not done]
+
+* ELLIPSIS
+    * INLINE ellipsis
+
+* REPEATED CHARACTERS
+    * DOLLAR
+    * STAR
+    * "+"
+    * "-"
+    * "a -- b" ==> replace with ","
+    * "a--b"   ==> replace with ","
+    * "! -- A" ==> REMOVE
+    * "A--A[a ']" ==> replace with ";"
+    * "a-- A" ==> replace with ";"
+    * "a-- a" ==> replace with ","
+    * LEAVE ONE (followed by space) : ,
+    * LEAVE ONE : _  (the % is handled separately when dealing with percentages)
+    * REMOVE ENTIRELY if 2+ : < > = #
+   
+
+#### _regularize_text-pass3.pl_
+
+* CONTRACTIONS
+    * 'll ==> _will / " will" ==> _will
+    * n't ==> _not
+    * 're ==> _are
+    * 've ==> _have
+    * some additional ad hoc (e.g. won't ==> will_not)
+    * 's ==> _s
+    * additional possibly useful/meaningful replacements (e.g. y'all)
+
+* WHITE SPACES
+    * squeezing extra white spaces
+    * fixing some punctuation and white space
+
+* PROFANITIES
+    * catch the "7 ones" and replace with tag <PROFANITY>
+
+
+#### _regularize_text-pass4.pl_
+
+* ABBREVIATIONS: find and mark with tags standard/common abbreviations
+    * month names
+    * Mr, Mrs, Dr, ...
+
+* MORE
+    * Find and replace something like <NUMBER>-word
+    * Remove genitives
+    * Clean line endings preceded by spurious spaces
+    * Replace: '' ==> "
+
+
+#### _regularize_text-pass5.pl_
+
+* WEIRD CHARACTERS
+    * Replace weird characters with <WEIRDO> tag
+
+* TAGS CLEANING
+    * Clean consecutive <TAGS>
+    * Remove <PERIOD>
+    * Remove <SPACE>
+    * Remove <WEIRDO>
+    * Remove quotes from single quoted words
+
+* MORE
+    * Clear row BEGINNINGS with non-alpha characters
+
+#### _regularize_text-pass6.pl_
+
+* MORE TAG-RELATED REGULARIZATIONS
+    * FIX missed HASHTAGS at line beginning
+    * FIX additional number capture
+    * Emptying tags that were defined to capture the original expression
+        (e.g. <EMOJ_*_EMOJ> ==> <EMOTICON>
+
+
+<a name="APPENDIX-post_sentence_cleaning"></a>
+
+## Summary of post-sentence-tokenization cleaning (with _perl scripts_)
+
+Scripts source in [this GitHub folder](https://github.com/pedrosan/DataScienceExamples/tree/master/myTextPredictr/MilestoneReport/scripts)
+
+#### _sentences-cleaning_1.pl_
+
+* CONTRACTIONS
+    - 'll ==> _will / " will" ==> _will
+    - n't ==> _not
+    - 're ==> _are
+    - 've ==> _have
+    - some additional ad hoc
+    - 's ==> _s
+    - additional possibly useful/meaningful replacements (e.g. y'all)
+
+#### _sentences-cleaning_2.pl_
+
+* Remove spaces at the end of a sentence 
+* More catching of profanities
+
+* TAGS
+    - Consecutive identical TAGS
+    - Remove TAGS enclosed in parenthesis
+    - Remove USELESS TAGS
+
+* Remove excess space
+    - Removed excess space at the beginning
+    - Removed excess space at the end
+    - Removed excess space in the middle
+
+* Clean _non-alpha_ BEGINNING of sentences
+    - Clean sentences "bracketed" by quotes or parenthesis (removing the "bracketing" character")
+    - Remove beginning quotes not paired in the rest of the sentence.
+    - Bracketed TAGS - just remove them
+    - Non-alpha preceding a TAG (done separately to make life simpler)
+    - Catching up with more fixes for beginning
+    - Clean sentences "bracketed" by quotes or parenthesis (removing the "bracketing" character")
+
+* Clean _non-alpha_ ENDING of sentences
+    - Clean extra spaces before "good" sentence endings
+    - Cleaning orphan " ' ) ] at the end match earlier in the sentence
+    - Some dirty ENDS
+    
+#### _sentences-cleaning_3.pl_
+
+* CLEAN (again) lines BEGINNING with TAGS and non-alpha
+
 
 
 <a name="APPENDIX-tokenization_issue"></a>

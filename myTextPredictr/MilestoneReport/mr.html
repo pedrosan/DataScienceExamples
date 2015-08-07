@@ -13,14 +13,14 @@
 
 <title>Building a Text Prediction Algorithm</title>
 
-<script src="../../common/libs/jquery-1.11.0/jquery.min.js"></script>
+<script src="common/libs/jquery-1.11.0/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<link href="../../common/libs/bootstrap-3.3.1/css/cerulean.min.css" rel="stylesheet" />
-<script src="../../common/libs/bootstrap-3.3.1/js/bootstrap.min.js"></script>
-<script src="../../common/libs/bootstrap-3.3.1/shim/html5shiv.min.js"></script>
-<script src="../../common/libs/bootstrap-3.3.1/shim/respond.min.js"></script>
+<link href="common/libs/bootstrap-3.3.1/css/cerulean.min.css" rel="stylesheet" />
+<script src="common/libs/bootstrap-3.3.1/js/bootstrap.min.js"></script>
+<script src="common/libs/bootstrap-3.3.1/shim/html5shiv.min.js"></script>
+<script src="common/libs/bootstrap-3.3.1/shim/respond.min.js"></script>
 
-<script src="../../common/js/toggle_GF.js"></script>
+<script src="common/js/toggle_GF.js"></script>
 
 
 <style type="text/css">code{white-space: pre;}</style>
@@ -51,7 +51,7 @@ code > span.er { font-weight: bold; }
 </style>
 
 
-<link rel="stylesheet" href="../../common/css/gf_xnew_nolines.css" type="text/css" />
+<link rel="stylesheet" href="common/css/gf_xnew_nolines.css" type="text/css" />
 
 </head>
 
@@ -83,8 +83,8 @@ img {
 
 
 <p><a name="SUMMARY"></a></p>
-<div id="executive-summary" class="section level1">
-<h1>EXECUTIVE SUMMARY</h1>
+<div id="summary" class="section level1">
+<h1>SUMMARY</h1>
 <p>In this report I briefly illustrate the exploratory analysis performed on a three datasets, comprising text from blogs, news and tweets.</p>
 <p>The ultimate goal is to produce a <em>light</em> application able to predict text (words) given some preceding text, mimicking the predictive typing feature of modern software keyboard of portable devices.</p>
 <p>As a playground a fairly substantial dataset was made available, comprising text from various heterogenous sources (blogs, news, twitter). These datasets are the foundation for developing an understanding of <em>language processing</em> and in turn devise a strategy for achieving the goal, and perhaps more importantly (in practice) they constitute our training and testing datasets.</p>
@@ -106,8 +106,10 @@ img {
 <ul>
 <li><a href="#PREPROCESSING">Preprocessing (before loading into R)</a>
 <ul>
-<li><a href="#Homogeneization">Homogeneization of Characters</a></li>
-<li><a href="#Contractions">Contractions, Profanities, Emoticons, Hashtags, etc…</a></li>
+<li><a href="#weird_characters">Removal of weird characters</a></li>
+<li><a href="#Homogeneization">Homogeneization of characters</a></li>
+<li><a href="#Contractions">Contractions, profanities, emoticons, hashtags, etc…</a></li>
+<li><a href="#exclude_short_rows">Excluding rows with less than 6 words</a></li>
 </ul></li>
 </ul></li>
 <li><a href="#LOADING">MOVING TO R</a>
@@ -116,7 +118,6 @@ img {
 <li><a href="#FURTHER_CLEANING">Further Data Cleaning in R</a>
 <ul>
 <li><a href="#text_transformations">Text transformations</a></li>
-<li><a href="#few_chars">Excluding rows with too few characters</a></li>
 <li><a href="#subsetting">Subsetting of the data</a></li>
 </ul></li>
 </ul></li>
@@ -125,6 +126,7 @@ img {
 <li><a href="#ANALYSIS-STEP1">Step 1 : Sentence Annotation</a></li>
 <li><a href="#ANALYSIS-STEP2">Step 2 : <em>n-grams</em> Tokenization</a>
 <ul>
+<li><a href="#ngrams-cleaning_and_reclassification">Cleaning and <em>re-classification</em> of n-grams</a></li>
 <li><a href="#ngrams_tables">A look at the n-grams</a></li>
 <li><a href="#ngrams_plots">Some Summary Plots for 4-grams</a>
 <ul>
@@ -136,6 +138,8 @@ img {
 <li><a href="#APPENDIX">APPENDIX</a>
 <ul>
 <li><a href="#APPENDIX-my_functions">User Defined Functions</a></li>
+<li><a href="#APPENDIX-regularize">Summary of regularization done with <em>perl scripts</em></a></li>
+<li><a href="#APPENDIX-post_sentence_cleaning">Summary of post-sentence-tokenization cleaning (with <em>perl scripts</em>)</a></li>
 <li><a href="#APPENDIX-tokenization_issue">Mysterious issue with <code>NGramTokenizer</code></a></li>
 </ul></li>
 </ul>
@@ -177,12 +181,72 @@ show code
 <span class="co"># my functions</span>
 <span class="kw">source</span>(<span class="st">&quot;./scripts/my_functions.R&quot;</span>)
 <span class="co">#-----------------------------</span></code></pre>
+<div id="the-data" class="section level2">
+<h2>THE DATA</h2>
+<p><a href="#CONTENT">Back to TOC</a></p>
+<p>The datasets are read-in separately into character vectors, using a user-defined compact function (<code>readByLine()</code>) (see <a href="#APPENDIX-my_functions"><strong>Appendix</strong></a> for the short source).</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># NOT EVALUATED because too computationally heavy (loading saved products)</span>
+in.blogs.ORIG &lt;-<span class="st"> </span><span class="kw">readByLine</span>(<span class="st">&quot;./data/en_US.blogs.ORIGINAL.txt.gz&quot;</span>, <span class="dt">check_nl =</span> <span class="ot">FALSE</span>, <span class="dt">skipNul =</span> <span class="ot">TRUE</span>)
+in.news.ORIG &lt;-<span class="st"> </span><span class="kw">readByLine</span>(<span class="st">&quot;./data/en_US.news.ORIGINAL.txt.gz&quot;</span>, <span class="dt">check_nl =</span> <span class="ot">FALSE</span>, <span class="dt">skipNul =</span> <span class="ot">TRUE</span>)
+in.twitter.ORIG &lt;-<span class="st"> </span><span class="kw">readByLine</span>(<span class="st">&quot;./data/en_US.twitter.ORIGINAL.txt.gz&quot;</span>, <span class="dt">check_nl =</span> <span class="ot">FALSE</span>, <span class="dt">skipNul =</span> <span class="ot">TRUE</span>)</code></pre>
+<p>Basic statistics of the three datasets in their original form:</p>
+<button class="toggle_code">
+show code
+</button>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># NOT EVALUATED</span>
+stats.blogs   &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(<span class="kw">system</span>(<span class="st">&quot;gzip -dc ./data/en_US.blogs.ORIGINAL.txt.gz | wc | awk &#39;{print $1; print $2; print $3}&#39;&quot;</span>, <span class="dt">intern =</span> <span class="ot">TRUE</span>))
+stats.news    &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(<span class="kw">system</span>(<span class="st">&quot;gzip -dc ./data/en_US.news.ORIGINAL.txt.gz | wc | awk &#39;{print $1; print $2; print $3}&#39;&quot;</span>, <span class="dt">intern =</span> <span class="ot">TRUE</span>))
+stats.twitter &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(<span class="kw">system</span>(<span class="st">&quot;gzip -dc ./data/en_US.twitter.ORIGINAL.txt.gz | wc | awk &#39;{print $1; print $2; print $3}&#39;&quot;</span>, <span class="dt">intern =</span> <span class="ot">TRUE</span>))
+
+stats.ORIG.df &lt;-<span class="st"> </span><span class="kw">data.frame</span>( <span class="dt">blogs =</span> stats.blogs, <span class="dt">news =</span> stats.news, <span class="dt">twitter =</span> stats.twitter, 
+                             <span class="dt">row.names =</span> <span class="kw">c</span>(<span class="st">&quot;lines&quot;</span>, <span class="st">&quot;words&quot;</span>, <span class="st">&quot;characters&quot;</span>), <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
+<span class="kw">saveRDS</span>(stats.ORIG.df, <span class="st">&quot;data/stats_ORIGINAL.RDS&quot;</span>)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">blogs</th>
+<th align="right">news</th>
+<th align="right">twitter</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">lines</td>
+<td align="right">899288</td>
+<td align="right">1010242</td>
+<td align="right">2360148</td>
+</tr>
+<tr class="even">
+<td align="left">words</td>
+<td align="right">37334114</td>
+<td align="right">34365936</td>
+<td align="right">30359804</td>
+</tr>
+<tr class="odd">
+<td align="left">characters</td>
+<td align="right">210160014</td>
+<td align="right">205811889</td>
+<td align="right">167105338</td>
+</tr>
+</tbody>
+</table>
 <p><a name="PREPROCESSING"></a></p>
+</div>
 <div id="preprocessing-before-loading-into-r" class="section level2">
 <h2>PREPROCESSING (before loading into R)</h2>
 <p><a href="#CONTENT">Back to TOC</a></p>
-<p>After a quick review of the data with various R functions and packages, I decided to perform some cleaning of the text with standard <em>Linux</em> command line tools.</p>
-<p>The main task was to analyze the mix of invidual characters present in the three datasets with the goal of doing some homogeneization and tidying up of non-alphanumeric characters, such as quotes that can come in different forms.</p>
+<p>After a quick review of the data with various R functions and packages, I decided to perform some cleaning of the text with standard <em>Linux</em> command line tools, mostly <strong>perl</strong> scripts. Broadly speaking I performed three categories of transformations:</p>
+<ul>
+<li>Removal of “weird” characters.</li>
+<li>Homogeneization of characters.</li>
+<li>Regularization of text, <em>e.g.</em> dealing with hashtags, profanities, emoticons, acronyms, numbers, “messy punctuation”</li>
+</ul>
+<p>which I will describe below.</p>
+<p><a name="weird_characters"></a></p>
+<div id="weird-characters" class="section level3">
+<h3><em>Weird</em> Characters</h3>
+<p>The first task was to analyze the mix of invidual characters present in the three datasets with the goal of doing some homogeneization and tidying up of non-alphanumeric characters, such as quotes that can come in different forms.</p>
 <p>The used method is not elegant, but effective enough, relying on a simple perl command substituting a series of <em>non-odd</em> characters with spaces, thus leaving a stream of <em>odd</em> characters subsequently parsed and cleaned to produce a list of <em>odd</em> characters sorted by their count.</p>
 <pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">perl</span> -pe <span class="st">&#39;s|[\d\w\$\,\.\!\?\(\);:\/\\\-=&amp;%#_\~&lt;&gt;]||g; s|\s||g; s|[\^@&quot;\+\*\[\]]||g;&#39;</span> <span class="kw">|</span> <span class="kw">\</span>
           <span class="kw">perl</span> -pe <span class="st">&quot;s/\&#39;//g;&quot;</span> <span class="kw">|</span> <span class="kw">\</span>
@@ -216,6 +280,7 @@ show code
 <span class="dt">    518 [°]         711 [</span><span class="st">`</span>]           <span class="dv">751</span> [😘]
                     <span class="dv">537</span> [ñ]           <span class="dv">741</span> [}]</code></pre>
 <p><a name="Homogeneization"></a></p>
+</div>
 <div id="homogeneization-of-characters" class="section level3">
 <h3>Homogeneization of Characters</h3>
 <p><a href="#CONTENT">Back to TOC</a></p>
@@ -322,9 +387,6 @@ show code
 </tr>
 </tbody>
 </table>
-<p>The dataset where cleaned with this perl commands and saved.</p>
-<pre class="sourceCode bash"><code class="sourceCode bash">  <span class="kw">perl</span> -pe <span class="st">&quot;s|’|\&#39;|g; s|…|...|g; s|–|\-|g; s|—|\-|g; s|‘|\&#39;|g;&quot;</span> <span class="ot">$1</span> <span class="kw">|</span>  <span class="kw">\</span>
-        <span class="kw">perl</span> -pe <span class="st">&#39;s|«|&quot;|g; s|»|&quot;|g; s|”|&quot;|g; s|“|&quot;|g;&#39;</span> </code></pre>
 <p><a name="Contractions"></a></p>
 </div>
 <div id="contractions-profanities-emoticons-hashtags-etc" class="section level3">
@@ -369,7 +431,14 @@ show code
 <li>Some character sequences were entirely deleted: multiple <code>&lt;</code>, <code>&gt;</code>, <code>=</code>, <code>#</code>.</li>
 </ul></li>
 </ul>
-<p>The rest of the analysis presented here is based on these <em>cleaned</em> datasets.</p>
+<p>The dataset where cleaned with <strong>perl scripts</strong>, available on <a href="https://github.com/pedrosan/DataScienceExamples/tree/master/myTextPredictr/MilestoneReport/scripts">GitHub</a> (look for <code>regularize_text-pass[1-5].pl</code> and <code>remove_tags_content.pl</code> scripts).<br />A summary of what they do is listed in the <a href="#APPENDIX-regularize">Appendix</a></p>
+<p><a name="exclude_short_rows"></a></p>
+</div>
+<div id="excluding-rows-with-less-than-6-words" class="section level3">
+<h3>Excluding rows with less than 6 words</h3>
+<p><a href="#CONTENT">Back to TOC</a></p>
+<p>During my initial attempts it immediately emerged the problem of excessively short rows of text. In particular, because I decided to perform tokenization on individual sentences, not directly on individual rows, the tokenizer tripped and failed on empty “sentences” resulting from short rows.</p>
+<p>I have then decided to set a cutoff to the minimum acceptable length of rows. After some empirical testing and row-length analysis with command line tools I have set a threshold at <span class="math">\(\ge6\)</span> words.</p>
 <hr class="thin_separator">
 <p><a name="LOADING"></a></p>
 </div>
@@ -381,21 +450,24 @@ show code
 <div id="loading-the-data" class="section level2">
 <h2>Loading the data</h2>
 <p><a href="#CONTENT">Back to TOC</a></p>
-<p>The datasets are read-in separately into character vectors, using a user-defined compact function (<code>readByLine()</code>) (see <a href="#APPENDIX-my_functions"><strong>Appendix</strong></a> for the short source).</p>
+<p>The rest of the analysis presented here is based on the <em>cleaned</em> datasets resulting from the processing described in the previous sections.</p>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="co"># NOT EVALUATED because too computationally heavy (loading saved products)</span>
-in.blogs.CL &lt;-<span class="st"> </span><span class="kw">readByLine</span>(<span class="st">&quot;./data/en_US.blogs.CLEANED1.txt.gz&quot;</span>, <span class="dt">check_nl =</span> <span class="ot">FALSE</span>, <span class="dt">skipNul =</span> <span class="ot">TRUE</span>)
-in.news.CL &lt;-<span class="st"> </span><span class="kw">readByLine</span>(<span class="st">&quot;./data/en_US.news.CLEANED1.txt.gz&quot;</span>, <span class="dt">check_nl =</span> <span class="ot">FALSE</span>, <span class="dt">skipNul =</span> <span class="ot">TRUE</span>)
-in.twitter.CL &lt;-<span class="st"> </span><span class="kw">readByLine</span>(<span class="st">&quot;./data/en_US.twitter.CLEANED1.txt.gz&quot;</span>, <span class="dt">check_nl =</span> <span class="ot">FALSE</span>, <span class="dt">skipNul =</span> <span class="ot">TRUE</span>)</code></pre>
-<p>Some basic statistics of the three datasets:</p>
+in.blogs.REG   &lt;-<span class="st"> </span><span class="kw">readByLine</span>(<span class="st">&quot;./data/blogs_REG.txt.gz&quot;</span>, <span class="dt">check_nl =</span> <span class="ot">FALSE</span>, <span class="dt">skipNul =</span> <span class="ot">TRUE</span>)
+in.news.REG    &lt;-<span class="st"> </span><span class="kw">readByLine</span>(<span class="st">&quot;./data/news_REG.txt.gz&quot;</span>, <span class="dt">check_nl =</span> <span class="ot">FALSE</span>, <span class="dt">skipNul =</span> <span class="ot">TRUE</span>)
+in.twitter.REG &lt;-<span class="st"> </span><span class="kw">readByLine</span>(<span class="st">&quot;./data/twitter_REG.txt.gz&quot;</span>, <span class="dt">check_nl =</span> <span class="ot">FALSE</span>, <span class="dt">skipNul =</span> <span class="ot">TRUE</span>)</code></pre>
+<p>Basic statistics of the three datasets in their original form:</p>
 <button class="toggle_code">
 show code
 </button>
-<pre class="sourceCode r"><code class="sourceCode r">stats.blogs   &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(<span class="kw">system</span>(<span class="st">&quot;gzip -dc ./data/en_US.blogs.CLEANED1.txt.gz | wc | awk &#39;{print $1; print $2; print $3}&#39;&quot;</span>, <span class="dt">intern =</span> <span class="ot">TRUE</span>))
-stats.news    &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(<span class="kw">system</span>(<span class="st">&quot;gzip -dc ./data/en_US.news.CLEANED1.txt.gz | wc | awk &#39;{print $1; print $2; print $3}&#39;&quot;</span>, <span class="dt">intern =</span> <span class="ot">TRUE</span>))
-stats.twitter &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(<span class="kw">system</span>(<span class="st">&quot;gzip -dc ./data/en_US.twitter.CLEANED1.txt.gz | wc | awk &#39;{print $1; print $2; print $3}&#39;&quot;</span>, <span class="dt">intern =</span> <span class="ot">TRUE</span>))
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># NOT EVALUATED</span>
+stats.blogs   &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(<span class="kw">system</span>(<span class="st">&quot;gzip -dc ./data/blogs_REG.txt.gz | wc | awk &#39;{print $1; print $2; print $3}&#39;&quot;</span>, <span class="dt">intern =</span> <span class="ot">TRUE</span>))
+stats.news    &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(<span class="kw">system</span>(<span class="st">&quot;gzip -dc ./data/news_REG.txt.gz | wc | awk &#39;{print $1; print $2; print $3}&#39;&quot;</span>, <span class="dt">intern =</span> <span class="ot">TRUE</span>))
+stats.twitter &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(<span class="kw">system</span>(<span class="st">&quot;gzip -dc ./data/twitter_REG.txt.gz | wc | awk &#39;{print $1; print $2; print $3}&#39;&quot;</span>, <span class="dt">intern =</span> <span class="ot">TRUE</span>))
 
-stats.df &lt;-<span class="st"> </span><span class="kw">data.frame</span>( <span class="dt">blogs =</span> stats.blogs, <span class="dt">news =</span> stats.news, <span class="dt">twitter =</span> stats.twitter, 
-                        <span class="dt">row.names =</span> <span class="kw">c</span>(<span class="st">&quot;lines&quot;</span>, <span class="st">&quot;words&quot;</span>, <span class="st">&quot;characters&quot;</span>), <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)</code></pre>
+stats.REG.df &lt;-<span class="st"> </span><span class="kw">data.frame</span>( <span class="dt">blogs =</span> stats.blogs, <span class="dt">news =</span> stats.news, <span class="dt">twitter =</span> stats.twitter, 
+                             <span class="dt">row.names =</span> <span class="kw">c</span>(<span class="st">&quot;lines&quot;</span>, <span class="st">&quot;words&quot;</span>, <span class="st">&quot;characters&quot;</span>), <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
+<span class="kw">saveRDS</span>(stats.REG.df, <span class="st">&quot;data/stats_REG.RDS&quot;</span>)</code></pre>
+<p>After preprocessing we have the following stats:</p>
 <table>
 <thead>
 <tr class="header">
@@ -408,21 +480,21 @@ stats.df &lt;-<span class="st"> </span><span class="kw">data.frame</span>( <span
 <tbody>
 <tr class="odd">
 <td align="left">lines</td>
-<td align="right">899288</td>
-<td align="right">1010242</td>
-<td align="right">2360148</td>
+<td align="right">793096</td>
+<td align="right">957228</td>
+<td align="right">2072644</td>
 </tr>
 <tr class="even">
 <td align="left">words</td>
-<td align="right">37334114</td>
-<td align="right">34365936</td>
-<td align="right">30359804</td>
+<td align="right">36606082</td>
+<td align="right">33908035</td>
+<td align="right">29072455</td>
 </tr>
 <tr class="odd">
 <td align="left">characters</td>
-<td align="right">208763813</td>
-<td align="right">205300313</td>
-<td align="right">166962974</td>
+<td align="right">207683984</td>
+<td align="right">206471971</td>
+<td align="right">162152503</td>
 </tr>
 </tbody>
 </table>
@@ -453,45 +525,17 @@ stats.df &lt;-<span class="st"> </span><span class="kw">data.frame</span>( <span
 </ul>
 <p>Done as follows (with big obligatory acknowledgement and thank you to Hadley Wickham and Stefan Bache for bringing us <em>the pipe</em> <code>%&gt;%</code>!).</p>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="co"># NOT EVALUATED because too computationally heavy (loading saved products)</span>
-in.blogs.CL.cleaned &lt;-<span class="st"> </span><span class="kw">tolower</span>(in.blogs.CL) %&gt;%<span class="st"> </span><span class="kw">removeNumbers</span>() %&gt;%<span class="st"> </span><span class="kw">stripWhitespace</span>()
-in.news.CL.cleaned &lt;-<span class="st"> </span><span class="kw">tolower</span>(in.news.CL) %&gt;%<span class="st"> </span><span class="kw">removeNumbers</span>() %&gt;%<span class="st"> </span><span class="kw">stripWhitespace</span>()
-in.twitter.CL.cleaned &lt;-<span class="st"> </span><span class="kw">tolower</span>(in.twitter.CL) %&gt;%<span class="st"> </span><span class="kw">removeNumbers</span>() %&gt;%<span class="st"> </span><span class="kw">stripWhitespace</span>()</code></pre>
-<p><a name="few_chars"></a></p>
-</div>
-<div id="excluding-rows-with-too-few-characters" class="section level3">
-<h3>Excluding rows with too few characters</h3>
-<p><a href="#CONTENT">Back to TOC</a></p>
-<p>During my initial attempts it immediately emerged the problem of excessively short rows of text. In particular, because I decided to perform tokenization on individual sentences, not directly on individual rows, the tokenizer tripped and failed on empty “sentences” resulting from short rows.</p>
-<p>I have then decided to set a cutoff to the minimum acceptable length of rows. After some empirical testing and row-length analysis with command line tools (<em>e.g.</em> something like <code>awk '{if(length &lt;= 8){printf &quot;%6d - %-s\n&quot;,NR,$0}}'</code>) I have set a threshold at 6 characters.</p>
-<pre class="sourceCode r"><code class="sourceCode r">nchar.min &lt;-<span class="st"> </span><span class="dv">6</span>
+in.blogs.REG &lt;-<span class="st"> </span><span class="kw">tolower</span>(in.blogs.REG) %&gt;%<span class="st"> </span><span class="kw">removeNumbers</span>() %&gt;%<span class="st"> </span><span class="kw">stripWhitespace</span>()
+in.news.REG &lt;-<span class="st"> </span><span class="kw">tolower</span>(in.news.REG) %&gt;%<span class="st"> </span><span class="kw">removeNumbers</span>() %&gt;%<span class="st"> </span><span class="kw">stripWhitespace</span>()
+in.twitter.REG &lt;-<span class="st"> </span><span class="kw">tolower</span>(in.twitter.REG) %&gt;%<span class="st"> </span><span class="kw">removeNumbers</span>() %&gt;%<span class="st"> </span><span class="kw">stripWhitespace</span>()
 
-nchar.blogs.CL &lt;-<span class="st"> </span><span class="kw">nchar</span>(in.blogs.CL.cleaned)
-in.blogs.CL.cleaned &lt;-<span class="st"> </span>in.blogs.CL.cleaned[nchar.blogs.CL &gt;<span class="st"> </span>nchar.min]
-
-nchar.news.CL &lt;-<span class="st"> </span><span class="kw">nchar</span>(in.news.CL.cleaned)
-in.news.CL.cleaned &lt;-<span class="st"> </span>in.news.CL.cleaned[nchar.news.CL &gt;<span class="st"> </span>nchar.min]
-
-nchar.twitter.CL &lt;-<span class="st"> </span><span class="kw">nchar</span>(in.twitter.CL.cleaned)
-in.twitter.CL.cleaned &lt;-<span class="st"> </span>in.twitter.CL.cleaned[nchar.twitter.CL &gt;<span class="st"> </span>nchar.min]</code></pre>
-<p><a name="subsetting"></a></p>
-</div>
-<div id="subsetting-of-the-data" class="section level3">
-<h3>Subsetting of the data</h3>
-<p><a href="#CONTENT">Back to TOC</a></p>
-<p>It immediately became clear that analyzing the entire dataset requires fairly powerful computing resources and time, even on a very high-end laptop and workstation.</p>
-<p>Therefore, for exploration and prototyping I have been working with a subset of 20% of the data of each type.</p>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># NOT EVALUATED</span>
-fraction &lt;-<span class="st"> </span><span class="fl">0.2</span>
-
-<span class="co"># for reproducibility set seed!</span>
-<span class="kw">set.seed</span>(<span class="dv">6420</span>)
-idx.blogs   &lt;-<span class="st"> </span><span class="kw">sample</span>(<span class="dv">1</span>:<span class="kw">length</span>(in.blogs), <span class="kw">ceiling</span>(fraction*<span class="kw">length</span>(in.blogs)))
-idx.news    &lt;-<span class="st"> </span><span class="kw">sample</span>(<span class="dv">1</span>:<span class="kw">length</span>(in.news), <span class="kw">ceiling</span>(fraction*<span class="kw">length</span>(in.news)))
-idx.twitter &lt;-<span class="st"> </span><span class="kw">sample</span>(<span class="dv">1</span>:<span class="kw">length</span>(in.twitter), <span class="kw">ceiling</span>(fraction*<span class="kw">length</span>(in.twitter)))
-
-sel.blogs   &lt;-<span class="st"> </span>in.blogs[idx.blogs]
-sel.news    &lt;-<span class="st"> </span>in.news[idx.news]
-sel.twitter &lt;-<span class="st"> </span>in.twitter[idx.twitter]</code></pre>
+<span class="co"># re-uppercases TAGS</span>
+in.blogs.REG &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&#39;&lt;(emoticon|hashtag|dollaramount|period|hour|profanity|usa|percentage|date|money|ass|space|decade|ordinal|number|telephonenumber|timeinterval)&gt;&#39;</span>, 
+                  <span class="st">&#39;&lt;</span><span class="ch">\\</span><span class="st">U</span><span class="ch">\\</span><span class="st">1&gt;&#39;</span>, in.blogs.REG, <span class="dt">ignore.case =</span> <span class="ot">TRUE</span>, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+in.news.REG &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&#39;&lt;(emoticon|hashtag|dollaramount|period|hour|profanity|usa|percentage|date|money|ass|space|decade|ordinal|number|telephonenumber|timeinterval)&gt;&#39;</span>, 
+                  <span class="st">&#39;&lt;</span><span class="ch">\\</span><span class="st">U</span><span class="ch">\\</span><span class="st">1&gt;&#39;</span>, in.news.REG, <span class="dt">ignore.case =</span> <span class="ot">TRUE</span>, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+in.twitter.REG &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&#39;&lt;(emoticon|hashtag|dollaramount|period|hour|profanity|usa|percentage|date|money|ass|space|decade|ordinal|number|telephonenumber|timeinterval)&gt;&#39;</span>, 
+                  <span class="st">&#39;&lt;</span><span class="ch">\\</span><span class="st">U</span><span class="ch">\\</span><span class="st">1&gt;&#39;</span>, in.twitter.REG, <span class="dt">ignore.case =</span> <span class="ot">TRUE</span>, <span class="dt">perl =</span> <span class="ot">TRUE</span>)</code></pre>
 <hr class="thin_separator">
 <p><a name="ANALYSIS"></a></p>
 </div>
@@ -500,13 +544,13 @@ sel.twitter &lt;-<span class="st"> </span>in.twitter[idx.twitter]</code></pre>
 <div id="analysis" class="section level1">
 <h1>ANALYSIS</h1>
 <p><a name="ANALYSIS-STEP1"></a></p>
-<div id="step-1-sentence-annotation" class="section level2">
-<h2>Step 1 : Sentence Annotation</h2>
+<div id="step-1-sentence-annotation-r" class="section level2">
+<h2>Step 1 : Sentence Annotation (R)</h2>
 <p><a href="#CONTENT">Back to TOC</a></p>
 <p>As noted, after some tests, I settled on an approach whereby <em>n-grams tokenization</em> is performed on separate individual sentences, instead of directly on individual rows as loaded from the dataset.</p>
-<p>This is motivated by the fact that the <em>tokenizer</em> I have adopted because I found its performance to be more satisfactory, the <em>NGramTokenizer</em> of the <em>RWeka</em> package, does not seem to interrupt its construction of <em>n-grams</em> at what are very likely sentence boundaries.</p>
-<p>With <em>next word prediction</em> in mind, it makes a lot of sense to restrict <em>n-grams</em> to sequences of words within the boundaries of a sentence.</p>
-<p>Therefore, after cleaning, transforming and filtering the data, the first real operation I perform is the annotation of sentences, for which I have been using the <strong>openNLP</strong> sentence annotator <code>Maxent_Sent_Token_Annotator()</code>, with its default settings.</p>
+<p>This is motivated by the fact that the <em>tokenizer</em> I have adopted because I found its performance to be more satisfactory, the <code>NGramTokenizer()</code> of the <strong>RWeka</strong> package, does not seem to interrupt its construction of <em>n-grams</em> at what are very likely sentence boundaries.</p>
+<p>With <em>next word prediction</em> in mind, it makes a lot of sense to restrict <em>n-grams</em> to sequences of words <em>within the boundaries of a sentence</em>.</p>
+<p>Therefore, after cleaning, transforming and filtering the data, the first real operation I perform is the annotation of sentences, for which I have been using the <strong>openNLP</strong> sentence annotator <code>Maxent_Sent_Token_Annotator()</code>, with its default settings, and the function <code>annotate()</code> from the <strong>NLP</strong> package.</p>
 <pre class="sourceCode r"><code class="sourceCode r">sent_token_annotator &lt;-<span class="st"> </span><span class="kw">Maxent_Sent_Token_Annotator</span>()
 sent_token_annotator
 <span class="co"># An annotator inheriting from classes</span>
@@ -514,17 +558,54 @@ sent_token_annotator
 <span class="co"># with description</span>
 <span class="co">#   Computes sentence annotations using the Apache OpenNLP Maxent sentence detector</span>
 <span class="co">#   employing the default model for language &#39;en&#39;.</span></code></pre>
-<p>I want the data in the form of a <em>vector with individual sentences</em>, and so I opted for <code>sapply()</code> combined with a function wrapping the operations necessary to prepare a row of data for annotation, the annotation itself and finally return a vector of sentences (the short function is shown in the <a href="#APPENDIX-my_functions"><strong>Appendix</strong></a>).</p>
+<p>I want the data in the form of a <em>vector with individual sentences</em>, and so I opted for <code>sapply()</code> combined with a function wrapping the operations necessary to prepare a row of data for annotation, the annotation itself and finally return a vector of sentences.</p>
+<pre class="sourceCode r"><code class="sourceCode r">find_sentences &lt;-<span class="st"> </span>function(x) {
+    s &lt;-<span class="st"> </span><span class="kw">paste</span>(x, <span class="dt">collapse =</span> <span class="st">&quot; &quot;</span>) %&gt;%<span class="st"> </span><span class="kw">as.String</span>()
+    a &lt;-<span class="st"> </span>NLP::<span class="kw">annotate</span>(s , sent_token_annotator) 
+    <span class="kw">as.vector</span>(s[a])
+}</code></pre>
+<p>To work around not fully performance issues, the tokenization was done on subsets (chunk) of the data, comprising <span class="math">\(100000\)</span> lines. Done this way was much faster than forcing the tokenization over the The following code takes each dataset, and splits it into sentences chunk by chunk, writing out the sentences for each chunk to separate files, which were then concatenated outside of R.</p>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="co"># NOT EVALUATED because too computationally heavy (loading saved products)</span>
-sel.blogs.sentences &lt;-<span class="st"> </span><span class="kw">sapply</span>(sel.blogs, <span class="dt">FUN =</span> find_sentences, <span class="dt">USE.NAMES =</span> <span class="ot">FALSE</span>) %&gt;%<span class="st"> </span>unlist 
-sel.news.sentences &lt;-<span class="st"> </span><span class="kw">sapply</span>(sel.news, <span class="dt">FUN =</span> find_sentences, <span class="dt">USE.NAMES =</span> <span class="ot">FALSE</span>) %&gt;%<span class="st"> </span>unlist 
-sel.twitter.sentences &lt;-<span class="st"> </span><span class="kw">sapply</span>(sel.twitter, <span class="dt">FUN =</span> find_sentences, <span class="dt">USE.NAMES =</span> <span class="ot">FALSE</span>) %&gt;%<span class="st"> </span>unlist </code></pre>
-<pre class="sourceCode r"><code class="sourceCode r">N.sentences &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="kw">length</span>(sel.blogs.sentences), <span class="kw">length</span>(sel.news.sentences), <span class="kw">length</span>(sel.twitter.sentences))
-stats.df[<span class="dv">4</span>, ] &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(<span class="dv">5</span>*N.sentences)
-stats.df[<span class="dv">5</span>, ] &lt;-<span class="st"> </span><span class="kw">round</span>(stats.df[<span class="dv">4</span>, ]/stats.df[<span class="dv">1</span>, ], <span class="dv">3</span>)
-<span class="kw">row.names</span>(stats.df)[<span class="dv">4</span>] &lt;-<span class="st"> &quot;sentences&quot;</span>
-<span class="kw">row.names</span>(stats.df)[<span class="dv">5</span>] &lt;-<span class="st"> &quot;sentences_per_line&quot;</span></code></pre>
-<p>The stats table, with the added <em>estimated number of sentences</em> (because the analysis is on just 20% of the data, the number tabulated is <code>5*N.sentences</code>) is as follows:</p>
+chunk_size &lt;-<span class="st"> </span><span class="dv">100000</span>
+
+for( what in <span class="kw">c</span>(<span class="st">&quot;blogs&quot;</span>, <span class="st">&quot;news&quot;</span>, <span class="st">&quot;twitter&quot;</span>)) {
+    
+    data.what &lt;-<span class="st"> </span><span class="kw">get</span>(<span class="kw">paste0</span>(<span class="st">&quot;in.&quot;</span>, what, <span class="st">&quot;.REG&quot;</span>))
+    len.what   &lt;-<span class="st"> </span><span class="kw">length</span>(data.what)
+    <span class="kw">cat</span>(<span class="st">&quot; - length &quot;</span>, len.what, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
+    
+    n_chunks &lt;-<span class="st"> </span><span class="kw">floor</span>(len.what/chunk_size) +<span class="st"> </span><span class="dv">1</span>
+    n1 &lt;-<span class="st"> </span>((<span class="dv">1</span>:n_chunks)-<span class="dv">1</span>)*chunk_size +<span class="st"> </span><span class="dv">1</span>
+    n2 &lt;-<span class="st"> </span>(<span class="dv">1</span>:n_chunks)*chunk_size
+    n2[n_chunks] &lt;-<span class="st"> </span>len.what
+    Ns_by_chunk &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="dv">0</span>, n_chunks)
+    <span class="kw">print</span>(n1)
+    <span class="kw">print</span>(n2)
+    
+    names &lt;-<span class="st"> </span><span class="kw">paste</span>(what, <span class="st">&quot;sentences&quot;</span>, <span class="kw">sprintf</span>(<span class="st">&quot;%02d&quot;</span>, (<span class="dv">1</span>:n_chunks)), <span class="dt">sep =</span> <span class="st">&quot;.&quot;</span>)
+    fnames &lt;-<span class="st"> </span><span class="kw">paste</span>(names, <span class="st">&quot;.gz&quot;</span>, <span class="dt">sep =</span> <span class="st">&quot;&quot;</span>)
+    <span class="kw">print</span>(names)
+    <span class="kw">print</span>(fnames)
+    
+    <span class="co"># loop over chunks of size &#39;chunk_size&#39;</span>
+    for(i in <span class="dv">1</span>:n_chunks) {
+        name1 &lt;-<span class="st"> </span>names[i]
+        fname1 &lt;-<span class="st"> </span>fnames[i]
+        idx &lt;-<span class="st"> </span>n1[i]:n2[i]
+        
+        <span class="kw">cat</span>(<span class="st">&quot;   &quot;</span>, name1, <span class="kw">length</span>(idx), idx[<span class="dv">1</span>], idx[<span class="kw">length</span>(idx)], <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
+
+        <span class="co"># find sentences</span>
+        <span class="kw">assign</span>( name1, <span class="kw">sapply</span>(data.what[idx], <span class="dt">FUN =</span> find_sentences, <span class="dt">USE.NAMES =</span> <span class="ot">FALSE</span>) %&gt;%<span class="st"> </span>unlist )
+        con &lt;-<span class="st"> </span><span class="kw">gzfile</span>(fname1, <span class="dt">open =</span> <span class="st">&quot;w&quot;</span>)
+
+        <span class="co"># write sentences for this chunk to file</span>
+        <span class="kw">writeLines</span>(<span class="kw">get</span>(name1), <span class="dt">con =</span> con)
+        <span class="kw">close</span>(con)
+    }
+    <span class="kw">rm</span>(i, n1, n2, n_chunks)
+}</code></pre>
+<p>The stats table, with the added <em>number of sentences</em> is now as follows:</p>
 <table>
 <thead>
 <tr class="header">
@@ -537,143 +618,196 @@ stats.df[<span class="dv">5</span>, ] &lt;-<span class="st"> </span><span class=
 <tbody>
 <tr class="odd">
 <td align="left">lines</td>
-<td align="right">899288</td>
-<td align="right">1010242</td>
-<td align="right">2360148</td>
+<td align="right">793096</td>
+<td align="right">957228</td>
+<td align="right">2072644</td>
 </tr>
 <tr class="even">
 <td align="left">words</td>
-<td align="right">37334114</td>
-<td align="right">34365936</td>
-<td align="right">30359804</td>
+<td align="right">36606082</td>
+<td align="right">33908035</td>
+<td align="right">29072455</td>
 </tr>
 <tr class="odd">
 <td align="left">characters</td>
-<td align="right">208763813</td>
-<td align="right">205300313</td>
-<td align="right">166962974</td>
+<td align="right">207683984</td>
+<td align="right">206471971</td>
+<td align="right">162152503</td>
 </tr>
 <tr class="even">
 <td align="left">sentences</td>
-<td align="right">2209980</td>
-<td align="right">1956430</td>
-<td align="right">3682545</td>
+<td align="right">2136323</td>
+<td align="right">1819982</td>
+<td align="right">3257495</td>
 </tr>
 <tr class="odd">
 <td align="left">sentences_per_line</td>
-<td align="right">2.457</td>
-<td align="right">1.937</td>
-<td align="right">1.56</td>
+<td align="right">2.694</td>
+<td align="right">1.901</td>
+<td align="right">1.572</td>
 </tr>
 </tbody>
 </table>
+<p>The list of sentences by dataset were then merged into a single master list.</p>
+<div id="some-further-cleaning-of-text-perl" class="section level3">
+<h3>Some further cleaning of text (<em>perl</em>)</h3>
+<p>After the tokenization into sentences, some more fixes were applied with <em>perl scripts</em> (sources posted on <a href="https://github.com/pedrosan/DataScienceExamples/tree/master/myTextPredictr/MilestoneReport/scripts">GitHub</a></p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">gzip</span> -dc all.sentences.ALL.gz <span class="kw">|</span> <span class="kw">\</span>
+    <span class="kw">./sentences_cleaning-v1.pl</span> <span class="kw">|</span> <span class="kw">\</span>
+    <span class="kw">awk</span> <span class="st">&#39;{if(NF &gt; 1){print $0}}&#39;</span> <span class="kw">|</span> <span class="kw">\</span>
+    <span class="kw">./sentences_cleaning-v2.pl</span> <span class="kw">|</span> <span class="kw">\</span>
+    <span class="kw">./sentences_cleaning-v2.pl</span> <span class="kw">|</span> <span class="kw">\</span>
+    <span class="kw">./sentences_cleaning-v2.pl</span> <span class="kw">|</span> <span class="kw">\</span>
+    <span class="kw">./sentences_cleaning-v3.pl</span> <span class="kw">|</span> <span class="kw">\</span>
+    <span class="kw">./sentences_cleaning-v2.pl</span></code></pre>
+<p>The repetition of script #2 turned out to be an easier approach instead of writing more complex regular expressions.</p>
+<p>The processed sentences were then filtered based on</p>
+<ul>
+<li>Number of words <span class="math">\(\ge 3\)</span> (<code>NF</code> in <em>awk</em>).
+<ul>
+<li>This criterion is simply due to the fact that we want sentences long enough to yield 3-grams.</li>
+</ul></li>
+<li>A <em>maximum</em> value of a ratio variable defined as <span class="math">\(\frac{(length - NF + 1)}{NF} \le 7.0\)</span>
+<ul>
+<li>This ratio cuts out particularly pathological sentences, including non-sense “words” (typically from twitter text).</li>
+</ul></li>
+</ul>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">awk</span> <span class="st">&#39;{if(NF &lt; 3){next}; ratio = (length - NF + 1)/NF; if(ratio &gt; 7.0){next}; print $0}&#39;</span> </code></pre>
+</div>
+<div id="removing-stop-words-r" class="section level3">
+<h3>Removing <em>stop words</em> (R)</h3>
+<p>After more thinking I decided to partially reconsider my decision against removal of <em>stop words</em> and remove a controlled, selected list of them.</p>
+<pre class="sourceCode r"><code class="sourceCode r">my_stop_words &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;a&quot;</span>, <span class="st">&quot;an&quot;</span>, <span class="st">&quot;as&quot;</span>, <span class="st">&quot;at&quot;</span>, <span class="st">&quot;no&quot;</span>, <span class="st">&quot;of&quot;</span>, <span class="st">&quot;on&quot;</span>, <span class="st">&quot;or&quot;</span>, 
+                   <span class="st">&quot;by&quot;</span>, <span class="st">&quot;so&quot;</span>, <span class="st">&quot;up&quot;</span>, <span class="st">&quot;or&quot;</span>, <span class="st">&quot;no&quot;</span>, <span class="st">&quot;in&quot;</span>, <span class="st">&quot;to&quot;</span>, <span class="st">&quot;rt&quot;</span>)
+
+<span class="co"># fixing extra spaces left by removing stop words</span>
+all.sentences &lt;-<span class="st"> </span><span class="kw">removeWords</span>(all.sentences.ALL, my_stop_words) %&gt;%<span class="st"> </span>
+<span class="st">                        </span><span class="kw">gsub</span>(<span class="st">&quot; +&quot;</span>, <span class="st">&quot; &quot;</span>, . , <span class="dt">perl =</span> <span class="ot">TRUE</span>) %&gt;%<span class="st"> </span>
+<span class="st">                        </span><span class="kw">gsub</span>(<span class="st">&quot;^ +&quot;</span>, <span class="st">&quot;&quot;</span>, . , <span class="dt">perl =</span> <span class="ot">TRUE</span>) %&gt;%<span class="st"> </span>
+<span class="st">                        </span><span class="kw">gsub</span>(<span class="st">&quot; +$&quot;</span>, <span class="st">&quot;&quot;</span>, . , <span class="dt">perl =</span> <span class="ot">TRUE</span>)</code></pre>
 <p><a name="ANALYSIS-STEP2"></a></p>
+</div>
 </div>
 <div id="step-2-n-grams-tokenization" class="section level2">
 <h2>Step 2 : <em>n-grams</em> Tokenization</h2>
 <p><a href="#CONTENT">Back to TOC</a></p>
-<p>For the <em>n-grams</em> tokenization I have been using the <strong>RWeka Tokenizer</strong> <code>NGramTokenizer</code>, passing to it a list of <em>token delimiters</em>.</p>
-<p>I have been extracting <em>n-grams</em> for <span class="math">\(n = 3, 4, 5\)</span>.<br />I have not been able to run <code>NGramTokenizer</code> on the full vector of sentences for each data set. It fails on some variation of memory-allocation related error (that honestly does not make much sense to me considering that I am running it on machines with 12GB of RAM).</p>
-<p>So, I am processing data in chunks of 100,000 sentences, as <em>exemplified</em> by this block of code (the <em>n-grams</em> data for the following section are loaded from saved previous analysis).</p>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># NOT EVALUATED because too computationally heavy (loading saved products)</span>
-token_delim &lt;-<span class="st"> &quot; </span><span class="ch">\\</span><span class="st">t</span><span class="ch">\\</span><span class="st">r</span><span class="ch">\\</span><span class="st">n.!?,;</span><span class="ch">\&quot;</span><span class="st">()&quot;</span>
-nl.chunk &lt;-<span class="st"> </span><span class="dv">100000</span>
-N &lt;-<span class="st"> </span><span class="kw">ceiling</span>(<span class="kw">length</span>(sel.blogs.sentences)/nl.chunk)
-
-<span class="co">#----- BLOGS ------------------------------------</span>
-end.blogs &lt;-<span class="st"> </span><span class="kw">length</span>(sel.blogs.sentences)
-
-<span class="co">#----- 3-grams -----</span>
-<span class="kw">cat</span>(<span class="st">&quot; *** Tokenizing : blogs : 3-grams ------------------------------------------------------------</span><span class="ch">\n</span><span class="st">&quot;</span>)
-n3grams.blogs<span class="fl">.1</span> &lt;-<span class="st"> </span><span class="kw">NGramTokenizer</span>(sel.blogs.sentences[<span class="dv">1</span>:<span class="dv">100000</span>], 
-                                  <span class="kw">Weka_control</span>(<span class="dt">min =</span> <span class="dv">3</span>, <span class="dt">max =</span> <span class="dv">3</span>, <span class="dt">delimiters =</span> token_delim))
-n3grams.blogs<span class="fl">.2</span> &lt;-<span class="st"> </span><span class="kw">NGramTokenizer</span>(sel.blogs.sentences[<span class="dv">100001</span>:<span class="dv">200000</span>], 
-                                  <span class="kw">Weka_control</span>(<span class="dt">min =</span> <span class="dv">3</span>, <span class="dt">max =</span> <span class="dv">3</span>, <span class="dt">delimiters =</span> token_delim))
-n3grams.blogs<span class="fl">.3</span> &lt;-<span class="st"> </span><span class="kw">NGramTokenizer</span>(sel.blogs.sentences[<span class="dv">200001</span>:<span class="dv">300000</span>], 
-                                  <span class="kw">Weka_control</span>(<span class="dt">min =</span> <span class="dv">3</span>, <span class="dt">max =</span> <span class="dv">3</span>, <span class="dt">delimiters =</span> token_delim))
-n3grams.blogs<span class="fl">.4</span> &lt;-<span class="st"> </span><span class="kw">NGramTokenizer</span>(sel.blogs.sentences[<span class="dv">300001</span>:<span class="dv">400000</span>], 
-                                  <span class="kw">Weka_control</span>(<span class="dt">min =</span> <span class="dv">3</span>, <span class="dt">max =</span> <span class="dv">3</span>, <span class="dt">delimiters =</span> token_delim))
-n3grams.blogs<span class="fl">.5</span> &lt;-<span class="st"> </span><span class="kw">NGramTokenizer</span>(sel.blogs.sentences[<span class="dv">400001</span>:end.blogs], 
-                                  <span class="kw">Weka_control</span>(<span class="dt">min =</span> <span class="dv">3</span>, <span class="dt">max =</span> <span class="dv">3</span>, <span class="dt">delimiters =</span> token_delim))</code></pre>
-<p>The chunks of n-grams are then combined with a script:</p>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">source</span>(<span class="st">&quot;./scripts/combine_nXgrams_blogs.R&quot;</span>)</code></pre>
+<p>For the <em>n-grams</em> tokenization I used the <strong>RWeka Tokenizer</strong> <code>NGramTokenizer</code>, passing to it a list of <em>token delimiters</em>.</p>
+<p>I have not been able to run <code>NGramTokenizer()</code> on the full vector of sentences for each data set. It fails on some variation of memory-allocation related error (that honestly does not make much sense to me considering that I am running it on machines with 12GB of RAM).</p>
+<p>So, I am processing data in chunks of 25,000 sentences, as <em>exemplified</em> by this block of code (the <em>n-grams</em> data for the following section are loaded from saved previous analysis).</p>
+<p>I extracted <em>n-grams</em> for <span class="math">\(n = 3, 4, 5\)</span>, with the code shown below:</p>
 <button class="toggle_code">
-show script code
+<strong>show n-grams tokenization code</strong>
 </button>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="co">#=--------------------------------------------------------------------------------------------------</span>
-<span class="co"># BLOGS</span>
-<span class="co">#=--------------------------------------------------------------------------------------------------</span>
-nl.chunk &lt;-<span class="st"> </span><span class="dv">100000</span>
-N &lt;-<span class="st"> </span><span class="kw">ceiling</span>(<span class="kw">length</span>(sel.blogs.sentences)/nl.chunk)
+<pre class="sourceCode r"><code class="sourceCode r">token_delim &lt;-<span class="st"> &quot; </span><span class="ch">\\</span><span class="st">r</span><span class="ch">\\</span><span class="st">n</span><span class="ch">\\</span><span class="st">t.,;:</span><span class="ch">\&quot;</span><span class="st">()?!&quot;</span>
+nl.chunk &lt;-<span class="st"> </span><span class="dv">25000</span>
 
-<span class="co">#=-- n3 ---#</span>
-size.n3g.blogs &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="dv">0</span>, N)
+<span class="kw">gc</span>()
+<span class="kw">cat</span>(<span class="st">&quot; *** Tokenizing n-grams in WHOLE dataset [&quot;</span>, <span class="kw">my_date</span>(), <span class="st">&quot;]----------------------------------------</span><span class="ch">\n</span><span class="st">&quot;</span>)
 
-for( i in <span class="dv">1</span>:N ) {
-    name &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="st">&quot;n3grams.blogs.&quot;</span>, i, <span class="dt">collapse =</span> <span class="st">&quot;&quot;</span>)
-    size.n3g.blogs[i] &lt;-<span class="st"> </span><span class="kw">length</span>(<span class="kw">get</span>(name))
-    <span class="kw">cat</span>(<span class="st">&quot; Number of 3-grams in set&quot;</span>, i, <span class="st">&quot; : &quot;</span>, size.n3g.blogs[i], <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
-}
+len.all.sentences &lt;-<span class="st"> </span><span class="kw">length</span>(all.sentences)
+<span class="kw">cat</span>(<span class="st">&quot; *** Number of sentences in the WHOLE data set : &quot;</span>, len.all.sentences, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
 
-n3grams.blogs.all &lt;-<span class="st"> </span><span class="kw">vector</span>(<span class="dt">mode =</span> <span class="st">&quot;character&quot;</span>, <span class="dt">length =</span> <span class="kw">sum</span>(size.n3g.blogs))
-ivec &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">0</span>, <span class="kw">cumsum</span>(size.n3g.blogs))
-for( i in <span class="dv">1</span>:N ) {
-    n1 &lt;-<span class="st"> </span>ivec[i] +<span class="st"> </span><span class="dv">1</span>
-    n2 &lt;-<span class="st"> </span>ivec[i<span class="dv">+1</span>]
-    name &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="st">&quot;n3grams.blogs.&quot;</span>, i, <span class="dt">collapse =</span> <span class="st">&quot;&quot;</span>)
-    <span class="kw">cat</span>(<span class="st">&quot; &quot;</span>, i, n1, n2, name, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
-    n3grams.blogs.all[n1:n2] &lt;-<span class="st"> </span><span class="kw">get</span>(name)
-}
+<span class="co"># define variable used to filter sentences long enough for n-grams of length N</span>
+subs &lt;-<span class="st"> </span><span class="kw">strsplit</span>(all.sentences, <span class="dt">split =</span> <span class="st">&quot;[ ;,.</span><span class="ch">\&quot;\t\r\n</span><span class="st">()!?]+&quot;</span>)
+nstr.subs  &lt;-<span class="st"> </span><span class="kw">sapply</span>(subs, <span class="dt">FUN =</span> function(x) { <span class="kw">length</span>(<span class="kw">unlist</span>(x)) }, <span class="dt">USE.NAMES =</span> <span class="ot">FALSE</span>)
+<span class="kw">rm</span>(subs)
 
-<span class="kw">rm</span>(<span class="dt">list=</span><span class="kw">ls</span>(<span class="dt">pattern =</span> <span class="st">&quot;^n3grams.blogs.[1-5]&quot;</span>))
+for( ngram_size in <span class="dv">3</span>:<span class="dv">5</span> ) {
+    <span class="kw">cat</span>(<span class="st">&quot; *** Tokenizing : WHOLE : &quot;</span>, ngram_size, <span class="st">&quot;-grams ----------------------------------------</span><span class="ch">\n</span><span class="st">&quot;</span>)
+    
+    good.sentences &lt;-<span class="st"> </span>all.sentences[nstr.subs &gt;=<span class="st"> </span>ngram_size]
+    len.good &lt;-<span class="st"> </span><span class="kw">length</span>(good.sentences)
+    <span class="kw">cat</span>(<span class="st">&quot;   Sentences with good length ( &gt;=&quot;</span>, ngram_size, <span class="st">&quot;) : &quot;</span>, <span class="kw">sprintf</span>(<span class="st">&quot;%7d&quot;</span>, len.good), <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
+    <span class="kw">cat</span>(<span class="st">&quot;   Sentences with good length ( &gt;=&quot;</span>, ngram_size, <span class="st">&quot;) : &quot;</span>, <span class="kw">sprintf</span>(<span class="st">&quot;%7d&quot;</span>, len.good), 
+           <span class="st">&quot;(of &quot;</span>, <span class="kw">sprintf</span>(<span class="st">&quot;%7d&quot;</span>, len.all.sentences), <span class="st">&quot;)</span><span class="ch">\n</span><span class="st">&quot;</span>)
 
-<span class="co">#=-- n4 ---#</span>
-size.n4g.blogs &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="dv">0</span>, N)
+    n_chunks &lt;-<span class="st"> </span><span class="kw">floor</span>(len.good/nl.chunk) +<span class="st"> </span><span class="dv">1</span>
+    n1 &lt;-<span class="st"> </span>((<span class="dv">1</span>:n_chunks)-<span class="dv">1</span>)*nl.chunk +<span class="st"> </span><span class="dv">1</span>
+    n2 &lt;-<span class="st"> </span>(<span class="dv">1</span>:n_chunks)*nl.chunk
+    n2[n_chunks] &lt;-<span class="st"> </span>len.good
 
-for( i in <span class="dv">1</span>:N ) {
-    name &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="st">&quot;n4grams.blogs.&quot;</span>, i, <span class="dt">collapse =</span> <span class="st">&quot;&quot;</span>)
-    size.n4g.blogs[i] &lt;-<span class="st"> </span><span class="kw">length</span>(<span class="kw">get</span>(name))
-    <span class="kw">cat</span>(<span class="st">&quot; Number of 4-grams in set&quot;</span>, i, <span class="st">&quot; : &quot;</span>, size.n4g.blogs[i], <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
-}
+    names &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&quot;n&quot;</span>, <span class="kw">sprintf</span>(<span class="st">&quot;%1d&quot;</span>, ngram_size), <span class="st">&quot;grams.blogs.&quot;</span>, <span class="kw">sprintf</span>(<span class="st">&quot;%03d&quot;</span>, (<span class="dv">1</span>:n_chunks)), <span class="dt">sep =</span> <span class="st">&quot;&quot;</span>)
+    fnames &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&quot;output/&quot;</span>, names, <span class="st">&quot;.gz&quot;</span>, <span class="dt">sep =</span> <span class="st">&quot;&quot;</span>)
+    
+    for(i in <span class="dv">1</span>:n_chunks) {
+        name1 &lt;-<span class="st"> </span>names[i]
+        fname1 &lt;-<span class="st"> </span>fnames[i]
+        idx &lt;-<span class="st"> </span>n1[i]:n2[i]
+    
+        <span class="kw">cat</span>(<span class="st">&quot;  [&quot;</span>, <span class="kw">sprintf</span>(<span class="st">&quot;%3d&quot;</span>, i), <span class="st">&quot;/&quot;</span>, <span class="kw">sprintf</span>(<span class="st">&quot;%3d&quot;</span>, n_chunks), <span class="st">&quot;]  &quot;</span>, 
+               name1, <span class="kw">length</span>(idx), idx[<span class="dv">1</span>], idx[<span class="kw">length</span>(idx)], <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
+    
+        <span class="co"># tokenize to n-grams</span>
+        <span class="kw">assign</span>( name1, <span class="kw">NGramTokenizer</span>(good.sentences[idx], 
+                <span class="kw">Weka_control</span>(<span class="dt">min =</span> ngram_size, <span class="dt">max =</span> ngram_size, <span class="dt">delimiters =</span> token_delim)) )
+    
+        <span class="co"># write to file n-grams from this chunk</span>
+        con &lt;-<span class="st"> </span><span class="kw">gzfile</span>(fname1, <span class="dt">open =</span> <span class="st">&quot;w&quot;</span>)
+        <span class="kw">writeLines</span>(<span class="kw">get</span>(name1), <span class="dt">con =</span> con)
+        <span class="kw">close</span>(con)
 
-n4grams.blogs.all &lt;-<span class="st"> </span><span class="kw">vector</span>(<span class="dt">mode =</span> <span class="st">&quot;character&quot;</span>, <span class="dt">length =</span> <span class="kw">sum</span>(size.n4g.blogs))
-ivec &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">0</span>, <span class="kw">cumsum</span>(size.n4g.blogs))
-for( i in <span class="dv">1</span>:N ) {
-    n1 &lt;-<span class="st"> </span>ivec[i] +<span class="st"> </span><span class="dv">1</span>
-    n2 &lt;-<span class="st"> </span>ivec[i<span class="dv">+1</span>]
-    name &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="st">&quot;n4grams.blogs.&quot;</span>, i, <span class="dt">collapse =</span> <span class="st">&quot;&quot;</span>)
-    <span class="kw">cat</span>(<span class="st">&quot; &quot;</span>, i, n1, n2, name, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
-    n4grams.blogs.all[n1:n2] &lt;-<span class="st"> </span><span class="kw">get</span>(name)
-}
+        <span class="kw">gc</span>()
+    }
 
-<span class="kw">rm</span>(<span class="dt">list=</span><span class="kw">ls</span>(<span class="dt">pattern =</span> <span class="st">&quot;^n4grams.blogs.[1-5]&quot;</span>))
+    <span class="co"># Combining chunks into one n-gram vector</span>
+    size.ngrams &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="dv">0</span>, n_chunks)
+    total_length &lt;-<span class="st"> </span><span class="dv">0</span> 
+    for(i in <span class="dv">1</span>:n_chunks) {
+        name1 &lt;-<span class="st"> </span>names[i]
+        this_length &lt;-<span class="st"> </span><span class="kw">length</span>(<span class="kw">get</span>(name1))
+        size.ngrams[i] &lt;-<span class="st"> </span>this_length
+        total_length &lt;-<span class="st"> </span>total_length +<span class="st"> </span>this_length
+        <span class="kw">cat</span>(<span class="st">&quot;  [&quot;</span>, <span class="kw">sprintf</span>(<span class="st">&quot;%3d&quot;</span>, i), <span class="st">&quot;/&quot;</span>, <span class="kw">sprintf</span>(<span class="st">&quot;%3d&quot;</span>, n_chunks), 
+               <span class="st">&quot;]  length of &quot;</span>, name1, <span class="st">&quot; = &quot;</span>, this_length, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
+    }
+    <span class="kw">cat</span>(<span class="st">&quot;    Total Length = &quot;</span>, total_length, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
+    
+    name_for_all_ngrams &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&quot;n&quot;</span>, <span class="kw">sprintf</span>(<span class="st">&quot;%1d&quot;</span>, ngram_size), <span class="st">&quot;grams.blogs.all&quot;</span>, <span class="dt">sep =</span> <span class="st">&quot;&quot;</span>)
+    temp_all_ngrams &lt;-<span class="st"> </span><span class="kw">vector</span>(<span class="dt">mode =</span> <span class="st">&quot;character&quot;</span>, <span class="dt">length =</span> total_length)
+    ivec &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">0</span>, <span class="kw">cumsum</span>(size.ngrams))
+    for(i in <span class="dv">1</span>:n_chunks) {
+        i1 &lt;-<span class="st"> </span>ivec[i] +<span class="st"> </span><span class="dv">1</span>
+        i2 &lt;-<span class="st"> </span>ivec[i<span class="dv">+1</span>]
+        name &lt;-<span class="st"> </span>names[i]
+        <span class="kw">cat</span>(<span class="st">&quot;   &quot;</span>, i, i1, i2, name, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
+        temp_all_ngrams[i1:i2] &lt;-<span class="st"> </span><span class="kw">get</span>(name)
+    }
 
-<span class="co">#=-- n5 ---#</span>
-size.n5g.blogs &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="dv">0</span>, N)
+    <span class="kw">assign</span>( name_for_all_ngrams, temp_all_ngrams )
 
-for( i in <span class="dv">1</span>:N ) {
-    name &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="st">&quot;n5grams.blogs.&quot;</span>, i, <span class="dt">collapse =</span> <span class="st">&quot;&quot;</span>)
-    size.n5g.blogs[i] &lt;-<span class="st"> </span><span class="kw">length</span>(<span class="kw">get</span>(name))
-    <span class="kw">cat</span>(<span class="st">&quot; Number of 5-grams in set&quot;</span>, i, <span class="st">&quot; : &quot;</span>, size.n5g.blogs[i], <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
-}
+    <span class="co"># write to file all n-grams</span>
+    fname &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&quot;output/&quot;</span>, <span class="st">&quot;n&quot;</span>, <span class="kw">sprintf</span>(<span class="st">&quot;%1d&quot;</span>, ngram_size), <span class="st">&quot;grams.blogs.all.gz&quot;</span>, <span class="dt">sep =</span> <span class="st">&quot;&quot;</span>)
+    con &lt;-<span class="st"> </span><span class="kw">gzfile</span>(fname, <span class="dt">open =</span> <span class="st">&quot;w&quot;</span>)
+    <span class="kw">writeLines</span>(temp_all_ngrams, <span class="dt">con =</span> con)
+    <span class="kw">close</span>(con)
 
-n5grams.blogs.all &lt;-<span class="st"> </span><span class="kw">vector</span>(<span class="dt">mode =</span> <span class="st">&quot;character&quot;</span>, <span class="dt">length =</span> <span class="kw">sum</span>(size.n5g.blogs))
-ivec &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">0</span>, <span class="kw">cumsum</span>(size.n5g.blogs))
-for( i in <span class="dv">1</span>:N ) {
-    n1 &lt;-<span class="st"> </span>ivec[i] +<span class="st"> </span><span class="dv">1</span>
-    n2 &lt;-<span class="st"> </span>ivec[i<span class="dv">+1</span>]
-    name &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="st">&quot;n5grams.blogs.&quot;</span>, i, <span class="dt">collapse =</span> <span class="st">&quot;&quot;</span>)
-    <span class="kw">cat</span>(<span class="st">&quot; &quot;</span>, i, n1, n2, name, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
-    n5grams.blogs.all[n1:n2] &lt;-<span class="st"> </span><span class="kw">get</span>(name)
-}
-
-<span class="kw">rm</span>(<span class="dt">list=</span><span class="kw">ls</span>(<span class="dt">pattern =</span> <span class="st">&quot;^n5grams.blogs.[1-5]&quot;</span>))
-
-<span class="co">#=--------------------------------------------------------------------------------------------------</span></code></pre>
+    <span class="co"># cleaning</span>
+    <span class="kw">rm</span>(good.sentences, len.good, temp_all_ngrams)
+    
+    <span class="kw">rm</span>(i, n1, n2, n_chunks)
+    <span class="kw">ls</span>(<span class="dt">pattern =</span> <span class="st">&quot;^n[1-6]grams.blogs.[0-9]&quot;</span>)
+    <span class="kw">rm</span>(<span class="dt">list =</span> <span class="kw">ls</span>(<span class="dt">pattern =</span> <span class="st">&quot;^n[1-6]grams.blogs.[0-9]&quot;</span>) )
+    <span class="kw">gc</span>()
+}</code></pre>
+<p><a name="ngrams-cleaning_and_reclassification"></a></p>
+<div id="cleaning-and-re-classification-of-n-grams" class="section level3">
+<h3>Cleaning and <em>re-classification</em> of n-grams</h3>
+<p>A small fraction of the n-grams so produced contains no-ASCII characters, and it makes sense to simply drop these n-grams.<br />For instance with:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">gzip</span> -dc n5grams.all.gz <span class="kw">|</span> <span class="kw">grep</span> -P -v <span class="st">&#39;([^\x00-\x7F]+)&#39;</span> </code></pre>
+<p>Another <em>perl script</em> (<code>ngrams-reprocess_clean_and_classify.pl</code>, find it on <a href="https://github.com/pedrosan/DataScienceExamples/tree/master/myTextPredictr/MilestoneReport/scripts">GitHub</a>) then</p>
+<ul>
+<li>Cleans up some problematic words or rejects some pathologically bad n-grams.</li>
+<li>Reclassifies n-grams based on their true adjusted number of words.</li>
+</ul>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">gzip</span> -dc n5grams.filtered_for_nonASCII.gz <span class="kw">|</span> <span class="kw">./scripts/ngrams-reprocess_clean_and_classify.pl</span> -go -print</code></pre>
+<p>This script produces a set of 7 files (<code>tmp_n*</code>) containing: * good 1-grams * good 2-grams * good 3-grams * good 4-grams * good 5-grams * n &gt; 5 grams * Trashed n-grams (full of problem not worth dealing with)</p>
+<p>Finally, we merge the n-grams of each order produced by the above script reprocessing all original n-grams.</p>
 <p><a name="ngrams_tables"></a></p>
+</div>
 <div id="a-look-at-the-n-grams" class="section level3">
 <h3>A look at the n-grams</h3>
 <p><a href="#CONTENT">Back to TOC</a></p>
+<p><strong>NOTE:</strong> the following results refer to the analysis of a subset of sentences (20%).</p>
 <p>From the <em>n-grams</em> vectors we can compute frequencies, which will be an important basis for the prediction algorithms.</p>
 <p>For now we can take a peek at what are the most frequent <em>3-grams</em> and <em>4-grams</em> in the three datasets.</p>
 <button class="toggle_code">
@@ -689,6 +823,7 @@ n4g.blogs.freq &lt;-<span class="st"> </span>n4g.blogs.freq[<span class="kw">ord
 
 <span class="kw">colnames</span>(n3g.blogs.freq) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;ngram&quot;</span>, <span class="st">&quot;count&quot;</span>)
 <span class="kw">colnames</span>(n4g.blogs.freq) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;ngram&quot;</span>, <span class="st">&quot;count&quot;</span>)</code></pre>
+<br />
 <button class="toggle_code">
 show code for news
 </button>
@@ -702,6 +837,7 @@ n4g.news.freq &lt;-<span class="st"> </span>n4g.news.freq[<span class="kw">order
 
 <span class="kw">colnames</span>(n3g.news.freq) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;ngram&quot;</span>, <span class="st">&quot;count&quot;</span>)
 <span class="kw">colnames</span>(n4g.news.freq) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;ngram&quot;</span>, <span class="st">&quot;count&quot;</span>)</code></pre>
+<br />
 <button class="toggle_code">
 show code for twitter
 </button>
@@ -720,8 +856,12 @@ n4g.twitter.freq &lt;-<span class="st"> </span>n4g.twitter.freq[<span class="kw"
 <button class="toggle_code">
 show code
 </button>
-<pre class="sourceCode r"><code class="sourceCode r">tmp3.df &lt;-<span class="st"> </span><span class="kw">cbind</span>(<span class="kw">head</span>(n3g.blogs.freq, <span class="dv">20</span>), <span class="kw">head</span>(n3g.news.freq, <span class="dv">20</span>), <span class="kw">head</span>(n3g.twitter.freq, <span class="dv">20</span>)) 
-tmp4.df &lt;-<span class="st"> </span><span class="kw">cbind</span>(<span class="kw">head</span>(n4g.blogs.freq, <span class="dv">20</span>), <span class="kw">head</span>(n4g.news.freq, <span class="dv">20</span>), <span class="kw">head</span>(n4g.twitter.freq, <span class="dv">20</span>)) 
+<pre class="sourceCode r"><code class="sourceCode r">tmp3.df &lt;-<span class="st"> </span><span class="kw">cbind</span>(<span class="kw">head</span>(n3g.blogs.top500, <span class="dv">20</span>), 
+                 <span class="kw">head</span>(n3g.news.top500, <span class="dv">20</span>), 
+                 <span class="kw">head</span>(n3g.twitter.top500, <span class="dv">20</span>)) 
+tmp4.df &lt;-<span class="st"> </span><span class="kw">cbind</span>(<span class="kw">head</span>(n4g.blogs.top500, <span class="dv">20</span>), 
+                 <span class="kw">head</span>(n4g.news.top500, <span class="dv">20</span>), 
+                 <span class="kw">head</span>(n4g.twitter.top500, <span class="dv">20</span>)) 
 <span class="kw">colnames</span>(tmp4.df) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;ngram_blogs&quot;</span>, <span class="st">&quot;count&quot;</span>, <span class="st">&quot;ngram_news&quot;</span>, <span class="st">&quot;count&quot;</span>, <span class="st">&quot;ngram_twitter&quot;</span>, <span class="st">&quot;count&quot;</span>)
 <span class="kw">colnames</span>(tmp4.df) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;ngram_blogs&quot;</span>, <span class="st">&quot;count&quot;</span>, <span class="st">&quot;ngram_news&quot;</span>, <span class="st">&quot;count&quot;</span>, <span class="st">&quot;ngram_twitter&quot;</span>, <span class="st">&quot;count&quot;</span>)
 <span class="co"># saveRDS(tmp3.df, file = &quot;tmp_n3g_table.RDS&quot;)</span></code></pre>
@@ -912,7 +1052,7 @@ bp_mix</code></pre>
 show plot code
 </button>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="co"># ECHO FALSE</span>
-data.blogs &lt;-<span class="st"> </span>n4g.blogs.freq[<span class="dv">1</span>:<span class="dv">20</span>, ]
+data.blogs &lt;-<span class="st"> </span>n4g.blogs.top500[<span class="dv">1</span>:<span class="dv">20</span>, ]
 bp_blogs &lt;-<span class="st"> </span><span class="kw">ggplot</span>(data.blogs, <span class="kw">aes</span>(<span class="dt">x =</span> <span class="kw">reorder</span>(ngram, count), <span class="dt">y =</span> count)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span><span class="kw">coord_flip</span>() +<span class="st"> </span><span class="kw">xlab</span>(<span class="st">&quot;&quot;</span>) +<span class="st"> </span>
 <span class="st">    </span><span class="kw">theme</span>(<span class="dt">plot.title =</span> <span class="kw">element_text</span>(<span class="dt">face =</span> <span class="st">&quot;bold&quot;</span>, <span class="dt">size =</span> <span class="dv">20</span>)) +<span class="st"> </span>
 <span class="st">    </span><span class="kw">theme</span>(<span class="dt">axis.text =</span> <span class="kw">element_text</span>(<span class="dt">size =</span> <span class="dv">10</span>)) +<span class="st"> </span>
@@ -921,7 +1061,7 @@ bp_blogs &lt;-<span class="st"> </span><span class="kw">ggplot</span>(data.blogs
 <span class="st">    </span><span class="kw">geom_bar</span>(<span class="dt">stat =</span> <span class="st">&quot;identity&quot;</span>, <span class="dt">fill =</span> mycolors[<span class="dv">1</span>]) +<span class="st"> </span>
 <span class="st">    </span><span class="kw">geom_text</span>(<span class="kw">aes</span>(<span class="dt">label =</span> count, <span class="dt">y =</span> <span class="dv">100</span>, <span class="dt">size =</span> <span class="dv">10</span>), <span class="dt">col =</span> <span class="st">&quot;white&quot;</span>) 
 
-data.news &lt;-<span class="st"> </span>n4g.news.freq[<span class="dv">1</span>:<span class="dv">20</span>, ]
+data.news &lt;-<span class="st"> </span>n4g.news.top500[<span class="dv">1</span>:<span class="dv">20</span>, ]
 bp_news &lt;-<span class="st"> </span><span class="kw">ggplot</span>(data.news, <span class="kw">aes</span>(<span class="dt">x =</span> <span class="kw">reorder</span>(ngram, count), <span class="dt">y =</span> count)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span><span class="kw">coord_flip</span>() +<span class="st"> </span><span class="kw">xlab</span>(<span class="st">&quot;&quot;</span>) +<span class="st"> </span>
 <span class="st">    </span><span class="kw">theme</span>(<span class="dt">plot.title =</span> <span class="kw">element_text</span>(<span class="dt">face =</span> <span class="st">&quot;bold&quot;</span>, <span class="dt">size =</span> <span class="dv">20</span>)) +<span class="st"> </span>
 <span class="st">    </span><span class="kw">theme</span>(<span class="dt">axis.text =</span> <span class="kw">element_text</span>(<span class="dt">size =</span> <span class="dv">10</span>)) +<span class="st"> </span>
@@ -930,7 +1070,7 @@ bp_news &lt;-<span class="st"> </span><span class="kw">ggplot</span>(data.news, 
 <span class="st">    </span><span class="kw">geom_bar</span>(<span class="dt">stat =</span> <span class="st">&quot;identity&quot;</span>, <span class="dt">fill =</span> mycolors[<span class="dv">2</span>]) +<span class="st"> </span>
 <span class="st">    </span><span class="kw">geom_text</span>(<span class="kw">aes</span>(<span class="dt">label =</span> count, <span class="dt">y =</span> <span class="dv">100</span>, <span class="dt">size =</span> <span class="dv">10</span>), <span class="dt">col =</span> <span class="st">&quot;white&quot;</span>) 
 
-data.twitter &lt;-<span class="st"> </span>n4g.twitter.freq[<span class="dv">1</span>:<span class="dv">20</span>, ]
+data.twitter &lt;-<span class="st"> </span>n4g.twitter.top500[<span class="dv">1</span>:<span class="dv">20</span>, ]
 bp_twitter &lt;-<span class="st"> </span><span class="kw">ggplot</span>(data.twitter, <span class="kw">aes</span>(<span class="dt">x =</span> <span class="kw">reorder</span>(ngram, count), <span class="dt">y =</span> count)) +<span class="st"> </span><span class="kw">theme_bw</span>() +<span class="st"> </span><span class="kw">coord_flip</span>() +<span class="st"> </span><span class="kw">xlab</span>(<span class="st">&quot;&quot;</span>) +<span class="st"> </span>
 <span class="st">    </span><span class="kw">theme</span>(<span class="dt">plot.title =</span> <span class="kw">element_text</span>(<span class="dt">face =</span> <span class="st">&quot;bold&quot;</span>, <span class="dt">size =</span> <span class="dv">20</span>)) +<span class="st"> </span>
 <span class="st">    </span><span class="kw">theme</span>(<span class="dt">axis.text =</span> <span class="kw">element_text</span>(<span class="dt">size =</span> <span class="dv">10</span>)) +<span class="st"> </span>
@@ -986,13 +1126,214 @@ find_sentences &lt;-<span class="st"> </span>function(x) {
 }
 
 <span class="co">#===================================================================================================</span></code></pre>
-<p>More functions can be reviewed directly from the repository:</p>
+<p>More functions can be reviewed directly from the <a href="https://github.com/pedrosan/DataScienceExamples/tree/master/myTextPredictr/MilestoneReport/scripts">repository</a></p>
+<p><a name="APPENDIX-regularize"></a></p>
+</div>
+<div id="summary-of-regularization-done-with-perl-scripts" class="section level2">
+<h2>Summary of regularization done with <em>perl scripts</em></h2>
+<p>Scripts source in <a href="https://github.com/pedrosan/DataScienceExamples/tree/master/myTextPredictr/MilestoneReport/scripts">this GitHub folder</a></p>
+<div id="regularize_text-pass1.pl" class="section level4">
+<h4><em>regularize_text-pass1.pl</em></h4>
 <ul>
-<li><a href="./scripts/combine_nXgrams_blogs.R">scripts/combine_nXgrams_blogs.R</a></li>
-<li><a href="./scripts/combine_nXgrams_news.R">scripts/combine_nXgrams_news.R</a></li>
-<li><a href="./scripts/combine_nXgrams_twitter.R">scripts/combine_nXgrams_twitter.R</a></li>
+<li>CHARACTERS “HOMOGENEIZATION”
+<ul>
+<li>Normalize odd characters</li>
+<li>Currency symbols</li>
+<li>HTML tags</li>
+<li>encoded apostrophe</li>
+</ul></li>
+<li>CHARACTER SEQUENCES
+<ul>
+<li>Cleaning of BEGIN / END of LINE</li>
+<li>EOL ellipsis</li>
+<li>EOL non-sense</li>
+<li>word bracketed by *</li>
+<li>substitution on “|” that seem to be equivalent to end of sentences (i.e. a period)</li>
+<li>substitution of &lt;==/&lt;– and ==&gt;/–&gt; with “;”</li>
+<li>sequences of !, ?</li>
+</ul></li>
+<li>HASHTAGS
+<ul>
+<li>recognized (most) hashtags</li>
+</ul></li>
+</ul>
+</div>
+<div id="regularize_text-pass2.pl" class="section level4">
+<h4><em>regularize_text-pass2.pl</em></h4>
+<ul>
+<li>NUMBER RELATED
+<ul>
+<li>dates</li>
+<li>hours am/pm</li>
+<li>hours a.m./p.m.</li>
+<li>dollar amounts</li>
+<li>percentages</li>
+</ul></li>
+<li>ACRONYMS
+<ul>
+<li>acronyms: US</li>
+</ul></li>
+<li>EMOTICONS
+<ul>
+<li>regular</li>
+<li>(reverse) [not done]</li>
+</ul></li>
+<li>ELLIPSIS
+<ul>
+<li>INLINE ellipsis</li>
+</ul></li>
+<li>REPEATED CHARACTERS
+<ul>
+<li>DOLLAR</li>
+<li>STAR</li>
+<li>“+”</li>
+<li>“-”</li>
+<li>“a – b” ==&gt; replace with “,”</li>
+<li>“a–b” ==&gt; replace with “,”</li>
+<li>“! – A” ==&gt; REMOVE</li>
+<li>“A–A[a ’]” ==&gt; replace with “;”</li>
+<li>“a– A” ==&gt; replace with “;”</li>
+<li>“a– a” ==&gt; replace with “,”</li>
+<li>LEAVE ONE (followed by space) : ,</li>
+<li>LEAVE ONE : _ (the % is handled separately when dealing with percentages)</li>
+<li>REMOVE ENTIRELY if 2+ : &lt; &gt; = #</li>
+</ul></li>
+</ul>
+</div>
+<div id="regularize_text-pass3.pl" class="section level4">
+<h4><em>regularize_text-pass3.pl</em></h4>
+<ul>
+<li>CONTRACTIONS
+<ul>
+<li>’ll ==&gt; _will / &quot; will&quot; ==&gt; _will</li>
+<li>n’t ==&gt; _not</li>
+<li>’re ==&gt; _are</li>
+<li>’ve ==&gt; _have</li>
+<li>some additional ad hoc (e.g. won’t ==&gt; will_not)</li>
+<li>’s ==&gt; _s</li>
+<li>additional possibly useful/meaningful replacements (e.g. y’all)</li>
+</ul></li>
+<li>WHITE SPACES
+<ul>
+<li>squeezing extra white spaces</li>
+<li>fixing some punctuation and white space</li>
+</ul></li>
+<li>PROFANITIES
+<ul>
+<li>catch the “7 ones” and replace with tag <PROFANITY></li>
+</ul></li>
+</ul>
+</div>
+<div id="regularize_text-pass4.pl" class="section level4">
+<h4><em>regularize_text-pass4.pl</em></h4>
+<ul>
+<li>ABBREVIATIONS: find and mark with tags standard/common abbreviations
+<ul>
+<li>month names</li>
+<li>Mr, Mrs, Dr, …</li>
+</ul></li>
+<li>MORE
+<ul>
+<li>Find and replace something like <NUMBER>-word</li>
+<li>Remove genitives</li>
+<li>Clean line endings preceded by spurious spaces</li>
+<li>Replace: ’’ ==&gt; &quot;</li>
+</ul></li>
+</ul>
+</div>
+<div id="regularize_text-pass5.pl" class="section level4">
+<h4><em>regularize_text-pass5.pl</em></h4>
+<ul>
+<li>WEIRD CHARACTERS
+<ul>
+<li>Replace weird characters with <WEIRDO> tag</li>
+</ul></li>
+<li>TAGS CLEANING
+<ul>
+<li>Clean consecutive <TAGS></li>
+<li>Remove <PERIOD></li>
+<li>Remove <SPACE></li>
+<li>Remove <WEIRDO></li>
+<li>Remove quotes from single quoted words</li>
+</ul></li>
+<li>MORE
+<ul>
+<li>Clear row BEGINNINGS with non-alpha characters</li>
+</ul></li>
+</ul>
+</div>
+<div id="regularize_text-pass6.pl" class="section level4">
+<h4><em>regularize_text-pass6.pl</em></h4>
+<ul>
+<li>MORE TAG-RELATED REGULARIZATIONS
+<ul>
+<li>FIX missed HASHTAGS at line beginning</li>
+<li>FIX additional number capture</li>
+<li>Emptying tags that were defined to capture the original expression (e.g. <EMOJ_*_EMOJ> ==&gt; <EMOTICON></li>
+</ul></li>
+</ul>
+<p><a name="APPENDIX-post_sentence_cleaning"></a></p>
+</div>
+</div>
+<div id="summary-of-post-sentence-tokenization-cleaning-with-perl-scripts" class="section level2">
+<h2>Summary of post-sentence-tokenization cleaning (with <em>perl scripts</em>)</h2>
+<p>Scripts source in <a href="https://github.com/pedrosan/DataScienceExamples/tree/master/myTextPredictr/MilestoneReport/scripts">this GitHub folder</a></p>
+<div id="sentences-cleaning_1.pl" class="section level4">
+<h4><em>sentences-cleaning_1.pl</em></h4>
+<ul>
+<li>CONTRACTIONS
+<ul>
+<li>’ll ==&gt; _will / &quot; will&quot; ==&gt; _will</li>
+<li>n’t ==&gt; _not</li>
+<li>’re ==&gt; _are</li>
+<li>’ve ==&gt; _have</li>
+<li>some additional ad hoc</li>
+<li>’s ==&gt; _s</li>
+<li>additional possibly useful/meaningful replacements (e.g. y’all)</li>
+</ul></li>
+</ul>
+</div>
+<div id="sentences-cleaning_2.pl" class="section level4">
+<h4><em>sentences-cleaning_2.pl</em></h4>
+<ul>
+<li>Remove spaces at the end of a sentence</li>
+<li><p>More catching of profanities</p></li>
+<li>TAGS
+<ul>
+<li>Consecutive identical TAGS</li>
+<li>Remove TAGS enclosed in parenthesis</li>
+<li>Remove USELESS TAGS</li>
+</ul></li>
+<li>Remove excess space
+<ul>
+<li>Removed excess space at the beginning</li>
+<li>Removed excess space at the end</li>
+<li>Removed excess space in the middle</li>
+</ul></li>
+<li>Clean <em>non-alpha</em> BEGINNING of sentences
+<ul>
+<li>Clean sentences “bracketed” by quotes or parenthesis (removing the “bracketing” character“)</li>
+<li>Remove beginning quotes not paired in the rest of the sentence.</li>
+<li>Bracketed TAGS - just remove them</li>
+<li>Non-alpha preceding a TAG (done separately to make life simpler)</li>
+<li>Catching up with more fixes for beginning</li>
+<li>Clean sentences “bracketed” by quotes or parenthesis (removing the “bracketing” character“)</li>
+</ul></li>
+<li>Clean <em>non-alpha</em> ENDING of sentences
+<ul>
+<li>Clean extra spaces before “good” sentence endings</li>
+<li>Cleaning orphan &quot; ’ ) ] at the end match earlier in the sentence</li>
+<li>Some dirty ENDS</li>
+</ul></li>
+</ul>
+</div>
+<div id="sentences-cleaning_3.pl" class="section level4">
+<h4><em>sentences-cleaning_3.pl</em></h4>
+<ul>
+<li>CLEAN (again) lines BEGINNING with TAGS and non-alpha</li>
 </ul>
 <p><a name="APPENDIX-tokenization_issue"></a></p>
+</div>
 <div id="mysterious-issue-with-ngramtokenizer" class="section level3">
 <h3>Mysterious issue with <code>NGramTokenizer</code></h3>
 <p>Because the <code>NGramTokenizer</code> would fail with a <em>java memory error</em> if fed the full vector of sentences, but run when fed chunks of 100,000 sentences, I thought that turning this into a basic loop handling the splitting in chunks, collecting the output and finally return just one vector of <em>n-grams</em> would work, be compact and smarter.</p>
