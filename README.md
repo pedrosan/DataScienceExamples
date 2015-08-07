@@ -36,10 +36,10 @@ A __report__ is available for some of them, hosted at [pedrosan.github.io](http:
   * [REPORT](http://pedrosan.github.io/DataScience/Impact_of_Major_Storm_Events/)
   * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Impact_of_Major_Storm_Events)
 
-* Text Prediction Application
+* myTextPredictr, a text prediction application (running on [pedrosan.shinyapps.io/myTextPredictr/](https://pedrosan.shinyapps.io/myTextPredictr/)
   * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/myTextPredictr/)
   * [Progress Report](http://pedrosan.github.io/DataScienceExamples/myTextPredictr/MilestoneReport/)
-  * ["pitch" slides](http://pedrosan.github.io/DataScienceExamples/myTextPredictr/Application/Slides/)
+  * ["pitch" slides](http://pedrosan.github.io/DataScienceExamples/myTextPredictr/Slides/)
   
 
 ### Note on the Reports' _Reproducible_ Format
