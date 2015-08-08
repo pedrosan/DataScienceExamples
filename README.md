@@ -15,7 +15,7 @@ A __report__ is available for some of them, hosted at [pedrosan.github.io](http:
   * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/myTextPredictr/)
   * [Progress Report](http://pedrosan.github.io/DataScienceExamples/myTextPredictr/MilestoneReport/)
   * [Final Report (in progress)](http://pedrosan.github.io/DataScienceExamples/myTextPredictr/FinalReport/)
-  * ["pitch" slides](http://pedrosan.github.io/DataScienceExamples/myTextPredictr/Slides/)
+  * [Slide deck with summary and basic information about algorithm](http://pedrosan.github.io/DataScienceExamples/myTextPredictr/Slides/)
   
 * Bike Sharing Data: 
   * [REPORT](http://pedrosan.github.io/DataScience/Bike_Sharing/)
