@@ -31,9 +31,16 @@ knit_print.tbl_df <- function(x, options) {
 
 <a name="SUMMARY"></a>
 
-# Preprocessing
+# Introduction
 
-For now I will just say that I did a lot of my pre-processing with `perl`. 
+This report illustrates the work done after obtaining the first _master list_ of n-grams, $n = 3, 4, 5$.
+
+It is still very much in progress, and for now not much more than a skeleton.
+
+## Raw-to-ngrams
+
+This phase is summarize in the _Milestone Report_, available
+[here](http://pedrosan.github.io/DataScience/myTextPredictr/MilestoneReport/)
 
 * I cleaned the most pathological issues of the text in `perl` before feeding it to `R`.  
 * In `perl` I did some more useful regex parsing to catch things like emoticon, hashtags,
@@ -43,6 +50,10 @@ For now I will just say that I did a lot of my pre-processing with `perl`.
   tokenization, but in terms of speed and quality.
 * In `perl` I did another pass at cleaning the sentences.
 * With cleaned sentences, back to `R` for n-gram tokenization, 2/3/4/5-grams (did not use 2-grams.)
+
+
+## N-grams analysis
+
 * Back to `perl` for validation of the n-grams.  If it seems like a lot of back and forth... in good part 
   it is because some issues became more visible (literally speaking) after each tokenization.
 * In `perl` I extracted a census of words from the sentences (I would cal that a _dictionary_).    
@@ -125,7 +136,9 @@ Moreover, creating this couple of arrays from the data frame turned out to be ma
 than creating the hash, pretty much non-measureable compared to few seconds.  Not worth the hassle
 especially considering that the delay in creating the hash when the application start can be annoying.
 
-I'll stop here... end of lunch break.
+
+## Prediction algorithm
+
 I might come back to illustrate the prediction algorithm based on these data.  
 I was satisfied by its performance, both for speed and accuracy, but not too happy about the latter because it
 tends to give higher priority to short words.  One easy improvement would be to increase the weight of
