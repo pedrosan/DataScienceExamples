@@ -144,5 +144,22 @@ I was satisfied by its performance, both for speed and accuracy, but not too hap
 tends to give higher priority to short words.  One easy improvement would be to increase the weight of
 "full n-gram matches" when they exist, because right now they can be diluted by the results of sub-n-gram matches.
 
+
+## Code 
+
+The main code on which the application runs is shown below or reviewed on
+[GitHub](https://github.com/pedrosan/DataScienceExamples/blob/master/myTextPredictr/Application/myTextPredictr/scripts/my_functions.R):
+
+```{r read_my_functions, eval = TRUE, echo = FALSE, cache = FALSE}
+read_chunk("./scripts/shinyapp.R")
+```
+
+<button class="toggle_code">show code</button>
+```{r print_chunk, eval = FALSE, echo = TRUE, cache = FALSE}
+<<shinyapp_functions>>
+```
+
+
+
 ---
 

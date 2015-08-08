@@ -23,6 +23,33 @@
 <script src="common/js/toggle_GF.js"></script>
 
 
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; background-color: #f8f8f8; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+pre, code { background-color: #f8f8f8; }
+code > span.kw { color: #204a87; font-weight: bold; }
+code > span.dt { color: #204a87; }
+code > span.dv { color: #0000cf; }
+code > span.bn { color: #0000cf; }
+code > span.fl { color: #0000cf; }
+code > span.ch { color: #4e9a06; }
+code > span.st { color: #4e9a06; }
+code > span.co { color: #8f5902; font-style: italic; }
+code > span.ot { color: #8f5902; }
+code > span.al { color: #ef2929; }
+code > span.fu { color: #000000; }
+code > span.er { font-weight: bold; }
+</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
 
 <link rel="stylesheet" href="common/css/gf_xnew_nolines.css" type="text/css" />
 
@@ -123,6 +150,657 @@ img {
 <div id="prediction-algorithm" class="section level2">
 <h2>Prediction algorithm</h2>
 <p>I might come back to illustrate the prediction algorithm based on these data.<br />I was satisfied by its performance, both for speed and accuracy, but not too happy about the latter because it tends to give higher priority to short words. One easy improvement would be to increase the weight of “full n-gram matches” when they exist, because right now they can be diluted by the results of sub-n-gram matches.</p>
+</div>
+<div id="code" class="section level2">
+<h2>Code</h2>
+<p>The main code on which the application runs is shown below or reviewed on <a href="https://github.com/pedrosan/DataScienceExamples/blob/master/myTextPredictr/Application/myTextPredictr/scripts/my_functions.R">GitHub</a>:</p>
+<button class="toggle_code">
+show code
+</button>
+<pre class="sourceCode r"><code class="sourceCode r">####################################################################################################
+<span class="co"># Main function</span>
+<span class="co">#=--------------------------------------------------------------------------------------------------</span>
+predict_engine &lt;-<span class="st"> </span>function(<span class="dt">input_text =</span> <span class="ot">NULL</span>, <span class="dt">n3w =</span> <span class="ot">NULL</span>, <span class="dt">n4w =</span> <span class="ot">NULL</span>, <span class="dt">n5w =</span> <span class="ot">NULL</span>, <span class="dt">dict =</span> <span class="ot">NULL</span>, vec_words, vec_counts, <span class="dt">how_many =</span> <span class="dv">5</span>, <span class="dt">debug =</span> <span class="ot">FALSE</span>) {
+    
+    dict_size &lt;-<span class="st"> </span><span class="kw">sum</span>(dict$count)
+
+    OutputColumns &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">2</span>)
+
+    <span class="co"># return some default data frame.</span>
+    fake1_wpred &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;BAZINGA!&quot;</span>, <span class="st">&quot;&quot;</span>, <span class="st">&quot;You&#39;ve&quot;</span>, <span class="st">&quot;kidding me&quot;</span>, <span class="st">&quot;&quot;</span>)
+    fake1_metric1 &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;3.141592653&quot;</span>, <span class="st">&quot;&quot;</span>, <span class="st">&quot;Got to be&quot;</span>, <span class="st">&quot;with this!&quot;</span>, <span class="st">&quot;&quot;</span>)
+    fake1_metric2 &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;2.718281828&quot;</span>, <span class="st">&quot;&quot;</span>, <span class="st">&quot;&quot;</span>, <span class="st">&quot;&quot;</span>, <span class="st">&quot;&quot;</span>)
+
+    fake2_wpred &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;BAZINGA!&quot;</span>, <span class="st">&quot;Sorry...&quot;</span>, <span class="st">&quot;I Could&quot;</span>, <span class="st">&quot;find&quot;</span>)
+    fake2_metric1 &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;3.141592653&quot;</span>, <span class="st">&quot;&quot;</span>, <span class="st">&quot;Not&quot;</span>, <span class="st">&quot;a match&quot;</span>)
+    fake2_metric2 &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;2.718281828&quot;</span>, <span class="st">&quot;&quot;</span>, <span class="st">&quot;&quot;</span>, <span class="st">&quot;&quot;</span>)
+
+    fake3_wpred &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;BAZINGA!&quot;</span>, <span class="st">&quot;&quot;</span>, <span class="st">&quot;EMPTY&quot;</span>, <span class="st">&quot;Please&quot;</span>)
+    fake3_metric1 &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;3.141592653&quot;</span>, <span class="st">&quot;&quot;</span>, <span class="st">&quot;INPUT&quot;</span>, <span class="st">&quot;Try Again&quot;</span>)
+    fake3_metric2 &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;2.718281828&quot;</span>, <span class="st">&quot;&quot;</span>, <span class="st">&quot;&quot;</span>, <span class="st">&quot;&quot;</span>)
+
+    fall_back1 &lt;-<span class="st"> </span><span class="kw">data.frame</span>( <span class="dt">prediction =</span> fake1_wpred, <span class="dt">metric1 =</span> fake1_metric1, <span class="dt">metric2 =</span> fake1_metric2, <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
+    fall_back2 &lt;-<span class="st"> </span><span class="kw">data.frame</span>( <span class="dt">prediction =</span> fake2_wpred, <span class="dt">metric1 =</span> fake2_metric1, <span class="dt">metric2 =</span> fake2_metric2, <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
+    fall_back3 &lt;-<span class="st"> </span><span class="kw">data.frame</span>( <span class="dt">prediction =</span> fake3_wpred, <span class="dt">metric1 =</span> fake3_metric1, <span class="dt">metric2 =</span> fake3_metric2, <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
+
+    debug_df_col1 &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;PROBLEM&quot;</span>, <span class="st">&quot; &quot;</span>, <span class="st">&quot; &quot;</span>, <span class="st">&quot; &quot;</span>, <span class="st">&quot; &quot;</span>)
+    debug_df_col2 &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;CAUGHT&quot;</span>, <span class="st">&quot; &quot;</span>, <span class="st">&quot; &quot;</span>, <span class="st">&quot; &quot;</span>, <span class="st">&quot; &quot;</span>)
+    debug_df_col3 &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot; &quot;</span>, <span class="st">&quot; &quot;</span>, <span class="st">&quot; &quot;</span>, <span class="st">&quot; &quot;</span>, <span class="st">&quot; &quot;</span>)
+    debug_df &lt;-<span class="st"> </span><span class="kw">data.frame</span>( <span class="dt">prediction =</span> debug_df_col1, <span class="dt">metric1 =</span> debug_df_col2, <span class="dt">metric2 =</span> debug_df_col3, <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
+
+    <span class="co">#-----------------------------------------------------------</span>
+    <span class="co"># input_refmt1 &lt;- system2(&quot;./scripts/regularize_for_R_new.pl&quot;, input = input_text, stdout = TRUE)</span>
+    <span class="co"># input_refmt2 &lt;- system2(&quot;./scripts/regularize_for_R_new.pl&quot;, input = shQuote(input_text), stdout = TRUE)</span>
+    <span class="co"># input_refmt3 &lt;- text_string_refmt(input_text)</span>
+    input_refmt &lt;-<span class="st"> </span><span class="kw">text_string_refmt</span>(input_text)
+    <span class="co"># input_refmt &lt;- input_text;</span>
+    
+    input_length &lt;-<span class="st"> </span><span class="fl">0.0</span>
+    input_length &lt;-<span class="st"> </span><span class="kw">nchar</span>(input_refmt)
+
+    if( <span class="kw">is.null</span>(input_length) ) {
+        candidates &lt;-<span class="st"> </span>debug_df
+        candidates[<span class="dv">2</span>, <span class="dv">1</span>] &lt;-<span class="st"> &quot;input_length&quot;</span>; candidates[<span class="dv">2</span>, <span class="dv">2</span>] &lt;-<span class="st"> &quot;NULL&quot;</span>
+        top10 &lt;-<span class="st"> </span><span class="kw">head</span>(candidates[, OutputColumns], how_many)
+        <span class="kw">return</span>(top10)
+    }
+
+    if( <span class="kw">is.na</span>(input_length) ) {
+        candidates &lt;-<span class="st"> </span>debug_df
+        candidates[<span class="dv">2</span>, <span class="dv">1</span>] &lt;-<span class="st"> &quot;input_length&quot;</span>; candidates[<span class="dv">2</span>, <span class="dv">2</span>] &lt;-<span class="st"> &quot;NA&quot;</span>
+        top10 &lt;-<span class="st"> </span><span class="kw">head</span>(candidates[, OutputColumns], how_many)
+        <span class="kw">return</span>(top10)
+    }
+
+    if( input_length ==<span class="st"> </span><span class="dv">0</span> ) { 
+        candidates &lt;-<span class="st"> </span>debug_df
+        candidates[<span class="dv">2</span>, <span class="dv">1</span>] &lt;-<span class="st"> &quot;input_length&quot;</span>; candidates[<span class="dv">2</span>, <span class="dv">2</span>] &lt;-<span class="st"> </span><span class="dv">0</span>
+        top10 &lt;-<span class="st"> </span><span class="kw">head</span>(candidates[, OutputColumns], how_many)
+        <span class="kw">return</span>(top10)
+    }
+
+    <span class="co">#-----------------------------------------------------------</span>
+    words_all &lt;-<span class="st"> </span><span class="kw">unlist</span>(<span class="kw">strsplit</span>(input_refmt, <span class="dt">split =</span> <span class="st">&quot;[ ;,.</span><span class="ch">\&quot;\t\r\n</span><span class="st">()!?:]+&quot;</span>))
+    nwords &lt;-<span class="st"> </span><span class="kw">min</span>(<span class="dv">5</span>, <span class="kw">length</span>(words_all))
+    
+    if( <span class="kw">is.null</span>(nwords) ) {
+        candidates &lt;-<span class="st"> </span>debug_df
+        candidates[<span class="dv">2</span>, <span class="dv">1</span>] &lt;-<span class="st"> &quot;nwords&quot;</span>; candidates[<span class="dv">2</span>, <span class="dv">2</span>] &lt;-<span class="st"> &quot;NULL&quot;</span>
+        top10 &lt;-<span class="st"> </span><span class="kw">head</span>(candidates[, OutputColumns], how_many)
+        <span class="kw">return</span>(top10)
+    }
+
+    if( <span class="kw">is.na</span>(nwords) ) {
+        candidates &lt;-<span class="st"> </span>debug_df
+        candidates[<span class="dv">2</span>, <span class="dv">1</span>] &lt;-<span class="st"> &quot;nwords&quot;</span>; candidates[<span class="dv">2</span>, <span class="dv">2</span>] &lt;-<span class="st"> &quot;NA&quot;</span>
+        top10 &lt;-<span class="st"> </span><span class="kw">head</span>(candidates[, OutputColumns], how_many)
+        <span class="kw">return</span>(top10)
+    }
+
+    if( nwords ==<span class="st"> </span><span class="dv">0</span> ) {
+        candidates &lt;-<span class="st"> </span>debug_df
+        candidates[<span class="dv">2</span>, <span class="dv">1</span>] &lt;-<span class="st"> &quot;nwords&quot;</span>; candidates[<span class="dv">2</span>, <span class="dv">2</span>] &lt;-<span class="st"> </span><span class="dv">0</span>
+        top10 &lt;-<span class="st"> </span><span class="kw">head</span>(candidates[, OutputColumns], how_many)
+        <span class="kw">return</span>(top10)
+    }
+
+    <span class="co">#-----------------------------------------------------------</span>
+    <span class="co"># keeps only 5 words if there are more after regularization</span>
+    <span class="co">#-----------------------------------------------------------</span>
+    if( nwords &gt;=<span class="st"> </span><span class="dv">5</span> ) {
+        <span class="co"># words_select &lt;- words_all[(length(words_all)-4):length(words_all)]</span>
+        words_select &lt;-<span class="st"> </span><span class="kw">tail</span>(words_all, <span class="dv">4</span>)
+    } else {
+        words_select &lt;-<span class="st"> </span>words_all
+    }
+    
+    <span class="co">#-----------------------------------------------------------</span>
+    <span class="co"># checks matches and counts on dictionary</span>
+    <span class="co">#-----------------------------------------------------------</span>
+    check_counts &lt;-<span class="st"> </span><span class="fl">0.0</span>
+    w_counts &lt;-<span class="st"> </span><span class="kw">sapply</span>(words_select, function(x) { <span class="kw">get_word_count</span>(dict, x) }, <span class="dt">USE.NAMES =</span> <span class="ot">FALSE</span> )
+    w_IDs    &lt;-<span class="st"> </span><span class="kw">sapply</span>(words_select, function(x) { <span class="kw">get_word_ID</span>(dict, x) }, <span class="dt">USE.NAMES =</span> <span class="ot">FALSE</span> )
+
+    check_counts &lt;-<span class="st"> </span><span class="kw">sum</span>(w_counts)
+
+    if( <span class="kw">is.null</span>(check_counts) ) {
+        candidates &lt;-<span class="st"> </span>debug_df
+        candidates[<span class="dv">2</span>, <span class="dv">1</span>] &lt;-<span class="st"> &quot;check_counts&quot;</span>; candidates[<span class="dv">2</span>, <span class="dv">2</span>] &lt;-<span class="st"> &quot;NULL&quot;</span>
+        candidates[<span class="dv">3</span>, <span class="dv">1</span>] &lt;-<span class="st"> &quot;nwords&quot;</span>      ; candidates[<span class="dv">3</span>, <span class="dv">2</span>] &lt;-<span class="st"> </span>nwords
+        candidates[ , <span class="dv">3</span>] &lt;-<span class="st"> </span>w_IDs[<span class="dv">1</span>:<span class="dv">5</span>]
+        top10 &lt;-<span class="st"> </span><span class="kw">head</span>(candidates[, OutputColumns], how_many)
+        <span class="kw">return</span>(top10)
+    }
+    if( <span class="kw">is.na</span>(check_counts) ) {
+        candidates &lt;-<span class="st"> </span>debug_df
+        candidates[<span class="dv">2</span>, <span class="dv">1</span>] &lt;-<span class="st"> &quot;check_counts&quot;</span>; candidates[<span class="dv">2</span>, <span class="dv">2</span>] &lt;-<span class="st"> &quot;NA&quot;</span>
+        candidates[<span class="dv">3</span>, <span class="dv">1</span>] &lt;-<span class="st"> &quot;nwords&quot;</span>      ; candidates[<span class="dv">3</span>, <span class="dv">2</span>] &lt;-<span class="st"> </span>nwords
+        candidates[ , <span class="dv">3</span>] &lt;-<span class="st"> </span>w_IDs[<span class="dv">1</span>:<span class="dv">5</span>]
+        top10 &lt;-<span class="st"> </span><span class="kw">head</span>(candidates[, OutputColumns], how_many)
+        <span class="kw">return</span>(top10)
+    }
+
+    if( check_counts ==<span class="st"> </span><span class="dv">0</span> ) { 
+        candidates &lt;-<span class="st"> </span>fall_back1
+        top10 &lt;-<span class="st"> </span><span class="kw">head</span>(candidates[, OutputColumns], how_many)
+        <span class="kw">return</span>(top10)
+    }
+
+    <span class="co">#-------------------</span>
+    bs_exp &lt;-<span class="st"> </span><span class="dv">0</span>:<span class="dv">3</span>
+    bs_w2 &lt;-<span class="st"> </span><span class="dv">2</span>^bs_exp 
+    <span class="co">#-------------------</span>
+    c_threshold &lt;-<span class="st"> </span><span class="fl">1e7</span>
+
+    threshold_n34 &lt;-<span class="st"> </span><span class="dv">10</span>
+    flag_n34 &lt;-<span class="st"> </span><span class="ot">FALSE</span>
+    threshold_bs2 &lt;-<span class="st"> </span><span class="dv">20</span>
+    flag_bs2 &lt;-<span class="st"> </span><span class="ot">FALSE</span>
+    <span class="co">#-------------------</span>
+    weight_ng5 &lt;-<span class="st"> </span><span class="fl">1.5</span>
+    weight_ng4 &lt;-<span class="st"> </span><span class="fl">1.0</span>
+    weight_ng3 &lt;-<span class="st"> </span><span class="fl">0.5</span>
+    <span class="co">#-------------------</span>
+    N5_candidates &lt;-<span class="st"> </span><span class="fl">0.0</span>
+    N4_candidates &lt;-<span class="st"> </span><span class="fl">0.0</span>
+    N3_candidates &lt;-<span class="st"> </span><span class="fl">0.0</span>
+    FLAG_EMPTY_5 &lt;-<span class="st"> </span><span class="ot">TRUE</span> 
+    FLAG_EMPTY_4 &lt;-<span class="st"> </span><span class="ot">TRUE</span> 
+    FLAG_EMPTY_3 &lt;-<span class="st"> </span><span class="ot">TRUE</span> 
+    FLAG_DONE &lt;-<span class="st"> </span><span class="ot">FALSE</span>
+    <span class="co">#-------------------</span>
+
+     <span class="co"># candidates &lt;- debug_df</span>
+     <span class="co"># candidates[2, 1] &lt;- &quot;N5_candidates&quot;; candidates[2, 2] &lt;- N5_candidates</span>
+     <span class="co"># candidates[3, 1] &lt;- &quot;N4_candidates&quot;; candidates[3, 2] &lt;- N4_candidates</span>
+     <span class="co"># candidates[4, 1] &lt;- &quot;N3_candidates&quot;; candidates[4, 2] &lt;- N3_candidates</span>
+     <span class="co"># candidates[5, 1] &lt;- &quot;FLAG_DONE&quot;;     candidates[5, 2] &lt;- FLAG_DONE</span>
+     <span class="co"># candidates[6, 1] &lt;- &quot;input_length&quot;;  candidates[6, 2] &lt;- input_length</span>
+     <span class="co"># candidates[7, 1] &lt;- &quot;check_counts&quot;;  candidates[7, 2] &lt;- check_counts</span>
+     <span class="co"># candidates[8, 1] &lt;- &quot;nwords&quot;      ;  candidates[8, 2] &lt;- nwords</span>
+     <span class="co"># candidates[1:3 , 3] &lt;- c(FLAG_EMPTY_5, FLAG_EMPTY_4, FLAG_EMPTY_3)</span>
+     <span class="co"># top10 &lt;- head(candidates[, OutputColumns], how_many)</span>
+     <span class="co"># return(top10)</span>
+
+    n5s &lt;-<span class="st"> </span><span class="kw">select_ngrams_xnew</span>(<span class="dt">ngrams =</span> n5w, 
+                              <span class="dt">columns =</span> <span class="dv">1</span>:<span class="dv">4</span>, 
+                              <span class="dt">words =</span> <span class="kw">tail</span>(w_IDs, <span class="dv">4</span>), 
+                              <span class="dt">counts =</span> <span class="kw">tail</span>(w_counts, <span class="dv">4</span>), 
+                              <span class="dt">c_threshold =</span> c_threshold) 
+
+    N5_candidates &lt;-<span class="st"> </span><span class="kw">nrow</span>(n5s$matches)
+    if( N5_candidates &gt;<span class="st"> </span><span class="dv">0</span> ) { 
+
+        n5text &lt;-<span class="st"> </span><span class="kw">mutate</span>(n5s$matches, 
+                         <span class="dt">logPdict_pred =</span> -<span class="dv">1</span>*(<span class="kw">log10</span>(vec_counts[pred]/dict_size)), 
+                         <span class="dt">logPdict =</span> <span class="kw">as.numeric</span>(logPdict),
+                         <span class="dt">orderW =</span> weight_ng5)
+        
+        n5text$nm &lt;-<span class="st"> </span><span class="kw">rowSums</span>(n5s$flags)
+        binscore5_w2 &lt;-<span class="st"> </span><span class="kw">apply</span>(n5s$flags, <span class="dv">1</span>, function(x) { x %*%<span class="st"> </span>bs_w2 } )
+        n5text$bs2 &lt;-<span class="st"> </span>binscore5_w2
+        
+        test_n34 &lt;-<span class="st"> </span><span class="kw">sum</span>( n5text$nm  &gt;=<span class="st">  </span><span class="dv">3</span> )
+        test_bs2 &lt;-<span class="st"> </span><span class="kw">sum</span>( n5text$bs2 &gt;=<span class="st"> </span><span class="dv">10</span> |<span class="st"> </span>n5text$bs2 ==<span class="st"> </span><span class="dv">7</span> |<span class="st"> </span>n5text$bs2 ==<span class="st"> </span><span class="dv">6</span> )
+        
+        if( test_n34 &gt;=<span class="st"> </span>threshold_n34 ) {
+            flag_n34 &lt;-<span class="st"> </span><span class="ot">TRUE</span>
+            n5text &lt;-<span class="st"> </span><span class="kw">filter</span>(n5text, nm &gt;=<span class="st"> </span><span class="dv">3</span>)
+        } else if( test_bs2 &gt;=<span class="st"> </span>threshold_bs2 ) {
+            flag_bs2 &lt;-<span class="st"> </span><span class="ot">TRUE</span>
+            n5text &lt;-<span class="st"> </span><span class="kw">filter</span>(n5text, bs2 &gt;=<span class="st"> </span><span class="dv">10</span> |<span class="st"> </span>bs2 ==<span class="st"> </span><span class="dv">7</span> |<span class="st"> </span>bs2 ==<span class="st"> </span><span class="dv">6</span> )
+        }
+        
+        n5text &lt;-<span class="st"> </span><span class="kw">mutate</span>(n5text, 
+                         <span class="dt">root =</span> <span class="kw">str_join</span>(vec_words[w1], vec_words[w2], vec_words[w3], vec_words[w4], <span class="dt">sep =</span> <span class="st">&quot; &quot;</span>), 
+                         <span class="dt">wpred =</span> vec_words[pred])
+        
+        n5text &lt;-<span class="st"> </span><span class="kw">mutate</span>(n5text, 
+                         <span class="dt">ngImp =</span> logPdict -<span class="st"> </span>logPng, 
+                         <span class="dt">predImp =</span> logPdict_pred +<span class="st"> </span><span class="kw">log10</span>(ngFreq/Nng), 
+                         <span class="dt">mixImp =</span> ngImp +<span class="st"> </span>predImp)
+        
+        N5_select &lt;-<span class="st"> </span><span class="kw">nrow</span>(n5text)
+        if( N5_select &gt;<span class="st"> </span><span class="dv">0</span> ) {
+            
+            filter5 &lt;-<span class="st"> </span>( n5text$logPdict &gt;<span class="st"> </span><span class="fl">12.5</span> &amp;<span class="st"> </span>n5text$logPdict_pred &gt;<span class="st"> </span><span class="fl">2.0</span> ) 
+            filter5 &lt;-<span class="st"> </span><span class="kw">ifelse</span>(n5text$bs2 &gt;=<span class="st"> </span><span class="dv">11</span>, <span class="ot">TRUE</span>, filter5)
+        
+            n5pred &lt;-<span class="st"> </span><span class="kw">filter</span>(n5text, filter5) %&gt;%
+<span class="st">                </span><span class="kw">select</span>(wpred, pred, logPdict, logPdict_pred, bs2, mixImp, orderW) %&gt;%
+<span class="st">                </span><span class="kw">arrange</span>(<span class="kw">desc</span>(bs2), <span class="kw">desc</span>(logPdict)) 
+            
+            n5pred_aggr &lt;-<span class="st"> </span><span class="kw">group_by</span>(n5pred, wpred) %&gt;%<span class="st"> </span>
+<span class="st">                </span><span class="kw">summarise</span>( <span class="dt">sum_bs2 =</span> <span class="kw">sum</span>(bs2), <span class="dt">sum_logPdict =</span> <span class="kw">sum</span>(logPdict)) %&gt;%<span class="st"> </span>
+<span class="st">                </span><span class="kw">arrange</span>(<span class="kw">desc</span>(sum_bs2), <span class="kw">desc</span>(sum_logPdict))
+            
+            N5_candidates &lt;-<span class="st"> </span><span class="kw">nrow</span>(n5pred_aggr)
+        }
+    }
+
+    if( N5_candidates &gt;<span class="st"> </span><span class="dv">0</span> ) { 
+        FLAG_EMPTY_5 &lt;-<span class="st"> </span><span class="ot">FALSE</span> 
+    }
+
+    if( N5_candidates &gt;=<span class="st"> </span><span class="dv">2</span> ) {
+        
+        FLAG_DONE &lt;-<span class="st"> </span><span class="ot">TRUE</span>
+
+        candidates &lt;-<span class="st"> </span><span class="kw">group_by</span>(n5pred, wpred) %&gt;%<span class="st"> </span>
+<span class="st">            </span><span class="kw">summarise</span>( <span class="dt">sum_bs2 =</span> <span class="kw">sum</span>(bs2*orderW), <span class="dt">sum_logPdict =</span> <span class="kw">sum</span>(logPdict), <span class="dt">sum_mixImp =</span> <span class="kw">sum</span>(mixImp*orderW)) %&gt;%<span class="st"> </span>
+<span class="st">            </span><span class="kw">arrange</span>(<span class="kw">desc</span>(sum_bs2), <span class="kw">desc</span>(sum_logPdict))
+        
+    }
+
+    <span class="co">#===============================================================================</span>
+    if( FLAG_DONE ==<span class="st"> </span><span class="ot">FALSE</span> ) {
+
+        n4s &lt;-<span class="st"> </span><span class="kw">select_ngrams_xnew</span>(<span class="dt">ngrams =</span> n4w, 
+                                  <span class="dt">columns =</span> <span class="dv">1</span>:<span class="dv">3</span>, 
+                                  <span class="dt">words =</span> <span class="kw">tail</span>(w_IDs, <span class="dv">3</span>), 
+                                  <span class="dt">counts =</span> <span class="kw">tail</span>(w_counts, <span class="dv">3</span>), 
+                                  <span class="dt">c_threshold =</span> c_threshold) 
+        
+        n4text &lt;-<span class="st"> </span><span class="kw">mutate</span>(n4s$matches, 
+                         <span class="dt">logPdict_pred =</span> -<span class="dv">1</span>*(<span class="kw">log10</span>(vec_counts[pred]/dict_size)), 
+                         <span class="dt">logPdict =</span> <span class="kw">as.numeric</span>(logPdict),
+                         <span class="dt">orderW =</span> weight_ng4)
+        
+        n4text$nm &lt;-<span class="st"> </span><span class="kw">rowSums</span>(n4s$flags)
+        binscore4_w2 &lt;-<span class="st"> </span><span class="kw">apply</span>(n4s$flags, <span class="dv">1</span>, function(x) { x %*%<span class="st"> </span><span class="kw">c</span>(bs_w2[<span class="dv">2</span>:<span class="dv">4</span>], <span class="dv">0</span>) } )
+        n4text$bs2 &lt;-<span class="st"> </span>binscore4_w2
+        
+        if( flag_n34 ) {
+            n4text &lt;-<span class="st"> </span><span class="kw">filter</span>(n4text, nm  &gt;=<span class="st">  </span><span class="dv">3</span>)
+        } else if( flag_bs2 ) {
+            n4text &lt;-<span class="st"> </span><span class="kw">filter</span>(n4text, bs2 &gt;=<span class="st"> </span><span class="dv">10</span>)
+        }
+        
+        n4text &lt;-<span class="st"> </span><span class="kw">mutate</span>(n4text, 
+                         <span class="dt">root =</span> <span class="kw">str_join</span>(vec_words[w1], vec_words[w2], vec_words[w3], <span class="dt">sep =</span> <span class="st">&quot; &quot;</span>), 
+                         <span class="dt">wpred =</span> vec_words[pred])
+        
+        n4text &lt;-<span class="st"> </span><span class="kw">mutate</span>(n4text, 
+                         <span class="dt">ngImp =</span> logPdict -<span class="st"> </span>logPng, 
+                         <span class="dt">predImp =</span> logPdict_pred +<span class="st"> </span><span class="kw">log10</span>(ngFreq/Nng), 
+                         <span class="dt">mixImp =</span> ngImp +<span class="st"> </span>predImp)
+        
+        N4_select &lt;-<span class="st"> </span><span class="kw">nrow</span>(n4text)
+        if( N4_select &gt;<span class="st"> </span><span class="dv">0</span> ) {
+            
+            <span class="co"># n4pred &lt;- filter(n4text, logPdict &gt; 8.0 &amp; logPdict_pred &gt; 2.0) %&gt;% </span>
+            filter4 &lt;-<span class="st"> </span>( n4text$logPdict &gt;<span class="st"> </span><span class="fl">8.0</span> &amp;<span class="st"> </span>n4text$logPdict_pred &gt;<span class="st"> </span><span class="fl">2.0</span> ) 
+            filter4 &lt;-<span class="st"> </span><span class="kw">ifelse</span>(n4text$bs2 &gt;=<span class="st"> </span><span class="dv">10</span>, <span class="ot">TRUE</span>, filter5)
+        
+            n4pred &lt;-<span class="st"> </span><span class="kw">filter</span>(n4text, filter4) %&gt;%
+<span class="st">                </span><span class="kw">select</span>(wpred, pred, logPdict, logPdict_pred, bs2, mixImp, orderW) %&gt;%
+<span class="st">                </span><span class="kw">arrange</span>(<span class="kw">desc</span>(bs2), <span class="kw">desc</span>(logPdict)) 
+            
+            n4pred_aggr &lt;-<span class="st"> </span><span class="kw">group_by</span>(n4pred, wpred) %&gt;%<span class="st"> </span>
+<span class="st">                </span><span class="kw">summarise</span>( <span class="dt">sum_bs2 =</span> <span class="kw">sum</span>(bs2), <span class="dt">sum_logPdict =</span> <span class="kw">sum</span>(logPdict)) %&gt;%<span class="st"> </span>
+<span class="st">                </span><span class="kw">arrange</span>(<span class="kw">desc</span>(sum_bs2), <span class="kw">desc</span>(sum_logPdict))
+
+            N4_candidates &lt;-<span class="st"> </span><span class="kw">nrow</span>(n4pred_aggr)
+        }
+        
+        if( N4_candidates &gt;<span class="st"> </span><span class="dv">0</span> ) { 
+            FLAG_EMPTY_4 &lt;-<span class="st"> </span><span class="ot">FALSE</span> 
+        }
+
+        if( N4_candidates &gt;=<span class="st"> </span><span class="dv">2</span> ) {
+            
+            FLAG_DONE &lt;-<span class="st"> </span><span class="ot">TRUE</span>
+        
+            candidates &lt;-<span class="st"> </span><span class="kw">group_by</span>(n4pred, wpred) %&gt;%<span class="st"> </span>
+<span class="st">                </span><span class="kw">summarise</span>( <span class="dt">sum_bs2 =</span> <span class="kw">sum</span>(bs2*orderW), <span class="dt">sum_logPdict =</span> <span class="kw">sum</span>(logPdict), <span class="dt">sum_mixImp =</span> <span class="kw">sum</span>(mixImp*orderW)) %&gt;%<span class="st"> </span>
+<span class="st">                </span><span class="kw">arrange</span>(<span class="kw">desc</span>(sum_bs2), <span class="kw">desc</span>(sum_logPdict))
+        }
+    }
+
+    <span class="co">#===============================================================================</span>
+    if( FLAG_DONE ==<span class="st"> </span><span class="ot">FALSE</span> ) {
+
+        if( FLAG_EMPTY_5 ==<span class="st"> </span><span class="ot">FALSE</span> &amp;<span class="st"> </span>FLAG_EMPTY_4 ==<span class="st"> </span><span class="ot">FALSE</span> ) {
+        
+            candidates &lt;-<span class="st"> </span><span class="kw">rbind</span>(n5pred, n4pred) %&gt;%<span class="st"> </span><span class="kw">group_by</span>(wpred) %&gt;%<span class="st"> </span>
+<span class="st">                </span><span class="kw">summarise</span>( <span class="dt">sum_bs2 =</span> <span class="kw">sum</span>(bs2*orderW), <span class="dt">sum_logPdict =</span> <span class="kw">sum</span>(logPdict), <span class="dt">sum_mixImp =</span> <span class="kw">sum</span>(mixImp*orderW)) %&gt;%<span class="st"> </span>
+<span class="st">                </span><span class="kw">arrange</span>(<span class="kw">desc</span>(sum_bs2), <span class="kw">desc</span>(sum_logPdict))
+            FLAG_DONE &lt;-<span class="st"> </span><span class="ot">TRUE</span>
+        
+        } else if( FLAG_EMPTY_5 ==<span class="st"> </span><span class="ot">FALSE</span> &amp;<span class="st"> </span>FLAG_EMPTY_4 ==<span class="st"> </span><span class="ot">TRUE</span> ) {
+        
+            candidates &lt;-<span class="st"> </span><span class="kw">group_by</span>(n5pred, wpred) %&gt;%<span class="st"> </span>
+<span class="st">                </span><span class="kw">summarise</span>( <span class="dt">sum_bs2 =</span> <span class="kw">sum</span>(bs2*orderW), <span class="dt">sum_logPdict =</span> <span class="kw">sum</span>(logPdict), <span class="dt">sum_mixImp =</span> <span class="kw">sum</span>(mixImp*orderW)) %&gt;%<span class="st"> </span>
+<span class="st">                </span><span class="kw">arrange</span>(<span class="kw">desc</span>(sum_bs2), <span class="kw">desc</span>(sum_logPdict))
+            FLAG_DONE &lt;-<span class="st"> </span><span class="ot">TRUE</span>
+            
+        } else if( FLAG_EMPTY_5 ==<span class="st"> </span><span class="ot">TRUE</span> &amp;<span class="st"> </span>FLAG_EMPTY_4 ==<span class="st"> </span><span class="ot">FALSE</span> ) {
+        
+            candidates &lt;-<span class="st"> </span><span class="kw">group_by</span>(n4pred, wpred) %&gt;%<span class="st"> </span>
+<span class="st">                </span><span class="kw">summarise</span>( <span class="dt">sum_bs2 =</span> <span class="kw">sum</span>(bs2*orderW), <span class="dt">sum_logPdict =</span> <span class="kw">sum</span>(logPdict), <span class="dt">sum_mixImp =</span> <span class="kw">sum</span>(mixImp*orderW)) %&gt;%<span class="st"> </span>
+<span class="st">                </span><span class="kw">arrange</span>(<span class="kw">desc</span>(sum_bs2), <span class="kw">desc</span>(sum_logPdict))
+            FLAG_DONE &lt;-<span class="st"> </span><span class="ot">TRUE</span>
+            
+        }
+    }
+
+    <span class="co">#===============================================================================</span>
+    if( FLAG_DONE ==<span class="st"> </span><span class="ot">FALSE</span> ) {
+
+        n3s &lt;-<span class="st"> </span><span class="kw">select_ngrams_xnew</span>(<span class="dt">ngrams =</span> n3w, 
+                                  <span class="dt">columns =</span> <span class="dv">1</span>:<span class="dv">2</span>, 
+                                  <span class="dt">words =</span> <span class="kw">tail</span>(w_IDs, <span class="dv">2</span>), 
+                                  <span class="dt">counts =</span> <span class="kw">tail</span>(w_counts, <span class="dv">2</span>), 
+                                  <span class="dt">c_threshold =</span> c_threshold) 
+        
+        if( <span class="kw">nrow</span>(n3s$matches) &gt;<span class="st"> </span><span class="dv">0</span> ) { 
+            n3text &lt;-<span class="st"> </span><span class="kw">mutate</span>(n3s$matches, 
+                             <span class="dt">logPdict_pred =</span> -<span class="dv">1</span>*(<span class="kw">log10</span>(vec_counts[pred]/dict_size)), 
+                             <span class="dt">logPdict =</span> <span class="kw">as.numeric</span>(logPdict),
+                             <span class="dt">orderW =</span> weight_ng3)
+            
+            n3text$nm &lt;-<span class="st"> </span><span class="kw">rowSums</span>(n3s$flags)
+            binscore3_w2 &lt;-<span class="st"> </span><span class="kw">apply</span>(n3s$flags, <span class="dv">1</span>, function(x) { x %*%<span class="st"> </span><span class="kw">c</span>(bs_w2[<span class="dv">3</span>:<span class="dv">4</span>], <span class="dv">0</span>, <span class="dv">0</span>) } )
+            n3text$bs2 &lt;-<span class="st"> </span>binscore3_w2
+            
+            n3text &lt;-<span class="st"> </span><span class="kw">mutate</span>(n3text, 
+                             <span class="dt">root =</span> <span class="kw">str_join</span>(vec_words[w1], vec_words[w2], <span class="dt">sep =</span> <span class="st">&quot; &quot;</span>), 
+                             <span class="dt">wpred =</span> vec_words[pred])
+            
+            n3text &lt;-<span class="st"> </span><span class="kw">mutate</span>(n3text, 
+                             <span class="dt">ngImp =</span> logPdict -<span class="st"> </span>logPng, 
+                             <span class="dt">predImp =</span> logPdict_pred +<span class="st"> </span><span class="kw">log10</span>(ngFreq/Nng), 
+                             <span class="dt">mixImp =</span> ngImp +<span class="st"> </span>predImp)
+            
+            <span class="co"># N3_matches &lt;- nrow(n3s$matches)</span>
+            N3_matches &lt;-<span class="st"> </span><span class="kw">nrow</span>(n3text)
+            if( N3_matches &gt;<span class="st"> </span><span class="dv">0</span> ) { select3 &lt;-<span class="st"> </span><span class="kw">flag_best_matches</span>(<span class="dt">data =</span> n3text, <span class="dt">order =</span> <span class="dv">2</span>) }
+            
+            N3_select &lt;-<span class="st"> </span><span class="kw">sum</span>(select3)
+            if( N3_select &gt;<span class="st"> </span><span class="dv">0</span> ) {
+                
+                n3pred &lt;-<span class="st"> </span>n3text[select3, ] %&gt;%<span class="st"> </span>
+<span class="st">                    </span><span class="kw">filter</span>(logPdict &gt;<span class="st"> </span><span class="fl">6.0</span> &amp;<span class="st"> </span>logPdict_pred &gt;<span class="st"> </span><span class="fl">2.0</span>) %&gt;%<span class="st"> </span>
+<span class="st">                    </span><span class="kw">select</span>(pred, logPdict, logPdict_pred, bs2, mixImp, orderW) %&gt;%
+<span class="st">                    </span><span class="kw">arrange</span>(<span class="kw">desc</span>(bs2), <span class="kw">desc</span>(logPdict)) 
+                
+                n3pred_aggr &lt;-<span class="st"> </span><span class="kw">group_by</span>(n3pred, pred) %&gt;%<span class="st"> </span>
+<span class="st">                    </span><span class="kw">summarise</span>( <span class="dt">sum_bs2 =</span> <span class="kw">sum</span>(bs2), <span class="dt">sum_logPdict =</span> <span class="kw">sum</span>(logPdict)) %&gt;%<span class="st"> </span>
+<span class="st">                    </span><span class="kw">arrange</span>(<span class="kw">desc</span>(sum_bs2), <span class="kw">desc</span>(sum_logPdict))
+            
+                N3_candidates &lt;-<span class="st"> </span><span class="kw">nrow</span>(n3pred_aggr)
+            }
+            
+            if( N3_candidates &gt;<span class="st"> </span><span class="dv">0</span> ) {
+                candidates &lt;-<span class="st"> </span><span class="kw">group_by</span>(n3pred, wpred) %&gt;%<span class="st"> </span>
+<span class="st">                    </span><span class="kw">summarise</span>( <span class="dt">sum_bs2 =</span> <span class="kw">sum</span>(bs2*orderW), <span class="dt">sum_logPdict =</span> <span class="kw">sum</span>(logPdict), <span class="dt">sum_mixImp =</span> <span class="kw">sum</span>(mixImp*orderW)) %&gt;%<span class="st"> </span>
+<span class="st">                    </span><span class="kw">arrange</span>(<span class="kw">desc</span>(sum_bs2), <span class="kw">desc</span>(sum_logPdict))
+                FLAG_DONE &lt;-<span class="st"> </span><span class="ot">TRUE</span>
+            }
+        }
+            
+    }
+    
+    <span class="co">#===============================================================================</span>
+    if( FLAG_DONE ==<span class="st"> </span><span class="ot">FALSE</span> ) {
+        candidates &lt;-<span class="st"> </span>fall_back2
+    }
+
+    <span class="co">#---------------------------------------------------------------------------------------------------</span>
+    
+    <span class="kw">colnames</span>(candidates) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;prediction&quot;</span>, <span class="st">&quot;score&quot;</span>, <span class="st">&quot;score_alt&quot;</span>) 
+    candidates$prediction &lt;-<span class="st"> </span><span class="kw">sapply</span>(candidates$prediction, function(x) {<span class="kw">reverse_refmt</span>(<span class="dt">input =</span> x)}, <span class="dt">USE.NAMES =</span> <span class="ot">FALSE</span>)
+
+    top10 &lt;-<span class="st"> </span><span class="kw">head</span>(candidates[, OutputColumns], how_many)
+
+    <span class="co"># top10 &lt;- mutate(top10, prediction = reverse_refmt(prediction))</span>
+    <span class="co"># top10$prediction &lt;- sapply(top10$prediction, function(x) {reverse_refmt(input = x)}, USE.NAMES = FALSE)</span>
+
+    <span class="kw">return</span>(top10)
+
+}
+
+####################################################################################################
+<span class="co"># FUNCTIONS</span>
+<span class="co">#=--------------------------------------------------------------------------------------------------</span>
+get_word_ID &lt;-<span class="st"> </span>function( dict, word ) {
+    ID &lt;-<span class="st"> </span>dict[dict$word ==<span class="st"> </span>word, <span class="dv">1</span>]
+    <span class="co"># Return first ID value to avoid duplication (which should not actually be possible)</span>
+    <span class="co"># If not found return 0</span>
+    if( <span class="kw">length</span>(ID) &gt;<span class="st"> </span><span class="dv">0</span> ) {
+        output &lt;-<span class="st"> </span>ID[<span class="dv">1</span>] 
+    } else {
+        output &lt;-<span class="st"> </span><span class="dv">0</span> 
+    }
+    <span class="kw">return</span>(output)
+}
+
+get_word_count &lt;-<span class="st"> </span>function( dict, word ) {
+    ID &lt;-<span class="st"> </span>dict[dict$word ==<span class="st"> </span>word, <span class="dv">3</span>]
+    <span class="co"># Return first ID value to avoid duplication (which should not actually be possible)</span>
+    <span class="co"># If not found return 0</span>
+    if( <span class="kw">length</span>(ID) &gt;<span class="st"> </span><span class="dv">0</span> ) {
+        output &lt;-<span class="st"> </span>ID[<span class="dv">1</span>] 
+    } else {
+        output &lt;-<span class="st"> </span><span class="dv">0</span> 
+    }
+    <span class="kw">return</span>(output)
+}
+
+flag_best_matches &lt;-<span class="st"> </span>function(<span class="dt">data =</span> <span class="ot">NULL</span>, <span class="dt">order =</span> <span class="ot">NULL</span>) {
+
+    <span class="co"># tier1_bs2  &lt;- c(7, 11, 13, 14, 15)   # nm &gt;= 3</span>
+    <span class="co"># tier2_bs2  &lt;- c(6, 10, 12)</span>
+    <span class="co"># tier3_bs2  &lt;- c(5, 8, 9)</span>
+    <span class="co"># tier4_bs2  &lt;- c(1, 2, 3, 4)          # these are pretty poor</span>
+
+    check_A &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="ot">FALSE</span>, <span class="kw">nrow</span>(data))
+    check_B &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="ot">FALSE</span>, <span class="kw">nrow</span>(data))
+    check_C &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="ot">FALSE</span>, <span class="kw">nrow</span>(data))
+    best &lt;-<span class="st"> </span>check_A
+
+    check_A &lt;-<span class="st"> </span>( data$nm ==<span class="st"> </span>order )
+    n_A &lt;-<span class="st"> </span><span class="kw">sum</span>( check_A )
+    if( order &gt;<span class="st"> </span><span class="dv">2</span> ) {
+        check_B &lt;-<span class="st"> </span>( data$nm ==<span class="st"> </span>order<span class="dv">-1</span> )
+        n_B &lt;-<span class="st"> </span><span class="kw">sum</span>( check_B )
+    }
+    if( order &gt;<span class="st"> </span><span class="dv">3</span> ) {
+        check_C &lt;-<span class="st"> </span>( data$nm ==<span class="st"> </span>order<span class="dv">-2</span> )
+        n_C &lt;-<span class="st"> </span><span class="kw">sum</span>( check_C )
+    }
+
+    check_AB  &lt;-<span class="st"> </span>( check_A |<span class="st"> </span>check_B )
+    check_ABC &lt;-<span class="st"> </span>( check_A |<span class="st"> </span>check_B |<span class="st"> </span>check_C )
+    n_AB  &lt;-<span class="st"> </span><span class="kw">sum</span>( check_AB )
+    n_ABC &lt;-<span class="st"> </span><span class="kw">sum</span>( check_ABC )
+
+    best &lt;-<span class="st"> </span>check_ABC
+    if( n_A &gt;=<span class="st"> </span><span class="dv">10</span> ) { 
+        best &lt;-<span class="st"> </span>check_A
+    } else if( n_AB &gt;=<span class="st"> </span><span class="dv">10</span> ) {
+        best &lt;-<span class="st"> </span>check_AB
+    }
+
+    <span class="kw">return</span>(best)
+
+}
+
+<span class="co">#=--------------------------------------------------------------------------------------------------</span>
+select_ngrams_xnew &lt;-<span class="st"> </span>function(<span class="dt">ngrams =</span> <span class="ot">NULL</span>, <span class="dt">columns =</span> <span class="ot">NULL</span>, <span class="dt">words =</span> <span class="ot">NULL</span>, <span class="dt">counts =</span> <span class="ot">NULL</span>, <span class="dt">c_threshold =</span> <span class="fl">1e7</span>) {
+    
+    max_ncol &lt;-<span class="st"> </span><span class="kw">ncol</span>(ngrams) -<span class="st"> </span><span class="dv">3</span>
+    if( <span class="kw">length</span>(columns) &gt;<span class="st"> </span>max_ncol ) {
+        columns &lt;-<span class="st"> </span><span class="dv">1</span>:max_ncol
+    }
+    if( <span class="kw">length</span>(words) &gt;<span class="st"> </span>max_ncol ) {
+        words &lt;-<span class="st"> </span><span class="kw">tail</span>(words, max_ncol)
+    }
+    
+    diff &lt;-<span class="st"> </span><span class="kw">length</span>(columns) -<span class="st"> </span><span class="kw">length</span>(words) 
+    if( diff &gt;<span class="st"> </span><span class="dv">0</span> ) {
+        i_sub &lt;-<span class="st"> </span>(diff +<span class="st"> </span><span class="dv">1</span>):<span class="kw">length</span>(columns)
+        columns &lt;-<span class="st"> </span>columns[i_sub]
+    }
+    if( diff &lt;<span class="st"> </span><span class="dv">0</span> ) {
+        i_sub &lt;-<span class="st"> </span>(<span class="kw">abs</span>(diff) +<span class="st"> </span><span class="dv">1</span>):<span class="kw">length</span>(words)
+        words &lt;-<span class="st"> </span>words[i_sub]
+        counts &lt;-<span class="st"> </span>counts[i_sub]
+    }
+    n_max &lt;-<span class="st"> </span><span class="kw">length</span>(columns)
+
+    name &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="st">&quot;temp_flag_&quot;</span>, <span class="kw">sprintf</span>(<span class="st">&quot;%1d&quot;</span>, <span class="dv">1</span>:<span class="dv">4</span>))
+    
+    for(i in <span class="dv">1</span>:<span class="dv">4</span>) {
+        <span class="kw">assign</span>( name[i], <span class="kw">rep</span>(<span class="ot">FALSE</span>, <span class="kw">nrow</span>(ngrams)) )
+    }
+    
+    for(i in <span class="dv">1</span>:n_max) {
+        if(counts[i] &gt;<span class="st"> </span><span class="dv">0</span> &amp;&amp;<span class="st"> </span>counts[i] &lt;=<span class="st"> </span>c_threshold) {
+            <span class="kw">assign</span>( name[i],  <span class="kw">as.logical</span>( words[i] ==<span class="st"> </span>ngrams[, columns[i]] ) )
+        }
+    }
+    
+    df_flags &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="kw">as.logical</span>(temp_flag_1), <span class="kw">as.logical</span>(temp_flag_2), 
+                           <span class="kw">as.logical</span>(temp_flag_3), <span class="kw">as.logical</span>(temp_flag_4) )
+    <span class="kw">colnames</span>(df_flags) &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="st">&quot;flag&quot;</span>, <span class="dv">1</span>:<span class="dv">4</span>)
+    
+    selection &lt;-<span class="st"> </span>( temp_flag_1 |<span class="st"> </span>temp_flag_2 |<span class="st"> </span>temp_flag_3 |<span class="st"> </span>temp_flag_4 )
+    df_sel_ngrams &lt;-<span class="st"> </span><span class="kw">filter</span>(ngrams, selection)
+    df_sel_flags &lt;-<span class="st"> </span><span class="kw">filter</span>(df_flags, selection)
+
+    <span class="co"># df_output &lt;- data.frame(df_sel_ngrams, df_sel_flags)</span>
+    <span class="co"># return( df_output )</span>
+    
+    <span class="kw">return</span>( <span class="kw">list</span>( <span class="dt">matches =</span> df_sel_ngrams, <span class="dt">flags =</span> df_sel_flags ) )
+
+}
+
+<span class="co">#=--------------------------------------------------------------------------------------------------</span>
+text_string_refmt &lt;-<span class="st"> </span>function(<span class="dt">input =</span> <span class="ot">NULL</span>) {
+
+    if( <span class="kw">nchar</span>(input) ==<span class="st"> </span><span class="dv">0</span> ) { 
+        <span class="kw">return</span>(input) 
+    } else {
+        tmp &lt;-<span class="st"> </span>input
+    }
+
+    <span class="co"># tmp &lt;- gsub(&#39;([[:space:]\(\!\&quot;.?\-\/])#((?!(?:[a-z_]*[0-9]){5})[_[:alnum:]]*[[:alpha:]][_[:alnum:]]*)\b&#39;, &quot;\\1 &lt;HASHTAG&gt; &quot;, tmp, perl = TRUE);</span>
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&#39;([[:space:]])#((?!(?:[a-z_]*[0-9]){5})[_[:alnum:]]*[[:alpha:]][_[:alnum:]]*)</span><span class="ch">\\</span><span class="st">b&#39;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1 &lt;HASHTAG&gt; &quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>);
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&#39;^#((?!(?:[a-z_]*[0-9]){5})[_[:alnum:]]*[[:alpha:]][_[:alnum:]]*)</span><span class="ch">\\</span><span class="st">b&#39;</span>, <span class="st">&quot;&lt;HASHTAG&gt; &quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+
+    <span class="co">#---------------------------------------</span>
+    <span class="co"># &#39;ll ==&gt; _will / &quot; will&quot; ==&gt; _will</span>
+    <span class="co">#----------------</span>
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;([^[:alnum:]])-+([^[:alnum:]])&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1 </span><span class="ch">\\</span><span class="st">2&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(I|you|he|it|she|we|they|who|there)&#39;ll</span><span class="ch">\\</span><span class="st">b&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1_will&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(I|you|he|it|she|we|they|who|there) +will</span><span class="ch">\\</span><span class="st">b&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1_will&quot;</span>,  tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+
+    <span class="co">#---------------------------------------</span>
+    <span class="co"># n&#39;t ==&gt; _not</span>
+    <span class="co">#----------------</span>
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(do|does|did|has|have|had|is|are|was|were|could|would|should|must|need)n</span><span class="ch">\&#39;</span><span class="st">t</span><span class="ch">\\</span><span class="st">b&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1_not&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(do|does|did|has|have|had|is|are|was|were|could|would|should|must|need) +not</span><span class="ch">\\</span><span class="st">b&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1_not&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(they|you|we)&#39;re</span><span class="ch">\\</span><span class="st">b&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1_are&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(they|you|we) +are</span><span class="ch">\\</span><span class="st">b&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1_are&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+
+    <span class="co">#---------------------------------------</span>
+    <span class="co"># &#39;ve ==&gt; _have</span>
+    <span class="co">#----------------</span>
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(I|you|we|they|would|should|could|must|might)&#39;ve</span><span class="ch">\\</span><span class="st">b&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1_have&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(I|you|we|they|would|should|could|must|might) +have</span><span class="ch">\\</span><span class="st">b&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1_have&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+
+    <span class="co">#---------------------------------------</span>
+    <span class="co"># ad hoc</span>
+    <span class="co">#----------------</span>
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(can)&#39;t</span><span class="ch">\\</span><span class="st">b&quot;</span>, <span class="st">&quot;can_not&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(can) +not</span><span class="ch">\\</span><span class="st">b&quot;</span>, <span class="st">&quot;can_not&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(won)&#39;t</span><span class="ch">\\</span><span class="st">b&quot;</span>, <span class="st">&quot;will_not&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(will) +not</span><span class="ch">\\</span><span class="st">b&quot;</span>, <span class="st">&quot;will_not&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(ain)&#39;t</span><span class="ch">\\</span><span class="st">b&quot;</span>, <span class="st">&quot;is_not&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(shan)&#39;t</span><span class="ch">\\</span><span class="st">b&quot;</span>, <span class="st">&quot;shall_not&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(shall) +not</span><span class="ch">\\</span><span class="st">b&quot;</span>, <span class="st">&quot;shall_not&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(I)&#39;m</span><span class="ch">\\</span><span class="st">b&quot;</span>, <span class="st">&quot;I_am&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(I) am</span><span class="ch">\\</span><span class="st">b&quot;</span>, <span class="st">&quot;I_am&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">bam I</span><span class="ch">\\</span><span class="st">b&quot;</span>, <span class="st">&quot;am_I&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(it)&#39;s&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1_s&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(he)&#39;s&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1_s&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(she)&#39;s&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1_s&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(that)&#39;s&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1_s&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(there)&#39;s&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1_s&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(what)&#39;s&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1_s&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(let)&#39;s&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1_s&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(here)&#39;s&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1_s&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(who)&#39;s&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1_s&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(how)&#39;s&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1_s&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(where)&#39;s&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1_s&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(it) +is&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1_is&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(he) +is&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1_is&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(she) +is&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1_is&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(that) +is&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1_is&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(there) +is&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1_is&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b((shit|piss|fuck|cunt|cocksuck|motherfuck|tits)[[:alpha:]]{0,12})</span><span class="ch">\\</span><span class="st">b&quot;</span>, <span class="st">&quot;&lt;PROFANITY&gt;&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b([[:alnum:]]+)&#39;s</span><span class="ch">\\</span><span class="st">b&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(a|an|as|at|no|of|on|or|by|so|up|or|no|in|to|rt)</span><span class="ch">\\</span><span class="st">b&quot;</span>, <span class="st">&quot;&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&#39; +&lt;(NUMBER|PERCENTAGE|EMOTICON|HASHTAG|TELEPHONENUMBER)&gt; +&#39;</span>, <span class="st">&#39; &#39;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&#39; +&lt;(NUMBER|PERCENTAGE|EMOTICON|HASHTAG|TELEPHONENUMBER)&gt;([^[:alpha:]])&#39;</span>, <span class="st">&#39;</span><span class="ch">\\</span><span class="st">2&#39;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&#39; +&lt;(NUMBER|PERCENTAGE|EMOTICON|HASHTAG|TELEPHONENUMBER)&gt;&#39;</span>, <span class="st">&#39; &#39;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&#39;^&lt;(NUMBER|PERCENTAGE|EMOTICON|HASHTAG|TELEPHONENUMBER)&gt; +&#39;</span>, <span class="st">&#39;&#39;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&#39;&lt;(NUMBER|PERCENTAGE|EMOTICON|HASHTAG|TELEPHONENUMBER)&gt; +&#39;</span>, <span class="st">&#39; &#39;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;[,;:]&quot;</span>, <span class="st">&quot; &quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot; +&quot;</span>, <span class="st">&quot; &quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;^ +&quot;</span>, <span class="st">&quot;&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot; +$&quot;</span>, <span class="st">&quot;&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+
+    refmt &lt;-<span class="st"> </span>tmp
+    <span class="kw">return</span>(refmt)
+}
+<span class="co">#=--------------------------------------------------------------------------------------------------</span>
+reverse_refmt &lt;-<span class="st"> </span>function(<span class="dt">input =</span> <span class="ot">NULL</span>) {
+
+    if( <span class="kw">nchar</span>(input) ==<span class="st"> </span><span class="dv">0</span> ) { 
+        <span class="kw">return</span>(input) 
+    } else {
+        tmp &lt;-<span class="st"> </span>input
+    }
+    <span class="co"># rev_refmt &lt;- system2(&quot;./scripts/reverse_refmt.pl&quot;, input = input, stdout = TRUE) </span>
+
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(i|you|he|it|she|we|they|who|there)_will</span><span class="ch">\\</span><span class="st">b&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1 will&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(do|does|did|has|have|had|is|are|was|were|could|would|should|must|need)_not</span><span class="ch">\\</span><span class="st">b&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1 not&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">bdon_t</span><span class="ch">\\</span><span class="st">b&quot;</span>, <span class="st">&quot;don&#39;t&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(they|you|we)_are</span><span class="ch">\\</span><span class="st">b&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1 are&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(i|you|we|they|would|should|could|must|might)_have</span><span class="ch">\\</span><span class="st">b&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1 have&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(can|will|is|shall)_not</span><span class="ch">\\</span><span class="st">b&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1 not&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">bi_am</span><span class="ch">\\</span><span class="st">b&quot;</span>, <span class="st">&quot;I am&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">bam_i</span><span class="ch">\\</span><span class="st">b&quot;</span>, <span class="st">&quot;am I&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(it|he|she|that|there|what|let|here|who|how|where)_s</span><span class="ch">\\</span><span class="st">b&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1&#39;s&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">b(it|he|she|that|there)_is</span><span class="ch">\\</span><span class="st">b&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1 is&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+
+    tmp &lt;-<span class="st"> </span><span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">bo_clock</span><span class="ch">\\</span><span class="st">b&quot;</span>, <span class="st">&quot;o&#39;clock&quot;</span>, tmp, <span class="dt">perl =</span> <span class="ot">TRUE</span>)
+
+    rev_refmt &lt;-<span class="st"> </span>tmp
+
+    <span class="kw">return</span>(rev_refmt)
+}
+<span class="co">#=--------------------------------------------------------------------------------------------------</span></code></pre>
 <hr />
 </div>
 </div>
