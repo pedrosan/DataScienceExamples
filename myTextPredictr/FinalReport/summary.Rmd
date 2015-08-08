@@ -1,5 +1,5 @@
 ---
-title: "Building a Text Prediction Algorithm: Summary"
+title: "myTextPredictr : Summary"
 subtitle    : 
 author      : Giovanni Fossati
 job         : 
