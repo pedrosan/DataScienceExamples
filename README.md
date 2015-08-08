@@ -4,14 +4,15 @@ Mix of projects showcasing some of data science work
 
 A __report__ is available for some of them, hosted at [pedrosan.github.io](http://pedrosan.github.io)
 
-* Rent vs. Buy (simulation-based) Calculator
+* __Rent vs. Buy (simulation-based) Calculator__
   * [The Calculator on _shinyapps.io_](https://pedrosan.shinyapps.io/AdvBvsR/)
   * [Introduction and general information](http://pedrosan.github.io/DataScience/Rent_vs_Buy/intro.html)
   * [Analysis of stock market returns](http://pedrosan.github.io/DataScience/Rent_vs_Buy/returns.html) 
     (indices) to get a handle on how to include them in the _calculator_.
   * [Repository](https://github.com/pedrosan/DataScienceExamples/tree/master/Rent_vs_Buy)
 
-* myTextPredictr, a text prediction application (running on [pedrosan.shinyapps.io/myTextPredictr/](https://pedrosan.shinyapps.io/myTextPredictr/))
+* __myTextPredictr__, a _text prediction application_ 
+  * [The Application on shinyapps.io](https://pedrosan.shinyapps.io/myTextPredictr/)
   * [Progress Report](http://pedrosan.github.io/DataScienceExamples/myTextPredictr/MilestoneReport/)
   * [Final Report (in progress)](http://pedrosan.github.io/DataScienceExamples/myTextPredictr/FinalReport/)
   * [Slide deck with summary and basic information about algorithm](http://pedrosan.github.io/DataScienceExamples/myTextPredictr/Slides/)
