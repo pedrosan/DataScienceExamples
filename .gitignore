@@ -1,6 +1,7 @@
 .cache/*
 my_lib/
 my_css/
+NYT_test/
 useful_files/
 .cache
 .Rhistory
